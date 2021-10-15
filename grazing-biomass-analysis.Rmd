@@ -21,9 +21,13 @@ knit: (function(input_file, encoding) {
 ---
 
 RMarkdown history:
+
 1. Feb 2021 started github repo (https://github.com/shu251/midcayman-rise-microeuk)
+
 2. continue to commit changes and as you include knitr and commit changes, those will be pushed to the git repo
+
 3. eventually set up the gitpages under settings 
+
 4 https://resources.github.com/whitepapers/github-and-rstudio/
 
 
@@ -42,7 +46,6 @@ GitHub repo hosts all raw data to reproduce analysis and results. See ```input-d
 
 ```{r Library loading, message=FALSE}
 library(tidyverse); library(cowplot); library(broom)
-getwd()
 ```
 
 
@@ -58,27 +61,34 @@ counts[is.na(counts)] <- 0 # Change blanks to zeroes
 
 Raw data table collected during microscopy count process. Below code reviews the structure of this raw data and updates column headers to be more 'R' friendly.
 ```{r Format for R}
-colnames(counts) <-c("DATE", "SAMPLE", "EXPID", "VOL", "MAG", "FOV", "nanoNoFLP", "microNoFLP", "nanoFLP", "microFLP", "NOTES", "DateCompiled"); colnames(counts)
+colnames(counts) <- c("DATE", "SAMPLE", "EXPID", "VOL", "MAG", "FOV", "nanoNoFLP", "microNoFLP", "nanoFLP", "microFLP", "NOTES", "DateCompiled"); colnames(counts)
 # Column 9 and 10 list the total number of FLP inside each, so # of occurences
 
 # Notes if count was not countable
 # unique(counts$NOTES)
+head(counts)
 ```
 
 > To count occurence and number of FLP ingested by eukaryotic cells, the number of FLPs ingested was tallied and comma separated for multiple eukaryotic cells with FLP. These values need to separated and counted as 1 eukaryotic cell each, but retain the number of FLP per cell.
 
-```{r Separate comma delim FLP counts}
+```{r Separate comma delim FLP counts, tidy=FALSE}
 counts_occur <- counts %>%
+  # remove incomplete
   filter(NOTES != "Not countable") %>% 
-  mutate(nanoFLP_occur = as.numeric(str_count(nanoFLP, "[1-9]\\d*")), #Count number of euk cells observed with FLPs
+  # Count number of euk cells observed with FLPs (ex. if "1,2", 'occur' will = 2)
+  mutate(nanoFLP_occur = as.numeric(str_count(nanoFLP, "[1-9]\\d*")), 
          microFLP_occur = as.numeric(str_count(microFLP, "[1-9]\\d*")),
-         nanoTOTAL = as.numeric(nanoNoFLP) + nanoFLP_occur, #Add number of euk cells with FLPs to those without for total number of euk cells
+         # Add number of euk cells with FLPs to those without for total number of euk cells
+         nanoTOTAL = as.numeric(nanoNoFLP) + nanoFLP_occur, 
          microTOTAL = as.numeric(microNoFLP) + microFLP_occur,
          euksTOTAL = nanoTOTAL + microTOTAL) %>%
       data.frame
+
+# unique(counts$nanoFLP)
+# unique(counts_occur$nanoFLP_occur)
 ```
 
-## Microscopy cells per ml (euk)
+## Calculate cells per ml (euk)
 Input data are the raw microscopy counts by FOV. Code below calculations cells/ml based on these values. Additionaly, variance and standard deviation are also calculated. Eukaryotic cells were also classified by size, where micro equates to >20um and nano is <20um. All counts were done at 100x magnification, confirm this: 
 ```{r QC}
 unique(counts_occur$MAG)
@@ -150,8 +160,8 @@ head(counts_cellsml_avg)
 
 ```{r Check working data frames}
 # Euk cell counts, all and averaged
-head(counts_cellsml_all)
-head(counts_cellsml_avg)
+# head(counts_cellsml_all)
+# head(counts_cellsml_avg)
 ```
 
 Parse experiment type information
@@ -178,8 +188,10 @@ plot_euk_conc$SiteOrder <- factor(plot_euk_conc$Site, levels = site_ids, labels 
 plot_euk_conc$NameOrder <- factor(plot_euk_conc$Name, levels = vent_ids, labels = vent_fullname)
 ```
 
+## Plot eukaryote cells per ml
+
 Box plot to report all eukaryote cell counts.
-```{r plot all euk counts}
+```{r plot all euk counts, tidy=FALSE, fig.height=4, fig.width=6}
 # Code for plot
 conc_boxplot <- ggplot(plot_euk_conc, aes(x = NameOrder, 
                                           y = CONCENTRATION, 
@@ -218,7 +230,7 @@ Here we show that the cell concentration across replicate samples was similar th
 
 
 Subset to plot from T0 only.
-```{r Isolate T0 only to plot}
+```{r Isolate T0 only to plot, tidy=FALSE}
 vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
 vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
 
@@ -257,33 +269,60 @@ euk_plot <- ggplot(plot_euk_format, aes(x = NameOrder, y = avg_conc, fill = Site
 ```{r euk concentration by sample, fig.height=4, fig.width=6}
 euk_plot
 ```
+Summary of findings from eukaryote cell concentration.
+```{r Summary of euk findings}
+# head(plot_euk_format)
+
+plot_euk_format %>% 
+  type.convert(as.is = TRUE) %>%
+  filter(VARIABLE == "eukCONC") %>% 
+  mutate(SAMPLE_TYPE = case_when(
+    NameOrder == "Background" ~ "Background",
+    NameOrder == "Plume" ~ "Plume",
+    TRUE ~ SiteOrder
+  )) %>%
+  group_by(SAMPLE_TYPE) %>% 
+  summarise(MEAN_cellml = format(mean(avg_conc), scientific = T),
+           min_cellml = format(min(avg_conc), scientific = T),
+           max_cellml = format(max(avg_conc), scientific = T),
+           num = n())
+```
+
 
 # Prokaryote cell concentration
 Import counts from DAPI counts of bacteria and archaea.
 
-```{r import and set up prokaryote DAPI count data}
+```{r import and set up prokaryote DAPI count data, message=FALSE}
 prok <- read.delim("input-data/prokINSITU-counts-compiled.txt")
+# head(prok)
+# unique(prok$CELLML)
 insitu_proks <- prok %>% 
+  filter(CELLML != "not countable") %>% 
   separate(SAMPLE, c("Site", "Name"), sep = "-", remove = FALSE) %>% 
   group_by(SAMPLE, Site, Name) %>% 
-  summarise(MEAN = mean(CELLML),
+  summarise(MEAN = mean(as.numeric(CELLML)),
             SD = sd(CELLML),
             SEM = (sd(CELLML)/sqrt(length(CELLML))),
             .groups = "rowwise") %>% 
   data.frame
 # head(insitu_proks)
+# View(insitu_proks)
 ```
 
 
 ## Microscopy cells per ml (prok)
 
 Plot in situ prokaryote values. Average across dives where applicable.
-```{r Plot prokaryote amounts}
+```{r Plot prokaryote amounts, tidy=FALSE}
 insitu_proks$Name_order <- factor(insitu_proks$Name, levels = c("BSW", "Plume", "Quakeplume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole", "HotChimlet1", "ShrimpGulley", "SouthofHotChimlet", "SouthofLungSnack", "ArrowLoop", "Bartizan", "Rav1"), labels = c("Background","Plume", "Quakeplume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "Hot Chimlet #1", "Shrimp Gulley", "South of Hot Chimlet", "South of LungSnack", "Arrow Loop", "Bartizan", "Ravelin #1"))
+
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
+
 insitu_proks$Site_order <- factor(insitu_proks$Site, levels = site_ids, labels = site_fullname)
+
 # unique(insitu_proks$Name)
+
 prok_plot <- ggplot(insitu_proks, aes(x = Name_order, y = MEAN)) +
   geom_errorbar(aes(ymax = (MEAN + SEM), ymin = (MEAN - SEM)), width = 0.2) +
   geom_point(stat = "identity", shape = 23, aes(fill = Site), size = 3) +
@@ -307,13 +346,115 @@ prok_plot <- ggplot(insitu_proks, aes(x = Name_order, y = MEAN)) +
 prok_plot
 ```
 
+Summary of findings from prokaryote cell counts.
+```{r}
+insitu_proks %>% 
+  filter(Name != "Quakeplume") %>% 
+  mutate(SAMPLE_TYPE = case_when(
+    Name == "BSW" ~ "Background",
+    Name == "Plume" ~ "Plume",
+    TRUE ~ Site
+  )) %>% 
+  group_by(SAMPLE_TYPE) %>% 
+  summarise(MEAN_cellml = format(mean(MEAN), scientific = T),
+           min_cellml = format(min(MEAN), scientific = T),
+           max_cellml = format(max(MEAN), scientific = T),
+           num = n())
+
+```
+
 
 ## Comparison with previous MCR
-Can include years 2012 and 2013, seeking clarification on these data.
-## Prokaryote biomass-literature
+Compare _in situ_ prokaryote cell counts from 2020 to previous years
+
+```{r Import previous cell ml data}
+prok_prev <- read.csv("input-data/cellcount_previousyr.csv")
+# View(prok_prev)
+# head(prok_prev)
+prok_prev_formatted <- prok_prev %>% 
+  mutate(VENTSITE = case_when(
+    grepl("Piccard", Site) ~ "Piccard",
+    grepl("Von Damm", Site) ~ "VD"
+  )) %>% 
+  filter(!is.na(YEAR)) %>% #QC of 
+  # filter(cells_ml != "NC") %>% 
+  # filter(cells_ml != "") %>% 
+  # filter(cells_ml != "no data") %>% 
+  type.convert(as.is = TRUE, numerals = "no.loss") %>%
+  select(YEAR, VENTSITE, NAME = Name, REP=Replicate, CELLML = cells_ml, ORIGSAMPLE = Orig_vent_site_ID, ID_number, Origin)
+
+# str(prok_prev_formatted)
+# View(prok_prev_formatted)
+# unique(prok_prev_formatted$VENTSITE)
+```
 
 
-Work on this! get FS xx vlaues from Julie
+```{r Import 2020 data}
+# Re-import 2020
+prok <- read.delim("input-data/prokINSITU-counts-compiled.txt")
+# View(prok)
+proks_allyrs <- prok %>% 
+  separate(SAMPLE, c("VENTSITE", "NAME"), sep = "-", remove = FALSE) %>% 
+  mutate(YEAR = 2020) %>%
+  select(YEAR, VENTSITE, NAME, REP, CELLML, ORIGSAMPLE = BAC) %>% 
+  bind_rows(prok_prev_formatted %>% select(-ID_number, -Origin)) %>% 
+  type.convert(as.is = TRUE) %>%
+  # Remove not countable or not data samples:
+  filter(CELLML != "NC") %>%
+  filter(CELLML != "") %>%
+  filter(CELLML != "no data") %>%
+  filter(CELLML != "not countable") %>% 
+  data.frame
+
+# View(proks_allyrs)
+# View(as.data.frame(unique(proks_allyrs$NAME)))
+
+vent_order <- c("BSW","Plume","Quakeplume","NearsummitBeebee","MainOrifice","NearMainOrifice","Rav1","HotChimlet1","HotChimlet","SouthofHotChimlet","NearHotChimlet","HotCracks1","HotCracks2","ShrimpHole","ShrimpHole(X18)","X18","X19","SouthofLungSnack","TwinPeaks","OMT","WhiteCastle","GingerCastle","ArrowLoop","Bartizan","LotsOShrimp","MustardStand","ShrimpButtery","ShrimpCanyon","ShrimpGulley","Shrimpocalypse","ShrimpVegas")
+vent_names <- c("Background","Plume","Quakeplume","Near summit Beebee Vents Mound","Main Orifice","Near Main Orifice","Ravelin #1","Hot Chimlet #1","Hot Chimlet","South of Hot Chimlet","Near Hot Chimlet","Hot Cracks #1","Hot Cracks #2","Shrimp Hole","Shrimp Hole (X-18)","X-18","X-19","South of Lung Snack","Twin Peaks","Old Man Tree","White Castle","Ginger Castle","Arrow Loop","Bartizan","Lots O Shrimp","Mustard Stand","Shrimp Buttery","Shrimp Canyon","Shrimp Gulley","Shrimpocalypse","Shrimp Vegas")
+proks_allyrs$NAME_ORDER <- factor(proks_allyrs$NAME, levels = vent_order, labels = vent_names)
+proks_allyrs$VENTSITE_ORDER <- factor(proks_allyrs$VENTSITE, levels = c("Piccard", "VD"), labels = c("Piccard", "Von Damm"))
+```
+
+```{r Plot cell counts by year, tidy=FALSE, fig.height=8, fig.width=7}
+# pdf("compare-across-yr-cellcount-04052021.pdf", h = 8, w = 7)
+ggplot(proks_allyrs, aes(x = NAME_ORDER, y = as.numeric(CELLML), fill = factor(YEAR), shape = VENTSITE_ORDER)) +
+  geom_point(stat = "identity", aes(fill = factor(YEAR)), size = 3) +
+  scale_shape_manual(values = c(21,23)) +
+  coord_flip() +
+  facet_grid(VENTSITE_ORDER ~ ., space = "free", scales = "free") +
+  scale_y_log10() +
+  scale_fill_manual(values = c("#1c9099", "#ffeda0", "#fc4e2a")) +
+  theme_linedraw() +
+  theme(axis.text = element_text(color = "black", size = 10),
+        strip.background = element_blank(),
+        strip.text.y = element_text(color = "black", size = 11, hjust = 0, vjust = 1),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey")) +
+  labs(y = bquote("Cells "~mL^-1), x = "") +
+  guides(fill=guide_legend(override.aes=list(shape=22)))
+# dev.off()
+```
+Generate complete table with all cell count data
+```{r Output to share}
+# head(prok)
+proks_allyrs_OUTPUT <- prok %>%
+  separate(SAMPLE, c("VENTSITE", "NAME"), sep = "-", remove = FALSE) %>% 
+  mutate(YEAR = 2020,
+         Origin = "") %>%
+  mutate(VENTSITE = case_when(
+    VENTSITE == "VD" ~ "Von Damm",
+    TRUE ~ VENTSITE
+  )) %>% 
+  separate(BAC, c("ORIGSAMPLE", "ID_number"), sep = " ") %>% 
+  select(YEAR, VENTSITE, NAME, REP, CELLML, ORIGSAMPLE, ID_number, Origin) %>%
+  bind_rows(prok_prev_formatted) %>%
+  data.frame
+# View(proks_allyrs_OUTPUT)
+# write_delim(proks_allyrs_OUTPUT, path = "input-data/cell-counts-MCR-multiyr.txt", delim = "\t")
+```
+
 
 # Determine grazing effect
 
@@ -321,6 +462,8 @@ Calculate FLP per eukaryotic cell over time. Goal is to make these calculations 
 
 Retain previously generated dataframes:
 ```{r View and check previous data frames}
+# save(counts_cellsml_all, counts_cellsml_avg, counts_occur, file = "MCR-cellcount-dfs")
+load("MCR-cellcount-dfs", verbose = TRUE)
 # Euk cell counts, all and averaged
 head(counts_cellsml_all)
 head(counts_cellsml_avg)
@@ -329,7 +472,7 @@ head(counts_occur)
 
 Supplementary plot showing the concentration of eukaryotic cells over time for each experiment.
 
-```{r Calculate average cellsml}
+```{r Calculate average cellsml, tidy=FALSE}
 # head(counts_cellsml_avg)
 vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
 vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
@@ -368,16 +511,18 @@ counts_sepflp <- counts_occur %>%
   filter(!NOTES == "Discard") %>% 
   filter(!(NOTES == "DTAF stain prevented counts of FLP, Euks only")) %>%
   select(DATE, SAMPLE, EXPID, VOL, MAG, FOV, nanoFLP, microFLP) %>%
+  # Inputs that are comma separated will be split into a new row
   separate_rows(microFLP, sep = ",", convert = TRUE) %>%
   separate_rows(nanoFLP, sep = ",", convert = TRUE) %>%
-  replace_na(list(microFLP = 0, nanoFLP = 0)) %>% #Replace NAs with zero
+  # Replace NAs with zeroes
+  replace_na(list(microFLP = 0, nanoFLP = 0)) %>% 
   data.frame
 
 ## Check, see FOV 23, separated into rows.
 # View(counts_sepflp %>%
-  # filter(SAMPLE == "VD-Rav2" & EXPID == "T10-Rep1"))
+# filter(SAMPLE == "VD-Rav2" & EXPID == "T10-Rep1"))
 # View(counts_occur %>%
-       # filter(SAMPLE == "VD-Rav2" & EXPID == "T10-Rep1"))
+# filter(SAMPLE == "VD-Rav2" & EXPID == "T10-Rep1"))
 ```
 
 Subset counts that are greater than 0, so only euk cells observed to have FLPs. Create new column that calculates FLP per Euk - by dividing by 1.
@@ -406,6 +551,7 @@ OUTPUT COLUMNS:
 (2) total_euks_wflp = number of euks counted with ingested FLP
 
 Repeat above operation for euk cells without any FLP. Here, subset total number of observations where there was a euk cell without FLP. These need to be counted as euk cell without an FLP.
+
 > Below code repeats process and compiles with other FLP/euk cell data.
 
 ```{r Repeat for non-FLP euk cells and combine}
@@ -430,7 +576,7 @@ counts_flp_compiled <- counts_occur %>%
             .groups = "rowwise") %>%
   # Join with FLP count information
   ## SAMPLE, EXPID, EXPTYPE, IGTREP, and SizeFrac variables should match
-  left_join(counts_flp) %>% 
+  left_join(counts_flp) %>% # Join with the counts of FLP per euk cell
   replace_na(list(total_FLP = 0, total_euks_wflp = 0)) %>% #Replace NAs with zero
   data.frame
 
@@ -462,6 +608,8 @@ counts_flp_compiled_all <- counts_flp_compiled %>%
 
 > All three size fractions are represented, total, micro, and nano.
 
+One outstanding question will be that there were many more nano size grazers than micro sized. Here I am preferring to use the total value (micro + nano), but will need to defend that this is ok.
+
 ```{r check output}
 # unique(counts_flp_compiled_all$SizeFrac)
 # unique(counts_flp_compiled_all$SAMPLE)
@@ -476,7 +624,7 @@ metadata <- read.delim("input-data/flp-exp-metadata-compiled.txt")
 head(metadata)
 ```
 
-Add metadata information to FLP data, reformat sample namse, and calculate FLP per euk as the total FLP divided by the total number of euk cells counted.
+Add metadata information to FLP data, reformat sample names, and calculate FLP per euk as the total FLP divided by the total number of euk cells counted.
 ```{r Join meta data modify naming}
 counts_flp_calcs_all <- counts_flp_compiled_all %>% 
   # Add in metadata
@@ -509,6 +657,7 @@ unique(counts_flp_calcs_all$Experiment)
 ```
 
 > COLS: Timepoint, Minutes = time point label, actual incubated minutes
+
 > COLS: Replicate_ID, REP, and IGT_REP = full replicate identified for IGTs and Bags, designation of biological replicates, and designation of technical replicates for IGT experiments
 
 ## Calculate linear regression to obtain slope
@@ -563,7 +712,7 @@ calcs_wslope_regression <- calculate_lm(counts_flp_calcs_all)
 # View(calcs_wslope_regression)
 ```
 
-Use below commented out to recalculate one linear regression. Above function uses the ```nest()``` capability of tidyverse. Below, one experiment is subset to checek the value.
+Use below commented out to recalculate one linear regression. Above function uses the ```nest()``` capability of tidyverse. Below, one experiment is subset to check the value.
 ```{r Linear regression check}
 # Extract only plume-bag experiment from VD
 # tmp_plume <- filter(counts_flp_calcs_all, Experiment == "Plume-Bag") %>% filter(Site == "VD") %>% filter(SizeFrac == "total_euks")
@@ -584,8 +733,8 @@ Use below commented out to recalculate one linear regression. Above function use
 ```
 
 
-### Plot linear regression trend
-```{r Plot results from bag experiments, fig.height=6, fig.width=7}
+## Plot linear regression trend
+```{r Plot results from bag experiments , tidy=FALSE, fig.height=6, fig.width=7}
 calcs_wslope_regression %>% 
   filter(SizeFrac == "total_euks") %>% 
   # filter(TYPE != "IGT") %>% 
@@ -620,12 +769,12 @@ IGT_lm_woTf <- counts_flp_calcs_all %>%
   add_column(IGT_cor = "rm Tf") %>% 
   data.frame
 
-# Recalculate lm(), but keep 
+# Recalculate lm(), keep replicates separate
 igt_regression_noTf <- calculate_lm(IGT_lm_woTf) # Recalculate
 ```
 
 Plot IGT grazing experiment with newly calculated grazing effect.
-```{r plot igt only, fig.height=4, fig.width=5}
+```{r plot igt only, tidy=FALSE, fig.height=4, fig.width=5}
 igt_regression_noTf %>% 
   # filter(SizeFrac == "total_euks") %>% 
   # filter(TYPE != "IGT") %>% 
@@ -647,7 +796,7 @@ igt_regression_noTf %>%
                      legend.title = element_blank(),
                      legend.position = "right")
 ```
-
+IGT grazing regression without the Tf data point appear more consistent. Keeping that one.
 
 ## Compile grazing experiment results
 ```{r Compile with modified IGT results}
@@ -688,7 +837,7 @@ dtaf_avg <- dtaf %>%
   data.frame
 ```
 
-```{r Plot average FLP in controls, fig.height=6, fig.width=7}
+```{r Plot average FLP in controls, tidy=FALSE, fig.height=6, fig.width=7}
 dtaf_avg %>% 
   filter(Site != "IGT") %>% 
   ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
@@ -707,8 +856,9 @@ dtaf_avg %>%
                           axis.title = element_text(size = 9)) +
   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
 ```
+Control experiments look ok for now.
 
-```{r Plot for IGT, fig.height=3, fig.width=4}
+```{r Plot for IGT, tidy=FALSE, fig.height=3, fig.width=4}
 dtaf_avg %>% 
   filter(Site == "IGT") %>% 
   ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
@@ -741,6 +891,14 @@ table_grazerate <- calcs_wslope_regression_update %>%
   data.frame
 # View(table_grazerate)
 # write_delim(table_grazerate, path = "Table-grazingrates.txt", delim = "\t")
+```
+
+```{r}
+library(gt)
+table_grazerate %>% 
+  group_by(Site, EXP_TYPE) %>% 
+  gt() #%>% 
+  # fmt_number(columns = 3, decimals = 4)
 ```
 
 
@@ -799,7 +957,7 @@ grazerate_plot$NAME <- factor(grazerate_plot$Name, levels = vent_fullname)
 ```
 
 
-```{r Plot grazing rate by site, fig.height=4, fig.width=6}
+```{r Plot grazing rate by site, tidy=FALSE, fig.height=4, fig.width=6}
 # svg("", h =, w = )
 grazing_min_plot <- grazerate_plot %>% 
   ggplot(aes(y = GRAZE_RATE, x = NAME, shape = EXP_TYPE, fill = Site)) +
@@ -835,6 +993,7 @@ Generate final plots that show eukaryote and prokaryote biomass and cell concent
 tmp <- filter(insitu_proks, Name != "BSW", Name != "Plume") %>% select(MEAN)
 avg_insitu <- mean(tmp$MEAN)
 # head(insitu_proks)
+
 # Add to master table with data
 table_grazerate_wflp_wprok <- insitu_proks %>% 
   select(Site = SAMPLE, Prok_conc = MEAN, Prok_sem = SEM) %>% 
@@ -859,10 +1018,12 @@ table_grazerate_wflp_wprok_weuk <- plot_euk_format %>%
 
 # Grazing rate calculations
 ```{r Report full table}
-head(table_grazerate_wflp_wprok_weuk)
+# head(table_grazerate_wflp_wprok_weuk)
 ```
 
 Based on Unrein et al. 2007, we use the estimated grazing rate, in situ prok abundance, in situ euk abundance, and the concentration of FLP to make additional estimates. 
+
+> SKH: add citations for the below calulcations.
 
 ```{r Rate calculations}
 table_wcalcs <- table_grazerate_wflp_wprok_weuk %>%
@@ -893,7 +1054,7 @@ table_wcalcs <- table_grazerate_wflp_wprok_weuk %>%
 # View(table_wcalcs)
 ```
 
-Explaination of units for table with calculated values.
+Explanation of units for table with calculated values.
 * RATE_min & RATE_hr = Grazing rate as 'FLPs per grazer per minute' and per hour
 * CLEARANCE_RATE = ml or nL per grazer per hour
 * SPEC_GRAZE_RATE (Specific grazing rate) = Prokaryotes per grazer per hour
@@ -904,12 +1065,82 @@ Explaination of units for table with calculated values.
 _Unrein, F., Massana, R., Alonso-Sáez, L., and Gasol, J.M. (2007) Significant year-round effect of small mixotrophic flagellates on bacterioplankton in an oligotrophic coastal system. Limnol Oceanogr 52: 456–469._
 
 
+```{r, fig.height=10, fig.width=18}
+# colnames(table_wcalcs)
+bkgd <- c("Background", "Plume")
+table_wcalcs %>% 
+  mutate(loc_type = case_when(
+    NAME %in% bkgd ~ "Background",
+    TRUE ~ "Vent fluid"
+  )) %>%
+  # group_by(loc_type, SITE, EXP) %>% 
+  select(-SAMPLE) %>% 
+  gt(
+    groupname_col = c("SITE", "EXP", "loc_type"),
+    rowname_col = "NAME"
+  ) %>% 
+  cols_label(RATE_min = html("minute<sup>-1</sup>"),
+             RATE_hr = html("hour<sup>-1</sup>"),
+             RATE_day = html("day<sup>-1</sup>"),
+             REPs = html("# of incubations"),
+             FLP_ml = html("FLP ml<sup>-1</sup>"),
+             PROK_ml = html("Prokaryote cells ml<sup>-1</sup>"),
+             PROK_sem = html("SEM prokaryote cells ml<sup>-1</sup>"),
+             EUK_ml = html("Eukaryote cells ml<sup>-1</sup>"),
+             EUK_sem = html("SEM eukaryote cells ml<sup>-1</sup>"),
+             FLP_L = html("FLP L<sup>-1</sup>"),
+             CLEARANCE_RATE_ml = html("ml grazer<sup>-1</sup> hr<sup>-1</sup>"),
+             CLEARANCE_RATE_nL = html("nl grazer<sup>-1</sup> hr<sup>-1</sup>"),
+             SPEC_GRAZE_RATE_hr = html("Prokaryote grazer<sup>-1</sup> hr<sup>-1</sup>"),
+             GRAZE_RATE_DAY = html("Prokaryote grazer<sup>-1</sup> day<sup>-1</sup>"),
+             GRAZING_EFFECT_hr = html("Prokaryote ml<sup>-1</sup> hr<sup>-1</sup>"),
+             GRAZING_EFFECT_hr_min = html("MIN"),
+             GRAZING_EFFECT_hr_max = html("MAX"),
+             GRAZING_EFFECT_day = html("Prokaryote ml<sup>-1</sup> day<sup>-1</sup>"),
+             BAC_TURNOVER_PERC = html("Bacteria turnover % day<sup>-1</sup>"),
+             BAC_TURNOVER_PERC_min = html("MIN"),
+             BAC_TURNOVER_PERC_max = html("MAX")) %>% 
+  tab_spanner(
+    label = (html("Turnover")),
+    columns = starts_with("BAC_TURNOVER")
+  ) %>% 
+  tab_spanner(
+    label = (html("Grazing rate: prokaryote cells consumed")),
+    columns = starts_with("GRAZING_EFFECT")
+  ) %>% 
+  tab_spanner(
+    label = (html("ml grazer<sup>-1</sup> hr<sup>-1</sup>")),
+    columns = c(CLEARANCE_RATE_ml, CLEARANCE_RATE_nL)
+  ) %>% 
+  tab_spanner(
+    label = html("Specific grazing rate"),
+    columns = c(SPEC_GRAZE_RATE_hr, GRAZE_RATE_DAY)
+  ) %>% 
+  tab_spanner(
+    label = (html("FLPs grazer<sup>-1</sup>")),
+    columns = c(RATE_hr, RATE_min, RATE_day),
+  ) %>% 
+  tab_spanner(
+    label = (html("Cell counts")),
+    columns = c(PROK_ml, PROK_sem, EUK_ml, EUK_sem, FLP_L, FLP_ml),
+  ) %>% 
+  tab_source_note(source_note = "NAs indicate values were unavailable.
+                  Zero values for rates indicate no grazing pressure detected.") %>% 
+  fmt_scientific(columns = everything()) %>% 
+  tab_options(
+    table.font.size = 12,
+    table.border.top.color = "black",
+    column_labels.border.bottom.color = "black",
+    column_labels.border.bottom.width= px(3),
+    table.width = pct(100))
+```
+
 # Estimates of carbon biomass and consumption
 
 ## Protist carbon-measured
 References for estimating biovolume _Pernice, M.C., Forn, I., Gomes, A., Lara, E., Alonso-Sáez, L., Arrieta, J.M., et al. (2015) Global abundance of planktonic heterotrophic protists in the deep ocean. ISME J 9: 782–792._
 
-```{r Import and process biovolumes}
+```{r Import and process biovolumes, tidy=FALSE}
 # Import manual biovolume measurements
 biov <- read.delim("input-data/biovol-euk-12-10-2020.txt")
 # head(biov)
@@ -948,12 +1179,13 @@ euk_carbon_max <- max(biov_calc$pgC_cell); euk_carbon_max
 
 Avg euk biomass pg C per individual cell == ```{r}euk_carbon```
 
+
 ## Protist carbon-literature
 
 Compare with Menden-Deuer and Lessard 2000, Table 2 - using only the heterotrophic species measured. Based on Table 2, the min volume was 4745 and the maximum was 1.2 x10^7 µm^3. Carbon content was measured at pg per cell, this was 469.48-35,339 pg per cell. 
 
 Import the heterotroph species volume and carbon content to compare to my measured values.
-```{r Compare carbon ranges, fig.height=7, fig.width=10}
+```{r Compare carbon ranges, tidy=FALSE, fig.height=7, fig.width=10}
 # Hu-measured
 range(biov_calc$Volume)
 range(biov_calc$pgC_cell)
@@ -1073,7 +1305,7 @@ table_wcalcs_biomass_bounded <- table_wcalcs_biomass %>%
 ```{r Save carbon table}
 head(table_wcalcs_biomass_bounded)
 # View(table_wcalcs_biomass_bounded)
-write_delim(table_wcalcs_biomass_bounded, path = "table-wcalc.txt", delim = "\t")
+# write_delim(table_wcalcs_biomass_bounded, file = "table-wcalc.txt", delim = "\t")
 # ?write_delim()
 ```
 
@@ -1084,7 +1316,7 @@ Format and factor values to plot.
 * Grazing rate column == FLP per minute consumed
 * Grazing effect hr == cells per ml per hr
 * Specific ingestion rate == % of cell carbon per day, estimated with literature and measured carbon values
-```{r Format and factor for plots}
+```{r Format and factor for plots, tidy=FALSE}
 biomass_rate_plot <- table_wcalcs_biomass_bounded %>% 
   select(SITE, NAME, EXP, SAMPLE, type, 
         PROK_ml, EUK_ml, PROK_sem, EUK_sem,
@@ -1122,7 +1354,7 @@ biomass_rate_plot$VARIABLE_ORDER <- factor(biomass_rate_plot$Variable,
 ```
 
 Function to generate consistent plots for Mid-Cayman Rise cell concentration and biomass data.
-```{r, fig.height=4, fig.width=9}
+```{r Plot for mid-cayman rise results, tidy=FALSE, fig.height=4, fig.width=9}
 conc_rate_plot_mcr <- function(df, var, sem){
   df %>% 
     filter(Variable == var) %>%
@@ -1132,7 +1364,7 @@ conc_rate_plot_mcr <- function(df, var, sem){
                   width = 0.2, position = position_dodge(width = 0.4)) +
     geom_point(stat = "identity", aes(shape = EXP, fill = SITE),
                color = "black", size = 3, position = position_dodge(width = 0.4)) +
-    scale_shape_manual(values = c(21, 24)) +
+    scale_shape_manual(values = c(21, 23)) +
     scale_fill_manual(values = c("#de2d26", "#1c9099")) +
     facet_wrap(VARIABLE_ORDER ~ ., scales = "free", 
                strip.position = c("left"), labeller = label_parsed) +
@@ -1157,21 +1389,34 @@ conc_rate_plot_mcr <- function(df, var, sem){
 }
 ```
 
-```{r, fig.height=8, fig.width=13}
+```{r, tidy=FALSE, fig.height=12, fig.width=7}
 # svg("cells-per-ml-yaxies.svg", h = 8, w = 13)
 plot_grid(conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem"),
           conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem"),
           conc_rate_plot_mcr(biomass_rate_plot, "Prok_biomass_L", "Prok_biomass_sem_L"),
           conc_rate_plot_mcr(biomass_rate_plot, "Euk_biomass_Hu_L", "Euk_biomass_Hu_sem_L"))
 # dev.off()
-# svg("biomass-literature-eukC.svg", h=5, w=7)
-# conc_rate_plot_mcr(biomass_rate_plot, "Euk_biomass_lit", "Euk_biomass_lit_sem")
+# svg("MCR-only-cellcounts-grazingrate.svg", h=12, w=7)
+plot_grid(conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem"),
+          conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem"),
+          conc_rate_plot_mcr(biomass_rate_plot, "GRAZING_EFFECT_hr", "Prok_biomass_sem_L"), ncol = 1)
 # dev.off()
 ```
 
-```{r Plot grazing rates within MCR, fig.height=7, fig.width=6}
+```{r See subset of grazing pressure results, tidy=FALSE}
+subset <- c("GRAZING_EFFECT_hr", "RATE_ugCbac_pergrazer_perday")
+biomass_rate_plot %>%
+  filter(Variable %in% subset) %>% 
+  group_by(EXP, type, Variable) %>% 
+  summarise(MEAN = mean(Value))
+# 8.577791e+03	- 1.214981e+03	
+```
+
+
+```{r Plot grazing rates within MCR, tidy=FALSE, fig.height=7, fig.width=6}
 # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
 grazing_rate <- biomass_rate_plot %>% 
+  type.convert(as.is = TRUE) %>%
     filter(Variable == "GRAZING_EFFECT_hr") %>%
     filter(SEM_variable == "GRAZING_EFFECT_hr_min" | SEM_variable == "GRAZING_EFFECT_hr_max") %>% 
     pivot_wider(names_from = SEM_variable, values_from = SEM) %>% 
@@ -1200,23 +1445,18 @@ grazing_rate <- biomass_rate_plot %>%
     guides(fill = guide_legend(override.aes = list(shape = c(21))),
            shape = guide_legend(override.aes = list(fill = "black"))) +
     labs(x = "", y = "")
-
+# class(grazing_rate)
 # head(biomass_rate_plot)
 # svg("plot-grazing-withscale.svg", h = 7, w = 6)
+# grazing_rate
 plot_grid(grazing_rate + scale_y_continuous(limits = c(0,2000)),
           grazing_rate,
           ncol = 1, rel_heights = c(0.6,1))
 # dev.off()
-
-# svg("plot-grazing-log.svg", h = 4, w = 6)
-# grazing_rate + scale_y_log10(limits = c(1e-1,1e5), breaks=10^(0:7))
-grazing_rate + scale_y_continuous(trans=scales::pseudo_log_trans(base = 10),breaks=10^(0:7))
-# dev.off()
 ```
 
 
-
-```{r Plot grazing rate, fig.height=5, fig.width=6}
+```{r Plot grazing rate, tidy=FALSE, fig.height=5, fig.width=6}
 # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
 prok_turnover <- biomass_rate_plot %>% 
     filter(Variable == "BAC_TURNOVER_PERC") %>%
@@ -1248,6 +1488,15 @@ prok_turnover <- biomass_rate_plot %>%
     labs(x = "", y = "")
 ```
 
+```{r}
+# View(biomass_rate_plot)
+# tmp <- (biomass_rate_plot %>% filter(Variable == "RATE_ugCbac_pergrazer_perday" & Value > 0))
+# range(tmp$Value)
+# View(tmp)
+# unique(biomass_rate_plot$Variable)
+```
+
+
 ```{r, fig.width=6, fig.height=8}
 # svg("prok-turnover.svg", h = 8, w = 6)
 plot_grid(prok_turnover,
@@ -1265,15 +1514,13 @@ gr <- read.delim("../../GordaRidgeCruise_2019/protist-gordaridge-2021/Grazing-at
 
 temps <- read.delim("/Users/sarahhu/Desktop/Projects/GordaRidgeCruise_2019/protist-gordaridge-2019-analysis/temperature-allvents.txt")
 mcr_graze <- read.delim("table-wcalc.txt")
-```
-
-```{r}
-gr
+# head(mcr_graze)
 ```
 
 
-```{r combine data sets}
-all_vents <- mcr_graze %>% 
+```{r combine data sets, tidy=FALSE}
+all_vents <- mcr_graze %>%
+  type.convert(as.is = TRUE) %>%
   select(SITE, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max, BAC_TURNOVER_PERC, ugC_L_perday) %>% 
   rbind(gr %>%
           add_column(SITE = "Gorda Ridge") %>% 
@@ -1289,12 +1536,12 @@ all_vents <- mcr_graze %>%
     TRUE ~ "Vent"
   ))
 # View(all_vents)
-all_vents
+# all_vents
 ```
 
 
 Plot grazing rates
-```{r Plot grazing rates from both sites}
+```{r Plot grazing rates from both sites prep df, tidy=FALSE}
 allrates <- all_vents %>% 
   select(SITE, NAME, SAMPLE, EXP, SAMPLE_TYPE, starts_with("GRAZING_EFFECT_")) %>% 
   distinct() %>% 
@@ -1324,35 +1571,86 @@ allrates <- all_vents %>%
     labs(x = "", y = bquote("cells"~ml^-1~hr^-1))
 ```
 
-```{r, fig.height=4, fig.width=9}
+```{r, fig.height=12, fig.width=9}
 # svg("compare-all-rates.svg", h = 10, w = 7)
-# plot_grid(allrates,
-          # allrates + scale_y_continuous(limits = c(0,1000)),
-          # allrates + scale_y_log10(), ncol = 1)
+plot_grid(allrates,
+          allrates + scale_y_continuous(limits = c(0,1000)),
+          allrates + scale_y_log10(), ncol = 1)
 # dev.off()
 # svg("compare-all-rates-color.svg", h = 4, w = 9)
-allrates + scale_y_log10()
+# allrates + scale_y_log10()
 # dev.off()
 ```
 
+Repeat grazing rate plot, but removed undetectable
+```{r Plot grazing rates from both sites, tidy=FALSE}
+# unique(all_vents$GRAZING_EFFECT_hr)
+allrates_nonzero <- all_vents %>% 
+  filter(GRAZING_EFFECT_hr > 0) %>% 
+  select(SITE, NAME, SAMPLE, EXP, SAMPLE_TYPE, starts_with("GRAZING_EFFECT_")) %>% 
+  distinct() %>% 
+    ggplot(aes(y = GRAZING_EFFECT_hr, x = NAME, fill = SITE, shape = SAMPLE_TYPE)) +
+    geom_errorbar(aes(ymax = (GRAZING_EFFECT_hr_max), ymin = (GRAZING_EFFECT_hr_min)), 
+                  width = 0.2, position = position_dodge(width = 0.4)) +
+    geom_point(stat = "identity", aes(fill = SITE, shape = SAMPLE_TYPE),
+               color = "black", size = 3, position = position_dodge(width = 0.4)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#de2d26", "#1c9099", "#addd8e")) +
+    facet_grid(. ~ SAMPLE_TYPE, scales = "free", space = "free") +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          axis.text.x = element_text(color="black", size = 11, 
+                                     angle = 45, hjust = 1, vjust = 1), 
+          axis.text.y = element_text(color="black", size = 11),
+          axis.title =element_text(color="black", size = 11),
+          axis.ticks = element_line(),
+          legend.title = element_blank(),
+          strip.placement = "outside",
+          strip.text.y = element_text(color="black", size = 11),
+          strip.text.x = element_blank())+
+    guides(fill = guide_legend(override.aes = list(shape = c(21))),
+           shape = guide_legend(override.aes = list(fill = "black"))) +
+    labs(x = "", y = bquote("cells"~ml^-1~hr^-1))
+```
 
+```{r, fig.height=4, fig.width=7}
+# svg("compare-all-rates-color-nonZero.svg", h = 4, w = 7)
+allrates_nonzero + scale_y_log10()
+# dev.off()
+```
+
+```{r Plot cell conc and rates, fig.width=6, fig.height=10}
+# svg("plot-gcellconc-grazing-log.svg", h = 10, w = 6)
+# grazing_rate + scale_y_log10(limits = c(1e-1,1e5), breaks=10^(0:7))
+plot_grid(conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem"),
+          conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem"),
+allrates_nonzero + scale_y_log10(), ncol = 1)
+# dev.off()
+```
 
 ## Run regression analysis with MCR and GR data
 ```{r Import meta data again}
 metadata <- read.delim("input-data/flp-exp-metadata-compiled.txt")
 # head(metadata)
 # temps
-all_vents
+# all_vents
 ```
+
 Linear regression with both Gorda Ridge and MCR data
 ```{r perform lm}
 library(broom)
 # ?pivot_longer
+# e	IGT
+# head(all_vents)
 regression_input <- all_vents %>% 
+  filter(!(SAMPLE == "Piccard-Shrimpocalypse" & EXP == "IGT")) %>% 
   filter(!is.na(Highest.Temp)) %>% 
     select(SITE, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday, TEMP = Highest.Temp) %>% 
+  mutate(PROK_EUK_RATIO = (PROK_ml/EUK_ml)) %>% 
   pivot_longer(cols = c(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday), names_to = "RATE", values_to = "RATE_VALUE") %>% 
-  pivot_longer(cols = c(PROK_ml, EUK_ml, TEMP), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>% 
+  pivot_longer(cols = c(PROK_ml, EUK_ml, PROK_EUK_RATIO, TEMP), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>% 
   data.frame
 
 regression_tmp <- regression_input %>% 
@@ -1383,7 +1681,7 @@ regression_results <- regression_input %>%
 ```
 
 Plot regression results
-```{r Plot results from lm, fig.height=7, fig.width=15}
+```{r Plot results from lm, tidy=FALSE, fig.height=7, fig.width=15}
 regression_results %>% 
   # filter(RATE == "GRAZING_EFFECT_hr") %>%
   # filter(PARAMS == "TEMP") %>% 
@@ -1403,6 +1701,51 @@ regression_results %>%
     legend.title = element_blank()) # +
   # labs(y = bquote("Cells "~mL^-1 ~hr^-1), x = "Temperature (C)")
 ```
+
+_NEXT STEP_ = get more biogeochem data?
+
+
+# Parameter comparions to plot
+
+Plot temperature by euk:prok ratio? individual? other things?
+
+
+# Prediction of MCR data with parameters
+
+From Vaque et al. 1994 paper equation (1):
+
+> log(GT) = -3.21 + 0.99 log (HNF) + 0.028 (T) + 0.55 log(BAC)
+
+*GT* = grazing rate (cells ml-1 hr-1)
+*HNF* = heterotrophic nanoflagellates (cells ml-1) T = temperature (C)
+*BAC* = prokaryote abundance (cells ml-1)
+
+
+Start with non-zero grazing rate values, etc. 
+Where... 
+*GT* == Grazing effect hr
+*HNF* == Euk_ml
+*BAC* == PROK_ml
+*T* == highest temp
+
+We only have these for MCR data.. can include GR for the "predicting euk_ml"
+
+## Predicted parameters
+```{r Calculate different predicted variables}
+# head(all_vents)
+allvent_wpredicted <- all_vents %>% 
+  select(SITE, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, Highest.Temp) %>% 
+  group_by(SITE, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr) %>% 
+  summarise(TEMP = mean(Highest.Temp)) %>% 
+  distinct() %>% 
+  mutate(PREDICTED_TEMP = (((log(GRAZING_EFFECT_hr)) + 3.21 - (0.99*log(EUK_ml)) - (0.55*log(PROK_ml))) / 0.028),
+         PREDICTED_GRAZING_EFFECT_hr = (10^(-3.21 + (0.99*log(EUK_ml)) + (0.028*TEMP) + (0.55*(log(PROK_ml))))),
+         PREDICTED_EUK = (10^(((log(GRAZING_EFFECT_hr)) + 3.21 - (0.55*log(PROK_ml)) - (0.028*TEMP))/0.99)),
+         PREDICTED_PROK = (10^(((log(GRAZING_EFFECT_hr)) + 3.21 - (0.99*log(EUK_ml)) - (0.028*TEMP))/0.55)))
+
+# View(allvent_wpredicted)  
+```
+
 
 
 ```{r END session information}
