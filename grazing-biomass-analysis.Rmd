@@ -1706,6 +1706,10 @@ _NEXT STEP_ = get more biogeochem data?
 
 
 # Parameter comparions to plot
+```{r}
+head(regression_results)
+unique(regression_results$PARAMS)
+```
 
 Plot temperature by euk:prok ratio? individual? other things?
 
@@ -1743,7 +1747,7 @@ allvent_wpredicted <- all_vents %>%
          PREDICTED_EUK = (10^(((log(GRAZING_EFFECT_hr)) + 3.21 - (0.55*log(PROK_ml)) - (0.028*TEMP))/0.99)),
          PREDICTED_PROK = (10^(((log(GRAZING_EFFECT_hr)) + 3.21 - (0.99*log(EUK_ml)) - (0.028*TEMP))/0.55)))
 
-# View(allvent_wpredicted)  
+# View(allvent_wpredicted)
 ```
 
 
