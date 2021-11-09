@@ -28,7 +28,7 @@ RMarkdown history:
 
 3. eventually set up the gitpages under settings 
 
-4 https://resources.github.com/whitepapers/github-and-rstudio/
+4. https://resources.github.com/whitepapers/github-and-rstudio/
 
 
 ```{r setup, include=FALSE}
@@ -436,6 +436,7 @@ ggplot(proks_allyrs, aes(x = NAME_ORDER, y = as.numeric(CELLML), fill = factor(Y
   guides(fill=guide_legend(override.aes=list(shape=22)))
 # dev.off()
 ```
+
 Generate complete table with all cell count data
 ```{r Output to share}
 # head(prok)
@@ -453,6 +454,25 @@ proks_allyrs_OUTPUT <- prok %>%
   data.frame
 # View(proks_allyrs_OUTPUT)
 # write_delim(proks_allyrs_OUTPUT, path = "input-data/cell-counts-MCR-multiyr.txt", delim = "\t")
+```
+```{r}
+# head(proks_allyrs_OUTPUT)
+# unique(proks_allyrs_OUTPUT$NAME)
+# View(proks_allyrs_OUTPUT %>% 
+#        filter(!is.na(as.numeric(CELLML))) %>% 
+#        mutate(TYPE = case_when(
+#          NAME == "BSW" ~ "Background",
+#          NAME == "Plume" ~ "Plume",
+#          TRUE ~ "Vent"
+#        )) %>% 
+#        mutate(VENTSITE = case_when(
+#          VENTSITE == "VD" ~ "Von Damm",
+#          TRUE ~ VENTSITE
+#        )) %>% 
+#        group_by(VENTSITE, YEAR, TYPE) %>% 
+#         summarise(MEAN = mean(as.numeric(CELLML))) %>% 
+#        pivot_wider(names_from = YEAR, values_from = MEAN, values_fill = NA))
+# ?pivot_wider
 ```
 
 
@@ -1055,11 +1075,17 @@ table_wcalcs <- table_grazerate_wflp_wprok_weuk %>%
 ```
 
 Explanation of units for table with calculated values.
+
 * RATE_min & RATE_hr = Grazing rate as 'FLPs per grazer per minute' and per hour
+
 * CLEARANCE_RATE = ml or nL per grazer per hour
+
 * SPEC_GRAZE_RATE (Specific grazing rate) = Prokaryotes per grazer per hour
+
 * GRAZING EFFECT = bacteria per ml per hour
+
 * Bacterial turnover rate = % per day
+
 # Carbon biomass table construction
 
 _Unrein, F., Massana, R., Alonso-Sáez, L., and Gasol, J.M. (2007) Significant year-round effect of small mixotrophic flagellates on bacterioplankton in an oligotrophic coastal system. Limnol Oceanogr 52: 456–469._
@@ -1537,6 +1563,7 @@ all_vents <- mcr_graze %>%
   ))
 # View(all_vents)
 # all_vents
+# write_delim(all_vents, file = "grazing-cellcounts-GR_MCR.txt", delim = "\t")
 ```
 
 
