@@ -1,0 +1,82 @@
+YEAR,Site,Orig_vent_site_ID,Name,Replicate,Value_unformatted,cells_ml,cells_ml_sci,ID_number,Origin
+2012,Piccard,"Shrimp Gulley #1: Piccard, BSM",ShrimpGulley,1_rep1,1.27 x 105,127000.00,1.30E+05,FS850,Reveillaud 2012
+2012,Piccard,"Shrimp Gulley #2: Piccard, BSM",ShrimpGulley,2_rep1,1.4 x 105,140000.00,1.40E+05,FS856,Reveillaud 2012
+2012,Piccard,"Shrimp Gulley #2, BSM",ShrimpGulley,2_rep2,,140000.00,1.40E+05,FS856,Anderson et al. 2017
+2012,Piccard,"Hot Chimlet: Piccard, BVM",HotChimlet1,rep1,5.45 x 104,54500.00,5.50E+04,FS851,Reveillaud 2012
+2012,Piccard,"Hot Chimlet, BVM",HotChimlet1,rep2,,54500.00,5.45E+04,FS851,Anderson et al. 2017
+2012,Piccard,"Shrimp Canyon: Piccard, BVM",ShrimpCanyon,rep1,5.2 x 104,52000.00,5.20E+04,FS852,Reveillaud 2012
+2012,Piccard,"Shrimp Canyon, BVM",ShrimpCanyon,rep2,,52000.00,5.20E+04,FS852,Anderson et al. 2017
+2012,Piccard,"Base of Lung Snack: Piccard, BWM",SouthofLungSnack,,1.37 x 105,137000.00,1.40E+05,FS853,Reveillaud 2012
+2012,Piccard,"X-19 at BV #4: Piccard, BVM",X19,rep1,7.27 x 104,72700.00,7.30E+04,FS854,Reveillaud 2012
+2012,Piccard,"Marker X-19 at BV #4, BVM",X19,rep2,,72700.00,7.27E+04,FS854,Anderson et al. 2017
+2012,Piccard,"Shrimp Vegas: Piccard, BVM",ShrimpVegas,,1.64 x 105,164000.00,1.60E+05,FS855,Reveillaud 2012
+2012,Piccard,"Fuzzy Rock 1, 2: Piccard, BVM",Fuzzy Rock,,no data,no data,,,Reveillaud 2012
+2012,Von Damm,Old Man Tree: Von Damm,OMT,rep1,NC,NC,NC,FS841,Reveillaud 2012
+2012,Von Damm,Old Man Tree,OMT,rep2,,,NC,FS841,Anderson et al. 2017
+2012,Von Damm,Ravelin #1: Von Damm,Rav1,,7.05 x 104,70500.00,7.10E+04,FS847,Reveillaud 2012
+2012,Von Damm,Ravelin #2: Von Damm,Rav2,rep1,NC,NC,NC,FS842,Reveillaud 2012
+2012,Von Damm,Ravelin #2,Rav2,rep2,,,NC,FS842,Anderson et al. 2017
+2012,Von Damm,Hot Cracks #1: Von Damm,HotCracks1,,2.47 x105,247000.00,2.50E+05,FS846,Reveillaud 2012
+2012,Von Damm,Hot Cracks #2: Von Damm,HotCracks2,,9.80 x 104,98000.00,9.80E+04,FS843,Reveillaud 2012
+2012,Von Damm,Shrimp Hole (X-18): Von Damm,ShrimpHole(X18),,2.69 x 105,269000.00,2.70E+05,FS844,Reveillaud 2012
+2012,Von Damm,Shrimp Hole,ShrimpHole,,,269000.00,2.69E+05,FS844,Anderson et al. 2017
+2012,Von Damm,White Castle: Von Damm,WhiteCastle,,2.75 x 105,275000.00,2.80E+05,FS845,Reveillaud 2012
+2012,Von Damm,Ginger Castle: Von Damm,GingerCastle,rep1,1.08 x 105,108000.00,1.10E+05,FS848,Reveillaud 2012
+2012,Von Damm,Ginger Castle,GingerCastle,rep2,,108000.00,1.08E+05,FS848,Anderson et al. 2017
+2012,Von Damm,Main Orifice: Von Damm,MainOrifice,rep1,2.97 x 104,29700.00,3.00E+04,FS849,Reveillaud 2012
+2012,Von Damm,Main Orifice,MainOrifice,rep2,,29700.00,2.97E+04,FS849,Anderson et al. 2017
+2012,Off Axis Von Damm,Seawater: Off Axis Von Damm,BSW,,1.84 x 104,18400.00,1.80E+04,MCR_CTD02_10,Reveillaud 2012
+2012,Off Axis Piccard,Seawater: Off Axis Piccard,BSW,,1.15 x 104,11500.00,1.20E+04,MCR_CTD02_03,Reveillaud 2012
+2013,Von Damm,Near Main Orifice,NearMainOrifice,rep1,372178.9667,372178.97,3.70E+05,FS865,
+2013,Von Damm,Near Main Orifice,NearMainOrifice,rep2,,372000.00,3.72E+05,FS866,Anderson et al. 2017
+2013,Von Damm,Near Main Orifice,NearMainOrifice,rep3,NC,NC,NC,FS867,
+2013,Piccard,"Hot Chimlet, BVM",HotChimlet,rep1,64800.70333,64800.70,6.50E+04,FS869,
+2013,Piccard,"Hot Chimlet, BVM",HotChimlet,rep2,149816.2033,149816.20,1.50E+05,FS870,
+2013,Von Damm,Shrimp Hole,ShrimpHole,rep1,75569.33333,75569.33,7.60E+04,FS871,
+2013,Von Damm,Shrimp Hole,ShrimpHole,rep2,,154000.00,1.54E+05,FS872,Anderson et al. 2017
+2013,Von Damm,Shrimp Hole,ShrimpHole,rep3,153972.5167,153972.52,1.50E+05,FS873,
+2013,Von Damm,Twin Peaks,TwinPeaks,rep1,402406.7,402406.70,4.00E+05,FS875,
+2013,Von Damm,Twin Peaks,TwinPeaks,rep2,,402000.00,4.02E+05,FS874,Anderson et al. 2017
+2013,Von Damm,Shrimp Buttery,ShrimpButtery,rep1,181366.4,181366.40,1.80E+05,FS876,
+2013,Von Damm,Shrimp Buttery,ShrimpButtery,rep2,,181000.00,1.81E+05,FS877,Anderson et al. 2017
+2013,Von Damm,Hot Cracks #2,HotCracks2,rep1,112409.3833,112409.38,1.10E+05,FS878,
+2013,Von Damm,Hot Cracks #2,HotCracks2,rep2,,112000.00,1.12E+05,FS879,Anderson et al. 2017
+2013,Von Damm,Hot Cracks #2,HotCracks2,rep3,68957.01667,68957.02,6.90E+04,FS880,
+2013,Von Damm,Old Man Tree,OMT,rep1,94083.82,94083.82,9.40E+04,FS882,
+2013,Von Damm,Old Man Tree,OMT,rep2,,94100.00,9.41E+04,FS881,Anderson et al. 2017
+2013,Von Damm,Old Man Tree,OMT,rep3,66123.16667,66123.17,6.60E+04,FS883,
+2013,Piccard,Near Hot Chimlet,NearHotChimlet,rep1,182248.0422,182248.04,1.80E+05,FS884,
+2013,Piccard,Near Hot Chimlet,NearHotChimlet,rep2,152083.2833,152083.28,1.50E+05,FS886,
+2013,Piccard,Near summit of Beebee Vents Mound,NearsummitBeebee,rep1,108630.9167,108630.92,1.10E+05,FS888,
+2013,Piccard,Near summit of Beebee Vents Mound,NearsummitBeebee,rep2,312668.1167,312668.12,3.10E+05,FS890,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,

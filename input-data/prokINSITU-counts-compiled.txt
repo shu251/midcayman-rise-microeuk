@@ -1,0 +1,42 @@
+REP	BAC	CELLML	SAMPLE	DIVE
+Chem4	ArrowLoop J2-1243	14694.03704	VD-ArrowLoop	J2-1243
+Chem5	ArrowLoop J2-1243	6045.546667	VD-ArrowLoop	J2-1243
+Chem1	Bartizan J2-1244	8396.592593	VD-Bartizan	J2-1244
+Chem2	Bartizan J2-1244	23930.28889	VD-Bartizan	J2-1244
+CountA	BSW-PIC CTD005	10705.65556	Piccard-BSW	CTD005
+Chem7	BSW-VD J2-1243	29178.15926	VD-BSW	J2-1243
+Chem7	BSW-VD J2-1243	56467.08519	VD-BSW	J2-1243
+Chem7	BSW-VD J2-1244	18472.5037	VD-BSW	J2-1244
+Chem2	HotChimlet#1 J2-1239	63394.27407	Piccard-HotChimlet1	J2-1239
+Chem1	HotChimlet1 J2-1239	62974.44444	Piccard-HotChimlet1	J2-1239
+Chem1	LotsOShrimp J2-1241	90263.37037	Piccard-LotsOShrimp	J2-1241
+Chem2	LotsOShrimp J2-1241	26239.35185	Piccard-LotsOShrimp	J2-1241
+Chem3	LotsOShrimp J2-1242	57726.57407	Piccard-LotsOShrimp	J2-1242
+Chem4	LotsOShrimp J2-1242	41283.24691	Piccard-LotsOShrimp	J2-1242
+Chem1	MustardStand J2-1243	70951.20741	VD-MustardStand	J2-1243
+Chem2	MustardStand J2-1243	42402.79259	VD-MustardStand	J2-1243
+CTD005	Picc-BSW-RepB	13014.71852	Piccard-BSW	
+CTD004	Picc-Plume	56047.25556	Piccard-Plume	
+CTD004	Picc-Plume-RepB	46811.0037	Piccard-Plume	
+CTD005	Picc-Quakeplume	29807.9037	Piccard-Quakeplume	
+CTD005	Picc-Quakeplume-RepB	12594.88889	Piccard-Quakeplume	
+Chem5	Ravelin#1 J2-1244	8816.422222	VD-Rav1	J2-1244
+Chem4	SHotChimlet J2-1244	67172.74074	Piccard-SouthofHotChimlet	J2-1244
+CountA	ShrimpGulley J2-1239	168771.5111	Piccard-ShrimpGulley	J2-1239
+countA	ShrimpGulley J2-1239	110415.1926	Piccard-ShrimpGulley	J2-1239
+Chem3	ShrimpHole J2-1244	45131.68519	VD-ShrimpHole	J2-1244
+Chem4	ShrimpHole J2-1244 	38834.24074	VD-ShrimpHole	J2-1244
+Chem1	Shrimpocalypse J2-1240	285064.3185	Piccard-Shrimpocalypse	J2-1240
+Chem3	Shrimpocalypse J2-1240	321956.8472	Piccard-Shrimpocalypse	J2-1240
+Chem5	Shrimpocalypse J2-1242	108735.8741	Piccard-Shrimpocalypse	J2-1242
+Chem1	SLungSnack J2-1242	96980.64444	Piccard-SouthofLungSnack	J2-1242
+Chem5	SofHotChimlet J2-1241	48980.12346	Piccard-SouthofHotChimlet	J2-1241
+Chem2	SofLungSnack	112934.1704	Piccard-SouthofLungSnack	
+CTD002	VD-BSW	47440.74815	VD-BSW	
+CTD001	VD-Plume	13854.37778	VD-Plume	
+CTD001	VD-Plume-Rep3	19102.24815	VD-Plume	
+Chem4	X-18 J2-1235	114403.5741	VD-X18	J2-1235
+Chem5	X-18 J2-1235	108455.9877	VD-X18	J2-1235
+"x3, Chem 4-7"	VD-OMT	not countable	VD-OMT	J2-1238
+"x3, Chem 1-3"	VD-Rav2	not countable	VD-Rav2	J2-1238
+"x3, Chem 1-3; Mislabeled as X-18"	VD-WhiteCastle	not countable	VD-WhiteCastle	J2-1235

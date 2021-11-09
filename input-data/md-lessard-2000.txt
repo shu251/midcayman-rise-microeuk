@@ -1,0 +1,9 @@
+species	vol	pgC_cell
+Bernardinium sp.	1579	222.89
+N. scintillans	1.20E+07	35339.56
+O. marina	4745	469.48
+O. conicum	50721	2717.31
+P. depressum	278883	30222.32
+P. excentricum	24181	5531.41
+P. oceanicum	124459	9147.03
+P. pellucidum	105667	8133.87

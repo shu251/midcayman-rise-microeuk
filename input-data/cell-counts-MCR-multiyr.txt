@@ -1,0 +1,92 @@
+YEAR	VENTSITE	NAME	REP	CELLML	ORIGSAMPLE	ID_number	Origin
+2020	Von Damm	ArrowLoop	Chem4	14694.03704	ArrowLoop	J2-1243	
+2020	Von Damm	ArrowLoop	Chem5	6045.546667	ArrowLoop	J2-1243	
+2020	Von Damm	Bartizan	Chem1	8396.592593	Bartizan	J2-1244	
+2020	Von Damm	Bartizan	Chem2	23930.28889	Bartizan	J2-1244	
+2020	Piccard	BSW	CountA	10705.65556	BSW-PIC	CTD005	
+2020	Von Damm	BSW	Chem7	29178.15926	BSW-VD	J2-1243	
+2020	Von Damm	BSW	Chem7	56467.08519	BSW-VD	J2-1243	
+2020	Von Damm	BSW	Chem7	18472.5037	BSW-VD	J2-1244	
+2020	Piccard	HotChimlet1	Chem2	63394.27407	HotChimlet#1	J2-1239	
+2020	Piccard	HotChimlet1	Chem1	62974.44444	HotChimlet1	J2-1239	
+2020	Piccard	LotsOShrimp	Chem1	90263.37037	LotsOShrimp	J2-1241	
+2020	Piccard	LotsOShrimp	Chem2	26239.35185	LotsOShrimp	J2-1241	
+2020	Piccard	LotsOShrimp	Chem3	57726.57407	LotsOShrimp	J2-1242	
+2020	Piccard	LotsOShrimp	Chem4	41283.24691	LotsOShrimp	J2-1242	
+2020	Von Damm	MustardStand	Chem1	70951.20741	MustardStand	J2-1243	
+2020	Von Damm	MustardStand	Chem2	42402.79259	MustardStand	J2-1243	
+2020	Piccard	BSW	CTD005	13014.71852	Picc-BSW-RepB	NA	
+2020	Piccard	Plume	CTD004	56047.25556	Picc-Plume	NA	
+2020	Piccard	Plume	CTD004	46811.0037	Picc-Plume-RepB	NA	
+2020	Piccard	Quakeplume	CTD005	29807.9037	Picc-Quakeplume	NA	
+2020	Piccard	Quakeplume	CTD005	12594.88889	Picc-Quakeplume-RepB	NA	
+2020	Von Damm	Rav1	Chem5	8816.422222	Ravelin#1	J2-1244	
+2020	Piccard	SouthofHotChimlet	Chem4	67172.74074	SHotChimlet	J2-1244	
+2020	Piccard	ShrimpGulley	CountA	168771.5111	ShrimpGulley	J2-1239	
+2020	Piccard	ShrimpGulley	countA	110415.1926	ShrimpGulley	J2-1239	
+2020	Von Damm	ShrimpHole	Chem3	45131.68519	ShrimpHole	J2-1244	
+2020	Von Damm	ShrimpHole	Chem4	38834.24074	ShrimpHole	J2-1244	
+2020	Piccard	Shrimpocalypse	Chem1	285064.3185	Shrimpocalypse	J2-1240	
+2020	Piccard	Shrimpocalypse	Chem3	321956.8472	Shrimpocalypse	J2-1240	
+2020	Piccard	Shrimpocalypse	Chem5	108735.8741	Shrimpocalypse	J2-1242	
+2020	Piccard	SouthofLungSnack	Chem1	96980.64444	SLungSnack	J2-1242	
+2020	Piccard	SouthofHotChimlet	Chem5	48980.12346	SofHotChimlet	J2-1241	
+2020	Piccard	SouthofLungSnack	Chem2	112934.1704	SofLungSnack	NA	
+2020	Von Damm	BSW	CTD002	47440.74815	VD-BSW	NA	
+2020	Von Damm	Plume	CTD001	13854.37778	VD-Plume	NA	
+2020	Von Damm	Plume	CTD001	19102.24815	VD-Plume-Rep3	NA	
+2020	Von Damm	X18	Chem4	114403.5741	X-18	J2-1235	
+2020	Von Damm	X18	Chem5	108455.9877	X-18	J2-1235	
+2020	Von Damm	OMT	x3, Chem 4-7	not countable	VD-OMT	NA	
+2020	Von Damm	Rav2	x3, Chem 1-3	not countable	VD-Rav2	NA	
+2020	Von Damm	WhiteCastle	x3, Chem 1-3; Mislabeled as X-18	not countable	VD-WhiteCastle	NA	
+2012	Piccard	ShrimpGulley	1_rep1	127000.00	Shrimp Gulley #1: Piccard, BSM	FS850	Reveillaud 2012
+2012	Piccard	ShrimpGulley	2_rep1	140000.00	Shrimp Gulley #2: Piccard, BSM	FS856	Reveillaud 2012
+2012	Piccard	ShrimpGulley	2_rep2	140000.00	Shrimp Gulley #2, BSM	FS856	Anderson et al. 2017
+2012	Piccard	HotChimlet1	rep1	54500.00	Hot Chimlet: Piccard, BVM	FS851	Reveillaud 2012
+2012	Piccard	HotChimlet1	rep2	54500.00	Hot Chimlet, BVM	FS851	Anderson et al. 2017
+2012	Piccard	ShrimpCanyon	rep1	52000.00	Shrimp Canyon: Piccard, BVM	FS852	Reveillaud 2012
+2012	Piccard	ShrimpCanyon	rep2	52000.00	Shrimp Canyon, BVM	FS852	Anderson et al. 2017
+2012	Piccard	SouthofLungSnack		137000.00	Base of Lung Snack: Piccard, BWM	FS853	Reveillaud 2012
+2012	Piccard	X19	rep1	72700.00	X-19 at BV #4: Piccard, BVM	FS854	Reveillaud 2012
+2012	Piccard	X19	rep2	72700.00	Marker X-19 at BV #4, BVM	FS854	Anderson et al. 2017
+2012	Piccard	ShrimpVegas		164000.00	Shrimp Vegas: Piccard, BVM	FS855	Reveillaud 2012
+2012	Piccard	Fuzzy Rock		no data	Fuzzy Rock 1, 2: Piccard, BVM		Reveillaud 2012
+2012	VD	OMT	rep1	NC	Old Man Tree: Von Damm	FS841	Reveillaud 2012
+2012	VD	OMT	rep2		Old Man Tree	FS841	Anderson et al. 2017
+2012	VD	Rav1		70500.00	Ravelin #1: Von Damm	FS847	Reveillaud 2012
+2012	VD	Rav2	rep1	NC	Ravelin #2: Von Damm	FS842	Reveillaud 2012
+2012	VD	Rav2	rep2		Ravelin #2	FS842	Anderson et al. 2017
+2012	VD	HotCracks1		247000.00	Hot Cracks #1: Von Damm	FS846	Reveillaud 2012
+2012	VD	HotCracks2		98000.00	Hot Cracks #2: Von Damm	FS843	Reveillaud 2012
+2012	VD	ShrimpHole(X18)		269000.00	Shrimp Hole (X-18): Von Damm	FS844	Reveillaud 2012
+2012	VD	ShrimpHole		269000.00	Shrimp Hole	FS844	Anderson et al. 2017
+2012	VD	WhiteCastle		275000.00	White Castle: Von Damm	FS845	Reveillaud 2012
+2012	VD	GingerCastle	rep1	108000.00	Ginger Castle: Von Damm	FS848	Reveillaud 2012
+2012	VD	GingerCastle	rep2	108000.00	Ginger Castle	FS848	Anderson et al. 2017
+2012	VD	MainOrifice	rep1	29700.00	Main Orifice: Von Damm	FS849	Reveillaud 2012
+2012	VD	MainOrifice	rep2	29700.00	Main Orifice	FS849	Anderson et al. 2017
+2012	VD	BSW		18400.00	Seawater: Off Axis Von Damm	MCR_CTD02_10	Reveillaud 2012
+2012	Piccard	BSW		11500.00	Seawater: Off Axis Piccard	MCR_CTD02_03	Reveillaud 2012
+2013	VD	NearMainOrifice	rep1	372178.97	Near Main Orifice	FS865	
+2013	VD	NearMainOrifice	rep2	372000.00	Near Main Orifice	FS866	Anderson et al. 2017
+2013	VD	NearMainOrifice	rep3	NC	Near Main Orifice	FS867	
+2013	Piccard	HotChimlet	rep1	64800.70	Hot Chimlet, BVM	FS869	
+2013	Piccard	HotChimlet	rep2	149816.20	Hot Chimlet, BVM	FS870	
+2013	VD	ShrimpHole	rep1	75569.33	Shrimp Hole	FS871	
+2013	VD	ShrimpHole	rep2	154000.00	Shrimp Hole	FS872	Anderson et al. 2017
+2013	VD	ShrimpHole	rep3	153972.52	Shrimp Hole	FS873	
+2013	VD	TwinPeaks	rep1	402406.70	Twin Peaks	FS875	
+2013	VD	TwinPeaks	rep2	402000.00	Twin Peaks	FS874	Anderson et al. 2017
+2013	VD	ShrimpButtery	rep1	181366.40	Shrimp Buttery	FS876	
+2013	VD	ShrimpButtery	rep2	181000.00	Shrimp Buttery	FS877	Anderson et al. 2017
+2013	VD	HotCracks2	rep1	112409.38	Hot Cracks #2	FS878	
+2013	VD	HotCracks2	rep2	112000.00	Hot Cracks #2	FS879	Anderson et al. 2017
+2013	VD	HotCracks2	rep3	68957.02	Hot Cracks #2	FS880	
+2013	VD	OMT	rep1	94083.82	Old Man Tree	FS882	
+2013	VD	OMT	rep2	94100.00	Old Man Tree	FS881	Anderson et al. 2017
+2013	VD	OMT	rep3	66123.17	Old Man Tree	FS883	
+2013	Piccard	NearHotChimlet	rep1	182248.04	Near Hot Chimlet	FS884	
+2013	Piccard	NearHotChimlet	rep2	152083.28	Near Hot Chimlet	FS886	
+2013	Piccard	NearsummitBeebee	rep1	108630.92	Near summit of Beebee Vents Mound	FS888	
+2013	Piccard	NearsummitBeebee	rep2	312668.12	Near summit of Beebee Vents Mound	FS890	
