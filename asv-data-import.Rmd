@@ -1,0 +1,121 @@
+---
+title: "ASV-table-input-formatting"
+author: "Sarah Hu"
+date: "9/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Compile ASV data from MCR from previous sequence analysis
+
+Import previously sequenced and analyzed tag-sequence data. See https://shu251.github.io/microeuk-amplicon-survey/ for additional information.
+```{r, include=FALSE}
+merged_tax <- read_delim("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/taxonomy.tsv", delim = "\t")
+merged_asv <- read_delim("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/microeuk-merged-asv-table.tsv", delim = "\t", skip = 1)
+```
+
+```{r, include=FALSE}
+metadata <- read.csv("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/samplelist-metadata.csv")
+head(metadata)
+# unique(metadata$Sample_actual)
+mcr <- c("VonDamm", "Piccard")
+metadata_formatted <- metadata %>%
+  filter(SITE %in% mcr) %>%
+  mutate_all(as.character) %>%
+  filter(Sample_or_Control == "Sample") %>%
+  filter(!(SAMPLETYPE == "Microcolonizer")) %>%
+  select(SAMPLE, VENT, SITE, SAMPLEID, DEPTH, SAMPLETYPE, YEAR, TEMP = starts_with("TEMP"), pH, PercSeawater = starts_with("Perc"), Mg = starts_with("Mg"), H2 = starts_with("H2."), H2S = starts_with("H2S"), CH4 = starts_with("CH4"), ProkConc, Sample_or_Control)
+```
+
+```{r, include=FALSE}
+load("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/seq-analysis/contam-asvs.RData", verbose= TRUE)
+
+class(list_of_contam_asvs)
+```
+
+```{r, include=FALSE}
+asv_wtax_qc <- merged_asv %>%
+  select(FeatureID = '#OTU ID', everything()) %>%
+  filter(!(FeatureID %in% list_of_contam_asvs)) %>%
+  # In wide format, subsample 1000 random ASVs
+  # sample_n(1000, replace = FALSE) %>%
+  pivot_longer(cols = !FeatureID,
+               names_to = "SAMPLE", values_to = "value") %>%
+  filter(grepl("_MCR_", SAMPLE)) %>%
+  left_join(merged_tax, by = c("FeatureID" = "Feature ID")) %>%
+  left_join(filter(metadata_formatted, grepl("_MCR_", SAMPLE))) %>%
+  unite(SAMPLENAME, SITE, SAMPLETYPE, YEAR, VENT, SAMPLEID, sep = " ", remove = FALSE)
+# dim(asv_wtax_qc)
+# length(unique(asv_wtax_qc$FeatureID))
+```
+
+
+```{r, include=FALSE}
+tax_matrix <- asv_wtax_qc %>%
+  select(FeatureID, Taxon) %>%
+  distinct() %>%
+  separate(Taxon, c("Domain", "Supergroup",
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";") %>%
+  column_to_rownames(var = "FeatureID") %>%
+  as.matrix
+# dim(tax_matrix)
+asv_matrix <- asv_wtax_qc %>%
+  select(FeatureID, SAMPLE, value) %>%
+  pivot_wider(names_from = SAMPLE, values_from = value, values_fill = 0) %>%
+  column_to_rownames(var = "FeatureID") %>%
+  as.matrix
+# dim(asv_matrix)
+# dim(asv_matrix); dim(tax_matrix)
+
+# Align row names for each matrix
+rownames(tax_matrix) <- row.names(asv_matrix)
+# dim(asv_matrix)
+mcr_samples <- as.character(colnames(asv_matrix))
+
+# Set rownames of metadata table to SAMPLE information
+metadata_mcr <- filter(metadata_formatted, SAMPLE %in% mcr_samples) %>%
+  rownames_to_column(var = "X") %>%
+  column_to_rownames(var = "SAMPLE")
+# dim(metadata_mcr)
+```
+
+```{r Phyloseq import, include=FALSE}
+# Import asv and tax matrices
+ASV = otu_table(asv_matrix, taxa_are_rows = TRUE)
+TAX = tax_table(tax_matrix)
+phylo_obj <- phyloseq(ASV, TAX)
+# phylo_obj
+# Import metadata as sample data in phyloseq
+samplenames <- sample_data(metadata_mcr)
+# samplenames
+# join as phyloseq object
+physeq_wnames = merge_phyloseq(phylo_obj, samplenames)
+# colnames(ASV)
+# TAX
+## Check
+physeq_wnames
+
+ntaxa(physeq_wnames) #17878
+nsamples(physeq_wnames) #23
+# # physeq_wnames # run with sample, 1000 tax.
+# # head(taxa_names(physeq_wnames))
+mcr_tree <- rtree(ntaxa(physeq_wnames), rooted = TRUE, tip.label = taxa_names(physeq_wnames))
+# class(mcr_tree)
+# ?merge_phyloseq
+physeq_mcr <- merge_phyloseq(physeq_wnames, mcr_tree)
+```
+
+
+```{r, include=FALSE}
+# phylo_obj <- phyloseq(ASV, TAX)
+# samplenames <- sample_data(metadata_formatted)
+# physeq_wnames = merge_phyloseq(phylo_obj, samplenames)
+# dim(asv_wtax_qc)
+# physeq_wnames
+save(phylo_obj, samplenames, physeq_wnames, metadata_mcr, asv_wtax_qc, TAX, tax_matrix, physeq_mcr, file = "input-data/MCR-amplicon-data.RData") 
+## Also saved with randomly selected 1000 rows.
+```
