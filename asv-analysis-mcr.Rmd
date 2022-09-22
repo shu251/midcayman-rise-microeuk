@@ -1,0 +1,590 @@
+---
+title: "MCR-ASV data"
+author: "Sarah Hu"
+date: "7/19/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+TO DO:
+1. Outline data anlysis plans for MCR sequence data on its own, sequence data with quantitative data, and then integrated trac? or else? type of data
+2. See email exchanges and tests with trac vignettes. Separate repo exists with trial code.
+
+```{r}
+library(tidyverse); library(phyloseq)
+library(cowplot)
+```
+
+# Import MCR data
+Originates from _in review_ paper - https://shu251.github.io/microeuk-amplicon-survey/#1_Background
+
+```{r}
+load("input-data/MCR-amplicon-data.RData", verbose = TRUE)
+# phylo_obj - preliminary phyloseq object
+# samplenames - all sample names for study
+# physeq_wnames - merged phyloseq information with everything
+# asv_wtax_qc - data framed with all ASVs, QC == removed contaminated ASVs
+# metadata_mcr - all metadata for MCR
+# TAX - taxonomy table only
+# physeq_mcr - physeq object for MCR only
+```
+
+## Check sequence stats
+```{r, fig.width=10, fig.height=5}
+# head(asv_wtax_qc)
+# unique(asv_wtax_qc$SAMPLE)
+asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  group_by(SAMPLE, VENT, SITE) %>% 
+  summarise(SUM_stats = sum(value),
+            ASV_stats = n_distinct(FeatureID)) %>% 
+  pivot_longer(cols = ends_with("_stats")) %>% 
+  ggplot(aes(x = SAMPLE, y = value)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  # geom_hline(yintercept=10000, linetype="dashed", color = "green") +
+  facet_grid(. ~ name, scales = "free") +
+  theme_linedraw()
+
+```
+
+## Supplementary table sequence information
+```{r}
+table_supp_seqstats <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  group_by(SAMPLE, VENT, SITE) %>% 
+  summarise(SUM_stats = sum(value),
+            ASV_stats = n_distinct(FeatureID))
+write.csv(table_supp_seqstats, file = "output-data/supp-table-sequencestats.csv")
+```
+
+# Metadata from MCR
+
+Compiled with additional quantitative parameters.
+```{r}
+env_params <- read.delim(file = "table_wenv.txt", sep = " ")
+
+subset_metadata <- env_params %>% 
+  filter(SAMPLETYPE != "Incubation") %>%
+  filter(VENT != "Quakeplume") %>% 
+  select(SITE, VENT, SAMPLETYPE, RATE_min, EUK_ml, GRAZING_EFFECT_hr) %>% 
+  distinct() %>%
+  group_by(SITE, VENT, SAMPLETYPE) %>%
+    summarise(RATE_min_avg = mean(RATE_min),
+              EUK_ml_avg = mean(EUK_ml),
+              GRAZING_EFFECT_hr_avg = mean(GRAZING_EFFECT_hr)) %>%
+  distinct() %>%
+  pivot_longer(cols = ends_with("_avg"))
+# head(env_params)
+```
+
+
+```{r}
+# head(metadata_formatted)
+metadata_numeric <- metadata_mcr %>% 
+  filter(SAMPLETYPE != "Incubation") %>%
+  select(VENT, SITE, SAMPLETYPE, DEPTH, TEMP, pH, PercSeawater, Mg, H2, H2S, CH4, ProkConc) %>% 
+  distinct() %>%
+  pivot_longer(cols = DEPTH:ProkConc, values_to = "VALUE_TMP") %>%
+  mutate(value = as.numeric(VALUE_TMP)) %>% select(-VALUE_TMP) %>% 
+  bind_rows(subset_metadata)
+```
+
+### Add metadata heat map with tile plot from above
+```{r}
+# x <- c("TEMP")
+tileplot_env <- function(x){
+  metadata_numeric %>% 
+  filter(name == x) %>%
+  ggplot(aes(x = name, y = VENT, fill = value)) +
+  geom_tile(color = "black") +
+  facet_grid(SITE + SAMPLETYPE ~ ., switch = "both", space = "free", scale = "free") + theme_linedraw() +
+    theme(axis.text.y = element_blank(),
+          strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          panel.background = element_blank(),
+          panel.border = element_blank(),
+          panel.grid = element_blank()) +
+    labs(x = "", y = "") +
+    scale_fill_distiller(palette = "Reds", direction=2, na.value = "grey50")
+}
+```
+
+```{r, fig.width=10, fig.height=7}
+# tileplot_env("TEMP")
+plot_grid(
+ tileplot_env("TEMP") + 
+   scale_fill_distiller(palette = "YlOrRd", direction=2, na.value = "grey50") +
+   theme(axis.text.y = element_text(color = "black", hjust = 1, vjust = 0), 
+         strip.text.y = element_text(color = "black", hjust = 0, vjust = 0), 
+         strip.placement = "outside"),
+ tileplot_env("PercSeawater") + 
+   scale_fill_distiller(palette = "Blues", direction=2, na.value = "grey50"),
+ tileplot_env("pH") + 
+   scale_fill_distiller(palette = "YlGnBu", direction=2, na.value = "grey50"),
+ tileplot_env("Mg") + 
+   scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+ # endemic_env("NO3"),
+ tileplot_env("H2") + 
+   scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+ tileplot_env("CH4") + 
+   scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+ tileplot_env("H2S") + 
+   scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+ tileplot_env("ProkConc") + 
+   scale_fill_distiller(palette = "Oranges", direction=2, na.value = "grey50"),
+ tileplot_env("EUK_ml_avg") + 
+   theme(axis.text.y = element_text(color = "black", hjust = 1, vjust = 0), 
+         strip.text.y = element_text(color = "black", hjust = 0, vjust = 0), 
+         strip.placement = "outside") +
+   scale_fill_distiller(palette = "Oranges", direction=2, na.value = "grey50"),
+ tileplot_env("GRAZING_EFFECT_hr_avg") + 
+   scale_fill_distiller(palette = "Oranges", direction=2, na.value = "grey50"),
+ nrow = 1,
+ rel_widths = c(4,1,1,1,1,1,1,1, 4, 1)
+)
+```
+
+> Bartizan is missing from environmental parameters. Need to fix this
+
+
+# Qualitative data
+
+```{r, fig.height=10, fig.width=4}
+# head(asv_wtax_qc)
+asv_wtax_qc %>% 
+  filter(SAMPLETYPE != "Incubation" | VENT != "Quakeplume") %>%
+  # Calculate mean sequence per ASV across replicates (when applicable)
+  group_by(SITE, VENT, FeatureID, Taxon, SAMPLETYPE) %>% 
+    summarise(seq_mean_byasv = mean(value)) %>% 
+  ungroup() %>% 
+  filter(seq_mean_byasv > 0) %>% 
+  group_by(SITE, VENT, SAMPLETYPE) %>% 
+    summarise(ASV_COUNT = n_distinct(FeatureID),
+              SEQ_COUNT = sum(seq_mean_byasv)) %>% 
+  ggplot(aes(x = 0, y = VENT, size = ASV_COUNT, fill = SEQ_COUNT)) +
+  geom_point(color = "black", shape = 21, stroke = 2, aes(size = ASV_COUNT)) +
+  scale_size_continuous(range = c(1, 12)) +
+  scale_fill_distiller(palette = "Greys", direction=2) +
+  facet_grid(SITE + SAMPLETYPE ~ ., switch = "both", space = "free", scale = "free") + theme_linedraw() +
+    theme(axis.text.x = element_blank(),
+          strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          panel.background = element_blank(),
+          panel.border = element_blank(),
+          panel.grid = element_blank()) +
+    labs(x = "", y = "")
+```
+
+# In situ to Tf samples
+
+Examine in situ to T final samples for presence/absence.
+```{r}
+head(asv_wtax_qc)
+# View(asv_wtax_qc)
+```
+
+Calculate percent change from in situ to Tf for all grazing experiments
+```{r}
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
+
+# Extract taxa information
+taxa_table <- data.frame(tax_table(TAX)) %>% rownames_to_column(var = "FeatureID")
+
+perc_change <- asv_wtax_qc %>% 
+    filter(value > 0) %>% 
+  # Avg seq count by ASV across replicates
+  group_by(SITE, VENT, SAMPLETYPE, FeatureID) %>% 
+  summarise(avg_seq = mean(value)) %>% 
+  mutate(ASSAY = case_when(
+    SAMPLETYPE == "Incubation" ~ "Tf",
+    TRUE ~ "insitu"
+  )) %>%
+    ungroup() %>% 
+  select(-SAMPLETYPE) %>%
+  pivot_wider(names_from = ASSAY, values_from = avg_seq, values_fn = sum) %>% 
+  # Select only ASVs present in both in situ and incubation experiments.
+  drop_na() %>% # remove NAs
+  filter(!(insitu == 0 | Tf == 0)) %>% # remove if 1 or the other are zero
+  filter(!(insitu == 0 & Tf == 0)) %>%
+    mutate(seq_change = Tf - insitu) %>% 
+    mutate(category_change = case_when(
+           seq_change < 0 ~ "Decrease",
+           seq_change > 0 ~ "Increase",
+           seq_change == 0 ~ "No Change")) %>% 
+  # Add in supergroup information
+  left_join(select(taxa_table, FeatureID, Domain:Species) %>% distinct()) %>% 
+  filter(Domain == "Eukaryota") %>%
+  filter(Supergroup != "Opisthokonta") %>% 
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  ))
+
+table(perc_change$category_change)
+# head(perc_change)
+# unique(perc_change[1:2])
+```
+
+Of the ASVs that appeared in both in situ and Tf for each grazing experiment, 1073 decreased in sequence relative abundance, and over 1200 increased. Only 28 showed no change in sequence relative abundance.
+
+
+Formatted table to show sequence increase vs. decrease PER ASV from insitu to experiment Tf.
+```{r, fig.height=7, fig.width=9}
+all_taxa_order <- c("Alveolata-Ciliophora", "Alveolata-Dinoflagellata", "Protalveolata", "Other Alveolata", "Amoebozoa", "Apusozoa", "Excavata", "Hacrobia", "Archaeplastida", "Rhizaria", "Rhizaria-Radiolaria", "Rhizaria-Cercozoa", "Stramenopiles", "Stramenopiles-Opalozoa", "Stramenopiles-Sagenista", "Stramenopiles-Ochrophyta", "Opisthokonta", "Unknown Eukaryota")
+# length(all_taxa_order)
+
+all_taxa_color = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c","#cc4c02", "#c7e9b4", "#238b45", "#c6dbef", "#99d8c9","#1d91c0", "#253494", "#9e9ac8", "#54278f", "#bdbdbd", "#252525", "#f0f0f0")
+# length(all_taxa_color)
+
+perc_change %>% 
+  group_by(SITE, VENT, category_change, SUPERGROUP) %>% 
+  summarise(sum_change = sum(seq_change),
+            asv_total = n_distinct(FeatureID)) %>% 
+  mutate(SUPERGROUP_ORDER = factor(SUPERGROUP, levels = all_taxa_order)) %>% 
+  ggplot(aes(x = sum_change, y = VENT, fill = SUPERGROUP_ORDER)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  scale_x_continuous(limits = c(-150000, 150000)) +
+  scale_fill_manual(values = all_taxa_color) +
+  facet_grid(SITE ~ ., space = "free", scales = "free") +
+  theme_linedraw() +
+  geom_vline(xintercept = 0) +
+    theme(
+          # strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          # panel.background = element_blank(),
+          # panel.border = element_blank(),
+          panel.grid.minor = element_blank()) +
+    labs(x = "Sequence Decrease           Sequence Increase", y = "")
+  # geom_bar(filter(category_change == "Increase"), stat = "identity") 
+```
+
+```{r}
+# str(perc_change)
+perc_change %>% 
+  group_by(SITE, VENT, category_change, SUPERGROUP) %>% 
+  summarise(sum_change = sum(seq_change),
+            asv_total = n_distinct(FeatureID)) %>% 
+  ungroup() %>% 
+  mutate(asv_int = as.numeric(asv_total)) %>% 
+  mutate(asv_change = case_when(
+           category_change == "Decrease" ~ (0 - asv_int),
+           TRUE ~ asv_int
+         )) %>% 
+  mutate(SUPERGROUP_ORDER = factor(SUPERGROUP, levels = all_taxa_order)) %>% 
+  ggplot(aes(x = asv_change, y = VENT, fill = SUPERGROUP_ORDER)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(limits = c(-350, 350)) +
+  scale_fill_manual(values = all_taxa_color) +
+  facet_grid(SITE ~ ., space = "free", scales = "free") +
+  theme_linedraw() +
+    theme(
+          # strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          # panel.background = element_blank(),
+          # panel.border = element_blank(),
+          panel.grid.minor = element_blank()) +
+    labs(x = "ASV change", y = "")
+```
+
+# Cluster analysis
+
+ordination analysis
+
+```{r}
+library(vegan); library(ggdendro); library(compositions)
+```
+
+
+## Cluster analysis with Tf samples
+```{r}
+# head(asv_wtax_qc)
+asv_mcr_numeric <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  group_by(FeatureID, SAMPLENAME) %>% 
+  summarise(MEAN_ACROSS_REPS = mean(value)) %>% 
+  select(FeatureID, SAMPLENAME, MEAN_ACROSS_REPS) %>% 
+  pivot_wider(names_from = SAMPLENAME, values_from = MEAN_ACROSS_REPS, values_fill = 0) %>% 
+  column_to_rownames(var = "FeatureID")
+```
+Transform compositional data
+```{r}
+logratio_mcr <- data.frame(compositions::clr(t(asv_mcr_numeric)))
+# dim(logratio_mcr)
+# ?alr()
+# ?ilr()
+
+pca_logratio <- prcomp(logratio_mcr)
+
+variance_logratio <- (pca_logratio$sdev^2)/sum(pca_logratio$sdev^2)
+
+barplot(variance_logratio, main = "Log-Ratio PCA Screeplot", xlab = "PC Axis", ylab = "% Variance", 
+    cex.names = 1.5, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+
+```
+
+```{r}
+# Extract PCA points
+mcr_pca_pts <- data.frame(pca_logratio$x, SAMPLE = rownames(pca_logratio$x)) %>% 
+  rownames_to_column(var = "SAMPLENAME") %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
+        remove = FALSE) 
+```
+
+```{r, fig.height=6, fig.width=8}
+mcr_pca_pts %>% 
+  mutate(TYPE = case_when(
+    SAMPLETYPE == "Incubation" ~ "Incubation",
+    TRUE ~ "in situ"
+  )) %>% 
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(color = "black", size = 4, aes(shape = SITE, fill = VENT, alpha = TYPE)) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_alpha_manual(values = c(1,0.4)) +
+  theme_linedraw() +
+  guides(fill = guide_legend(override.aes = list(shape = c(22)))) 
+
+```
+
+
+
+Dendrogram analysis
+```{r}
+# ?decostand()
+# Relative abundance
+rel_abun <- decostand(asv_mcr_numeric, MARGIN = 2, method = "total")
+# Cluster dendrogram (average hierarchical clustering)
+cluster_mcr <- hclust(dist(t(rel_abun)), method = "average")
+dendro <- as.dendrogram(cluster_mcr)
+mcr_dendro <- dendro_data(dendro, type = "rectangle")
+```
+
+```{r}
+mcr_dendro_plot <- ggplot(segment(mcr_dendro)) +
+  geom_segment(aes(x = x, y = y, xend = xend, 
+    yend = yend)) + 
+  coord_flip() + 
+  scale_y_reverse(expand = c(0.2, 0.5), breaks = c(0, 0.2, 0.4, 0.6, 0.8)) +
+  geom_text(aes(x = x, y = y, label = label, angle = 0, hjust = 0), data = label(mcr_dendro)) +
+  theme_dendro() + labs(y = "Dissimilarity") +
+    theme(axis.text.x = element_text(color = "black", size = 14), axis.line.x = element_line(color = "#252525"), 
+        axis.ticks.x = element_line(), axis.title.x = element_text(color = "black", 
+            size = 14))
+# svg('figs/SUPPLEMENTARY-dendrogram-wreps.svg', w = 10, h = 8)
+mcr_dendro_plot
+```
+
+
+## Cluster analysis with only in situ samples
+```{r}
+
+```
+
+
+# Excess
+
+## trac vignette
+
+Complete below steps in this order!
+```{r}
+# install.packages("r-reticulate", force = TRUE)
+library(reticulate)
+use_python("~/anaconda3/envs/r_4.1/bin/python", required = TRUE)
+library(trac)
+```
+
+```{r}
+library(tidyverse); library(phyloseq)
+```
+
+
+https://jacobbien.github.io/trac/articles/trac-example.html
+
+vignette code
+goal: predict some response variable based on amplicon data
+
+* response vector (y) of length (n). n = number of samples
+
+* n by p data matrix = x. p = number of leaves (ASVs)
+
+* binary matrix A, with p rows
+
+```{r}
+names(sCD14)
+# class(sCD14) # list
+?sCD14
+```
+```{r}
+class(sCD14$y) #numeric
+class(sCD14$x) # Matrix #array
+class(sCD14$tree) #phylo  
+class(sCD14$tax) # dataframe
+class(sCD14$A) #dgCMatrix
+# head(sCD14$tax) # OTU IDs as row names, each taxonomic level needs to add to previous
+```
+
+Splits data into a train a test set. Takes 2/3rd of the observations for training.
+```{r}
+set.seed(123)
+ntot <- length(sCD14$y) # total number of samples
+# ntot
+n <- round(2/3 * ntot)  # n == 2/3 of the total for training
+tr <- sample(ntot, n) #sample the total number for training == tr
+# tr
+```
+
+take the log of the feature matrix (always perform this step? normalization or somekind?)
+```{r}
+# Function to do log pseudo
+log_pseudo <- function(x, pseudo_count = 1) log(x + pseudo_count)
+
+# y == n vector response
+ytr <- sCD14$y[tr] #training #separate training ## response vector
+yte <- sCD14$y[-tr] #test #separate test dataseet y
+
+# z == n by p matrix with log(X)
+ztr <- log_pseudo(sCD14$x[tr, ]) # do pseudo count function on matrix of OTUs for training
+zte <- log_pseudo(sCD14$x[-tr, ]) #repeat for test dataset
+dim(ztr) # full training data set?
+dim(zte) # test dataset
+```
+
+
+```{r}
+# ?trac()
+fit <- trac(ztr, ytr, A = sCD14$A, min_frac = 1e-2, nlam = 30)
+# ?fit() # estimate model parameters
+# class(fit)
+class(sCD14$tree)
+```
+
+Trac outputs:
+```{r}
+# trac regularization path
+plot_trac_path(fit) #default will show alpha coefficients
+# str(fit)
+```
+```{r}
+# plot_trac_path(fit) + geom_hline(y = 306)
+```
+
+This plot, alpha vs. lambda, shows the solution path. Each line is a taxa, where the path of its "alpha coefficient" as a product of the tuning parameter increases (left to right). 
+x-axis of these plots represent the tuning parameter 
+
+
+What is meant by "early on in the path?"
+fit == a list that is representative of the path. So the nonzero function below, takes the first non-zero alpha∂
+
+
+
+```{r}
+show_nonzeros <- function(x) x[x != 0]
+show_nonzeros(fit[[1]]$alpha[, 2])
+show_nonzeros(fit[[1]]$alpha[, 3])
+# fit[[1]] # beta list
+# fit[[1]]$alpha[,2] # corresponding taxa alpha coefficients
+```
+
+Repeat with beta values, these are coefficients that correspond to the leaf taxa
+```{r}
+plot_trac_path(fit, coef = "beta")
+```
+Define leaf taxa (beta) vs. nodes of the tree (alpha)?
+
+For beta plot, as tuning parameter (amount of regularization increases), the beta coefficients (y-axis) fuse together - this is the aggregation of taxa via trac regularizer.
+
+Therefore, we need to cross validate to choose the most appropriate tuning parameter
+
+```{r}
+?cv_trac
+cvfit <- cv_trac(fit, Z = ztr, y = ytr, A = sCD14$A)
+# default is 5-fold cross validation
+```
+
+```{r}
+plot_cv_trac(cvfit)
+```
+This plot shows the minimum mean squared error and one standard-error rule. Where the vertical lines are the aggregations that are selected as part of the cross-validation.
+- on the left (should be dashed??) is the 1SE rule
+- on the right (should be dotted) is the CV best
+
+What is the value of the vertical lines?
+```{r}
+cvfit$cv[[1]]$ibest #18
+cvfit$cv[[1]]$i1se #8
+```
+What are the taxa using the 1SE rule with respect to the nonzero alpha coefficients?
+Structure of 'fit'?
+```{r}
+show_nonzeros(fit[[1]]$alpha[, cvfit$cv[[1]]$i1se])
+```
+
+Question: how many of these would I incorporate into a table? is there a range?
+
+
+## Making preductions
+Now that we've established the most, we can use predict_trac()
+```{r}
+# ?predict_trac
+yhat_te <- predict_trac(fit, new_Z = zte)
+testerr <- colMeans((yhat_te[[1]] - yte)^2)
+nnz <- colSums(fit[[1]]$alpha != 0)
+class(nnz)
+# Numeric output where I've made a predction on the test set. And then computed the mean squared error ont he test set.
+```
+```{r}
+
+tibble(nnz = nnz, testerr = testerr) %>%
+  ggplot(aes(x = nnz, y = testerr)) +
+  geom_point() +
+  geom_vline(xintercept = nnz[cvfit$cv[[1]]$i1se]) + # or 5?
+  geom_vline(xintercept = nnz[cvfit$cv[[1]]$ibest]) # 23
+```
+Test prediction along the y-axis and inferred aggregations at x-axis.
+Do not understand the vertical line here?
+
+trac = 1/2
+```{r}
+fit2 <- trac(ztr, ytr, A = sCD14$A, min_frac = 1e-2,
+             nlam = 30, w = Matrix::colSums(sCD14$A)^0.5)
+```
+
+Are the other 2 examples, the aggregating and the sparse log-contrast just other options?
+
+What else is a good way to interpret Figure 2E. But also write about Figure 2E? And Isolate the alpha coefficient?
+
+
