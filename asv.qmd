@@ -4,136 +4,577 @@ format: html
 editor: visual
 ---
 
-## Compile ASV data from MCR from previous sequence analysis
+# Import sequence and metadata
 
 Set up R environment
 
 ```{r}
 #| warning: false
 library(tidyverse); library(phyloseq); library(ape)
+library(ggupset)
 ```
 
 Import previously sequenced and analyzed tag-sequence data. See https://shu251.github.io/microeuk-amplicon-survey/ for additional information.
 
-```{r}
-#| include: false
-#| message: false
-merged_tax <- read_delim("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/taxonomy.tsv", delim = "\t")
-
-merged_asv <- read_delim("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/microeuk-merged-asv-table.tsv", delim = "\t", skip = 1)
-```
-
-Import metadata
+## Import ASV R objects
 
 ```{r}
 #| warning: false
-metadata <- read.csv("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/samplelist-metadata.csv")
-
-# head(metadata)
-# unique(metadata$Sample_actual)
-mcr <- c("VonDamm", "Piccard")
-metadata_formatted <- metadata %>%
-  filter(SITE %in% mcr) %>%
-  mutate_all(as.character) %>%
-  filter(Sample_or_Control == "Sample") %>%
-  filter(!(SAMPLETYPE == "Microcolonizer")) %>%
-  select(SAMPLE, VENT, SITE, SAMPLEID, DEPTH, SAMPLETYPE, YEAR, TEMP = starts_with("TEMP"), pH, PercSeawater = starts_with("Perc"), Mg = starts_with("Mg"), H2 = starts_with("H2."), H2S = starts_with("H2S"), CH4 = starts_with("CH4"), ProkConc, Sample_or_Control)
+load("input-data/MCR-amplicon-data.RData", verbose = T)
 ```
 
-## Import decontam results to QC ASV table
-```{r}
-#| warning: false
-load("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/seq-analysis/contam-asvs.RData", verbose= TRUE)
-
-class(list_of_contam_asvs)
-```
+# Visualize metadata
 
 ```{r}
-#| warning: false
-asv_wtax_qc <- merged_asv %>%
-  select(FeatureID = '#OTU ID', everything()) %>%
-  filter(!(FeatureID %in% list_of_contam_asvs)) %>%
-  # In wide format, subsample 1000 random ASVs
-  # sample_n(1000, replace = FALSE) %>%
-  pivot_longer(cols = !FeatureID,
-               names_to = "SAMPLE", values_to = "value") %>%
-  filter(grepl("_MCR_", SAMPLE)) %>%
-  left_join(merged_tax, by = c("FeatureID" = "Feature ID")) %>%
-  left_join(filter(metadata_formatted, grepl("_MCR_", SAMPLE))) %>%
-  unite(SAMPLENAME, SITE, SAMPLETYPE, YEAR, VENT, SAMPLEID, sep = " ", remove = FALSE)
-# dim(asv_wtax_qc)
-# length(unique(asv_wtax_qc$FeatureID))
-```
-
-```{r}
-#| warning: false
-tax_matrix <- asv_wtax_qc %>%
-  select(FeatureID, Taxon) %>%
+env_params <- read.delim(file = "input-data/table_wenv.txt", sep = " ")
+# env_params
+subset_metadata <- env_params %>% 
+  filter(SAMPLETYPE != "Incubation") %>%
+  filter(VENT != "Quakeplume") %>% 
+  select(SITE, VENT, SAMPLETYPE, RATE_min, EUK_ml, GRAZING_EFFECT_hr) %>% 
   distinct() %>%
-  separate(Taxon, c("Domain", "Supergroup",
+  group_by(SITE, VENT, SAMPLETYPE) %>%
+    summarise(RATE_min_avg = mean(RATE_min),
+              EUK_ml_avg = mean(EUK_ml),
+              GRAZING_EFFECT_hr_avg = mean(GRAZING_EFFECT_hr)) %>%
+  distinct() %>%
+  pivot_longer(cols = ends_with("_avg"))
+
+metadata_numeric <- metadata_mcr %>% 
+  filter(SAMPLETYPE != "Incubation") %>%
+  select(VENT, SITE, SAMPLETYPE, DEPTH, TEMP, pH, PercSeawater, Mg, H2, H2S, CH4, ProkConc) %>% 
+  distinct() %>%
+  pivot_longer(cols = DEPTH:ProkConc, values_to = "VALUE_TMP") %>%
+  mutate(value = as.numeric(VALUE_TMP)) %>% select(-VALUE_TMP) %>% 
+  bind_rows(subset_metadata)
+```
+
+```{r}
+tileplot_env <- function(x){
+  metadata_numeric %>% 
+  filter(name == x) %>%
+  ggplot(aes(x = name, y = VENT, fill = value)) +
+  geom_tile(color = "black") +
+  facet_grid(SITE + SAMPLETYPE ~ ., switch = "both", space = "free", scale = "free") + theme_linedraw() +
+    theme(axis.text.y = element_blank(),
+          strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          panel.background = element_blank(),
+          panel.border = element_blank(),
+          panel.grid = element_blank()) +
+    labs(x = "", y = "") +
+    scale_fill_distiller(palette = "Reds", direction=2, na.value = "grey50")
+}
+
+```
+
+Optional plot, likely will not use.
+
+```{r}
+# plot_grid(
+#  tileplot_env("TEMP") + 
+#    scale_fill_distiller(palette = "YlOrRd", direction=2, na.value = "grey50") +
+#    theme(axis.text.y = element_text(color = "black", hjust = 1, vjust = 0), 
+#          strip.text.y = element_text(color = "black", hjust = 0, vjust = 0), 
+#          strip.placement = "outside"),
+#  tileplot_env("PercSeawater") + 
+#    scale_fill_distiller(palette = "Blues", direction=2, na.value = "grey50"),
+#  tileplot_env("pH") + 
+#    scale_fill_distiller(palette = "YlGnBu", direction=2, na.value = "grey50"),
+#  tileplot_env("Mg") + 
+#    scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+#  # endemic_env("NO3"),
+#  tileplot_env("H2") + 
+#    scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+#  tileplot_env("CH4") + 
+#    scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+#  tileplot_env("H2S") + 
+#    scale_fill_distiller(palette = "Purples", direction=2, na.value = "grey50"),
+#  tileplot_env("ProkConc") + 
+#    scale_fill_distiller(palette = "Oranges", direction=2, na.value = "grey50"),
+#  tileplot_env("EUK_ml_avg") + 
+#    theme(axis.text.y = element_text(color = "black", hjust = 1, vjust = 0), 
+#          strip.text.y = element_text(color = "black", hjust = 0, vjust = 0), 
+#          strip.placement = "outside") +
+#    scale_fill_distiller(palette = "Oranges", direction=2, na.value = "grey50"),
+#  tileplot_env("GRAZING_EFFECT_hr_avg") + 
+#    scale_fill_distiller(palette = "Oranges", direction=2, na.value = "grey50"),
+#  nrow = 1,
+#  rel_widths = c(4,1,1,1,1,1,1,1, 4, 1)
+# )
+```
+
+# Community structure & diversity at Von Damm & Piccard
+
+## Cluster analysis
+
+Ordination analysis
+
+```{r}
+library(vegan); library(ggdendro); library(compositions)
+```
+
+## Cluster analysis with grazing assays
+
+```{r}
+# head(asv_wtax_qc)
+asv_mcr_numeric <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  group_by(FeatureID, SAMPLENAME) %>% 
+  summarise(MEAN_ACROSS_REPS = mean(value)) %>% 
+  select(FeatureID, SAMPLENAME, MEAN_ACROSS_REPS) %>% 
+  pivot_wider(names_from = SAMPLENAME, values_from = MEAN_ACROSS_REPS, values_fill = 0) %>% 
+  column_to_rownames(var = "FeatureID")
+```
+
+Transform compositional data
+
+```{r}
+logratio_mcr <- data.frame(compositions::clr(t(asv_mcr_numeric)))
+# dim(logratio_mcr)
+# ?alr()
+# ?ilr()
+
+pca_logratio <- prcomp(logratio_mcr)
+
+variance_logratio <- (pca_logratio$sdev^2)/sum(pca_logratio$sdev^2)
+
+barplot(variance_logratio, main = "Log-Ratio PCA Screeplot", xlab = "PC Axis", ylab = "% Variance", 
+    cex.names = 1.5, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+
+```
+
+```{r}
+# Extract PCA points
+mcr_pca_pts <- data.frame(pca_logratio$x, SAMPLE = rownames(pca_logratio$x)) %>% 
+  rownames_to_column(var = "SAMPLENAME") %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
+        remove = FALSE) 
+```
+
+### PCoA with all samples
+
+```{r, fig.height=6, fig.width=8}
+mcr_pca_pts %>% 
+  mutate(TYPE = case_when(
+    SAMPLETYPE == "Incubation" ~ "Incubation",
+    TRUE ~ "in situ"
+  )) %>% 
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(color = "black", size = 4, aes(shape = SITE, fill = VENT, alpha = TYPE)) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_alpha_manual(values = c(1,0.4)) +
+  theme_linedraw() +
+  guides(fill = guide_legend(override.aes = list(shape = c(22)))) 
+
+```
+
+Dendrogram analysis
+
+```{r}
+# ?decostand()
+# Relative abundance
+rel_abun <- decostand(asv_mcr_numeric, MARGIN = 2, method = "total")
+# Cluster dendrogram (average hierarchical clustering)
+cluster_mcr <- hclust(dist(t(rel_abun)), method = "average")
+dendro <- as.dendrogram(cluster_mcr)
+mcr_dendro <- dendro_data(dendro, type = "rectangle")
+```
+
+```{r}
+mcr_dendro_plot <- ggplot(segment(mcr_dendro)) +
+  geom_segment(aes(x = x, y = y, xend = xend, 
+    yend = yend)) + 
+  coord_flip() + 
+  scale_y_reverse(expand = c(0.2, 0.5), breaks = c(0, 0.2, 0.4, 0.6, 0.8)) +
+  geom_text(aes(x = x, y = y, label = label, angle = 0, hjust = 0), data = label(mcr_dendro)) +
+  theme_dendro() + labs(y = "Dissimilarity") +
+    theme(axis.text.x = element_text(color = "black", size = 14), axis.line.x = element_line(color = "#252525"), 
+        axis.ticks.x = element_line(), axis.title.x = element_text(color = "black", 
+            size = 14))
+# svg('figs/SUPPLEMENTARY-dendrogram-wreps.svg', w = 10, h = 8)
+mcr_dendro_plot
+```
+
+### PCoA with in situ only
+
+```{r}
+asv_mcr_numeric_insitu <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  group_by(FeatureID, SAMPLENAME) %>% 
+  summarise(MEAN_ACROSS_REPS = mean(value)) %>% 
+  select(FeatureID, SAMPLENAME, MEAN_ACROSS_REPS) %>% 
+  pivot_wider(names_from = SAMPLENAME, values_from = MEAN_ACROSS_REPS, values_fill = 0) %>% 
+  column_to_rownames(var = "FeatureID")
+
+insitu_logratio_mcr <- data.frame(compositions::clr(t(asv_mcr_numeric_insitu)))
+
+insitu_pca_logratio <- prcomp(insitu_logratio_mcr)
+
+insitu_variance_logratio <- (insitu_pca_logratio$sdev^2)/sum(insitu_pca_logratio$sdev^2)
+
+barplot(insitu_variance_logratio, main = "Log-Ratio PCA Screeplot", xlab = "PC Axis", ylab = "% Variance", 
+    cex.names = 1.5, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+```
+
+```{r}
+# Extract PCA points for only insitu samples
+insitu_mcr_pca_pts <- data.frame(insitu_pca_logratio$x, SAMPLE = rownames(insitu_pca_logratio$x)) %>% 
+  rownames_to_column(var = "SAMPLENAME") %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
+        remove = FALSE) 
+```
+
+```{r, fig.height=6, fig.width=8}
+insitu_mcr_pca_pts %>% 
+  mutate(TYPE = case_when(
+    SAMPLETYPE == "Incubation" ~ "Incubation",
+    TRUE ~ "in situ"
+  )) %>% 
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(color = "black", size = 4, aes(shape = SITE, fill = VENT, alpha = TYPE)) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_alpha_manual(values = c(1,0.4)) +
+  theme_linedraw() +
+  guides(fill = guide_legend(override.aes = list(shape = c(22)))) 
+# Keep same sample colors to compare to cluster analysis with in situ and Tf samples.
+```
+
+## Shared ASVs
+
+```{r}
+load("input-data/MCR-amplicon-data.RData", verbose=TRUE)
+# unique(asv_wtax_qc$SITE)
+head(asv_wtax_qc)
+# head(TAX)
+```
+
+Function to generate upsetR plot with varied taxonomic levels.
+
+Questions:
+
+-   How many ASVs are shared among vent sites within Von Damm and Piccard?
+
+-   What about shared ASVs across each vent field?
+
+-   Is there a taxonomic level that drives site-to-site or field-to-field community dissimilarity?
+
+```{r}
+# | fig-width: 10
+# | fig-height: 15
+# options for taxa: SupergroupPhylum, Supergroup, Phylum, Class, Order, Family, Genus, Species
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
+
+make_upset_plot <- function(df, taxa_level){ 
+  taxa_select <- enquo(taxa_level)
+  df %>% 
+  filter(value > 0) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
                   "Phylum", "Class", "Order",
                   "Family", "Genus", "Species"), sep = ";") %>%
-  column_to_rownames(var = "FeatureID") %>%
-  as.matrix
-# dim(tax_matrix)
-asv_matrix <- asv_wtax_qc %>%
-  select(FeatureID, SAMPLE, value) %>%
-  pivot_wider(names_from = SAMPLE, values_from = value, values_fill = 0) %>%
-  column_to_rownames(var = "FeatureID") %>%
-  as.matrix
-# dim(asv_matrix)
-# dim(asv_matrix); dim(tax_matrix)
-
-# Align row names for each matrix
-rownames(tax_matrix) <- row.names(asv_matrix)
-# dim(asv_matrix)
-mcr_samples <- as.character(colnames(asv_matrix))
-
-# Set rownames of metadata table to SAMPLE information
-metadata_mcr <- filter(metadata_formatted, SAMPLE %in% mcr_samples) %>%
-  rownames_to_column(var = "X") %>%
-  column_to_rownames(var = "SAMPLE")
-# dim(metadata_mcr)
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  # Taxa to supergroup
+  mutate(SupergroupPhylum = SUPERGROUP) %>% #add modified "supergroup-phylum category"
+  # Average across replicates
+    group_by(FeatureID, SAMPLENAME, VENT, !!taxa_select) %>% 
+    summarise(AVG = mean(value)) %>% 
+  ungroup() %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "Sample_tmp"), remove = TRUE) %>%
+  mutate(REGION = "Mid-Cayman Rise") %>%  
+  mutate(VENTNAME = paste(SITE, VENT, sep = " ")) %>% 
+    select(-Sample_tmp) %>% 
+  unite(SAMPLE, SITE, SAMPLETYPE, VENT, sep = " ", remove = FALSE) %>% 
+  
+  group_by(!!taxa_select, SAMPLE) %>% 
+    summarise(SUM = sum(AVG)) %>%
+  ungroup() %>%
+  distinct(!!taxa_select, SUM, SAMPLE, .keep_all = TRUE) %>% 
+  group_by(!!taxa_select) %>% 
+  summarise(SAMPLE = list(SAMPLE)) %>% 
+  ggplot(aes(x = SAMPLE)) +
+    geom_bar(color = "black", width = 0.7, aes(fill = !!taxa_select)) +
+    scale_x_upset(n_intersections = 25) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "", y = "Shared at taxonomic level") +
+  theme_linedraw() +
+  theme(axis.text.y = element_text(color="black", size=14, face = "bold"),
+        axis.text.x = element_text(color="black", size=14, face = "bold"),
+        axis.title = element_text(color="black", size=14, face = "bold"),
+        legend.text = element_text(color = "black", size = 12, face = "bold"),
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.margin = margin(1, 1, 1, 5, "cm"))
+  # +
+  # scale_fill_manual(values = all_taxa_color)
+}
+# all_taxa_color
+#values = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#deebf7", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525", "#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525")
+# Filter data to reduce noise and show sample type to vent ecosystem variability.
+# 
 ```
 
-## Import as phyloseq objects
+Example comparisons of shared taxonomic levels. *Explanation*: At ASV level, most ASVs are not shared across samples. So at other taxonomic categories, are these taxa also present or are there whole classes not present?
 
 ```{r}
-#| warning: false
-# Import asv and tax matrices
-ASV = otu_table(asv_matrix, taxa_are_rows = TRUE)
-TAX = tax_table(tax_matrix)
-phylo_obj <- phyloseq(ASV, TAX)
-# phylo_obj
-# Import metadata as sample data in phyloseq
-samplenames <- sample_data(metadata_mcr)
-# samplenames
-# join as phyloseq object
-physeq_wnames = merge_phyloseq(phylo_obj, samplenames)
-# colnames(ASV)
-# TAX
-## Check
-physeq_wnames
+# | fig-width: 10
+# | fig-height: 15
+# SupergroupPhylum, Supergroup, Phylum, Class, Order, Family, Genus, Species
 
-ntaxa(physeq_wnames) #17878
-nsamples(physeq_wnames) #23
-# # physeq_wnames # run with sample, 1000 tax.
-# # head(taxa_names(physeq_wnames))
-mcr_tree <- rtree(ntaxa(physeq_wnames), rooted = TRUE, tip.label = taxa_names(physeq_wnames))
-# class(mcr_tree)
-# ?merge_phyloseq
-physeq_mcr <- merge_phyloseq(physeq_wnames, mcr_tree)
+# make_upset_plot(asv_wtax_qc, SupergroupPhylum)
+# make_upset_plot(asv_wtax_qc, Class) + theme(legend.position = "none")
+# make_upset_plot(asv_wtax_qc, Supergroup) + theme(legend.position = "none")
 ```
 
-## Save output ASV tables for downstream analyses
+```{r}
+head(asv_wtax_qc)
+```
+
+A better visualization may be a presence/absence across samples with a tile plot.
 
 ```{r}
-#| warning: false
-# phylo_obj <- phyloseq(ASV, TAX)
-# samplenames <- sample_data(metadata_formatted)
-# physeq_wnames = merge_phyloseq(phylo_obj, samplenames)
-# dim(asv_wtax_qc)
-# physeq_wnames
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
 
-# save(phylo_obj, samplenames, physeq_wnames, metadata_mcr, asv_wtax_qc, TAX, tax_matrix, physeq_mcr, file = "input-data/MCR-amplicon-data.RData") 
+make_tile_plot_pa <- function(df, taxa_level, level0){ 
+  taxa_select <- enquo(taxa_level)
+  taxa_select_higher <- enquo(level0)
+  df %>% 
+  filter(value > 0) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";") %>%
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  # Taxa to supergroup
+  mutate(SupergroupPhylum = SUPERGROUP) %>% #add modified "supergroup-phylum category"
+  # Average across replicates
+    group_by(FeatureID, SAMPLENAME, VENT, !!taxa_select_higher, !!taxa_select) %>% 
+    summarise(AVG = mean(value)) %>% 
+  ungroup() %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "Sample_tmp"), remove = TRUE) %>%
+  mutate(REGION = "Mid-Cayman Rise") %>%  
+  mutate(VENTNAME = paste(SITE, VENT, sep = " ")) %>% 
+    select(-Sample_tmp) %>% 
+  unite(SAMPLE, SITE, SAMPLETYPE, VENT, sep = " ", remove = FALSE) %>% 
+  group_by(SITE, !!taxa_select_higher, !!taxa_select, SAMPLE) %>% 
+    summarise(SUM = sum(AVG)) %>%
+  ungroup() %>%
+    add_column(PRESENT = 1) %>% 
+    drop_na() %>% # remove NAs in taxa categories
+  ggplot(aes(x = SAMPLE, y = !!taxa_select)) +
+    geom_tile(color = "white", fill = "black", aes(fill = PRESENT)) +
+      facet_grid(SupergroupPhylum ~ SITE, space = "free", scales = "free") +
+  theme_linedraw() +
+  labs(x= "", y = "") +
+  theme(axis.text.y = element_text(color="black", size=11),
+        axis.text.x = element_text(color="black", size=11, angle = 90, vjust = 0.5, hjust = 1),
+        axis.title = element_text(color="black", size=11),
+        legend.text = element_text(color = "black", size = 11),
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.margin = margin(1, 1, 1, 5, "cm"))
+}
+```
+
+```{r, fig.height=18, fig.width=7}
+# | fig-width: 10
+# | fig-height: 20
+make_tile_plot_pa(asv_wtax_qc, Class, SupergroupPhylum)
+```
+## Richness by site
+
+
+## Corncob
+
+```{r}
+devtools::install_github("bryandmartin/corncob")
+library(corncob); library(phyloseq)
+```
+
+```{r}
+load("input-data/MCR-amplicon-data.RData", verbose = TRUE)
+```
+
+Explore data input for corncob
+
+```{r}
+otu_table(physeq_mcr)[1:3, 1:3]
+sample_data(physeq_mcr)[1:3, ]
+tax_table(physeq_mcr)[1:3, ]
+```
+
+# Compare in situ and Tf samples
+
+Examine in situ to T final samples for presence/absence.
+
+```{r}
+head(asv_wtax_qc)
+# View(asv_wtax_qc)
+```
+
+Calculate percent change from in situ to Tf for all grazing experiments
+
+```{r}
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
+
+# Extract taxa information
+taxa_table <- data.frame(tax_table(TAX)) %>% rownames_to_column(var = "FeatureID")
+
+perc_change <- asv_wtax_qc %>% 
+    filter(value > 0) %>% 
+  # Avg seq count by ASV across replicates
+  group_by(SITE, VENT, SAMPLETYPE, FeatureID) %>% 
+  summarise(avg_seq = mean(value)) %>% 
+  mutate(ASSAY = case_when(
+    SAMPLETYPE == "Incubation" ~ "Tf",
+    TRUE ~ "insitu"
+  )) %>%
+    ungroup() %>% 
+  select(-SAMPLETYPE) %>%
+  pivot_wider(names_from = ASSAY, values_from = avg_seq, values_fn = sum) %>% 
+  # Select only ASVs present in both in situ and incubation experiments.
+  drop_na() %>% # remove NAs
+  filter(!(insitu == 0 | Tf == 0)) %>% # remove if 1 or the other are zero
+  filter(!(insitu == 0 & Tf == 0)) %>%
+    mutate(seq_change = Tf - insitu) %>% 
+    mutate(category_change = case_when(
+           seq_change < 0 ~ "Decrease",
+           seq_change > 0 ~ "Increase",
+           seq_change == 0 ~ "No Change")) %>% 
+  # Add in supergroup information
+  left_join(select(taxa_table, FeatureID, Domain:Species) %>% distinct()) %>% 
+  filter(Domain == "Eukaryota") %>%
+  filter(Supergroup != "Opisthokonta") %>% 
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  ))
+
+table(perc_change$category_change)
+# head(perc_change)
+# unique(perc_change[1:2])
+```
+
+Of the ASVs that appeared in both in situ and Tf for each grazing experiment, 1073 decreased in sequence relative abundance, and over 1200 increased. Only 28 showed no change in sequence relative abundance.
+
+Formatted table to show sequence increase vs. decrease PER ASV from insitu to experiment Tf.
+
+```{r, fig.height=7, fig.width=9}
+all_taxa_order <- c("Alveolata-Ciliophora", "Alveolata-Dinoflagellata", "Protalveolata", "Other Alveolata", "Amoebozoa", "Apusozoa", "Excavata", "Hacrobia", "Archaeplastida", "Rhizaria", "Rhizaria-Radiolaria", "Rhizaria-Cercozoa", "Stramenopiles", "Stramenopiles-Opalozoa", "Stramenopiles-Sagenista", "Stramenopiles-Ochrophyta", "Opisthokonta", "Unknown Eukaryota")
+# length(all_taxa_order)
+
+all_taxa_color = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c","#cc4c02", "#c7e9b4", "#238b45", "#c6dbef", "#99d8c9","#1d91c0", "#253494", "#9e9ac8", "#54278f", "#bdbdbd", "#252525", "#f0f0f0")
+# length(all_taxa_color)
+
+perc_change %>% 
+  group_by(SITE, VENT, category_change, SUPERGROUP) %>% 
+  summarise(sum_change = sum(seq_change),
+            asv_total = n_distinct(FeatureID)) %>% 
+  mutate(SUPERGROUP_ORDER = factor(SUPERGROUP, levels = all_taxa_order)) %>% 
+  ggplot(aes(x = sum_change, y = VENT, fill = SUPERGROUP_ORDER)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  scale_x_continuous(limits = c(-150000, 150000)) +
+  scale_fill_manual(values = all_taxa_color) +
+  facet_grid(SITE ~ ., space = "free", scales = "free") +
+  theme_linedraw() +
+  geom_vline(xintercept = 0) +
+    theme(
+          # strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          # panel.background = element_blank(),
+          # panel.border = element_blank(),
+          panel.grid.minor = element_blank()) +
+    labs(x = "Sequence Decrease           Sequence Increase", y = "")
+  # geom_bar(filter(category_change == "Increase"), stat = "identity") 
+```
+
+```{r}
+# str(perc_change)
+perc_change %>% 
+  group_by(SITE, VENT, category_change, SUPERGROUP) %>% 
+  summarise(sum_change = sum(seq_change),
+            asv_total = n_distinct(FeatureID)) %>% 
+  ungroup() %>% 
+  mutate(asv_int = as.numeric(asv_total)) %>% 
+  mutate(asv_change = case_when(
+           category_change == "Decrease" ~ (0 - asv_int),
+           TRUE ~ asv_int
+         )) %>% 
+  mutate(SUPERGROUP_ORDER = factor(SUPERGROUP, levels = all_taxa_order)) %>% 
+  ggplot(aes(x = asv_change, y = VENT, fill = SUPERGROUP_ORDER)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(limits = c(-350, 350)) +
+  scale_fill_manual(values = all_taxa_color) +
+  facet_grid(SITE ~ ., space = "free", scales = "free") +
+  theme_linedraw() +
+    theme(
+          # strip.text = element_blank(),
+          strip.background = element_blank(),
+          axis.ticks = element_blank(),
+          strip.placement = "outside",
+          legend.title = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 5),
+          # panel.background = element_blank(),
+          # panel.border = element_blank(),
+          panel.grid.minor = element_blank()) +
+    labs(x = "ASV change", y = "")
+```
+
+# Session information
+
+```{r}
+sessionInfo()
 ```

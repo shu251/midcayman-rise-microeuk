@@ -3,6 +3,10 @@ title: "Protistan grazing analysis"
 format: 
   html:
     code-fold: true
+    toc: true
+    toc-location: left
+    number-sections: true
+    number-depth: 2
 editor: visual
 ---
 
@@ -15,6 +19,7 @@ Code below details how to import cell count (FLP count) information from Mid-Cay
 ```{r}
 #| message: false
 library(tidyverse); library(cowplot); library(broom)
+library(patchwork)
 ```
 
 ## Import raw count data
@@ -1338,7 +1343,405 @@ conc_rate_plot_mcr <- function(df, var, sem){
 # conc_rate_plot_mcr(biomass_rate_plot, "Prok_biomass_L", "Prok_biomass_sem_L")
 
 conc_rate_plot_mcr(biomass_rate_plot, "Euk_biomass_Hu_L", "Euk_biomass_Hu_sem_L")
+```
 
-# conc_rate_plot_mcr(biomass_rate_plot, "GRAZING_EFFECT_hr")
+```{r}
+# scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+grazing_rate <- biomass_rate_plot %>% 
+  type.convert(as.is = TRUE) %>%
+    filter(Variable == "GRAZING_EFFECT_hr") %>%
+    filter(SEM_variable == "GRAZING_EFFECT_hr_min" | SEM_variable == "GRAZING_EFFECT_hr_max") %>% 
+    pivot_wider(names_from = SEM_variable, values_from = SEM) %>% 
+    ggplot(aes(y = Value, x = NAME_ORDER, shape = EXP, fill = FIELD)) +
+    geom_errorbar(aes(ymax = (GRAZING_EFFECT_hr_max), ymin = (GRAZING_EFFECT_hr_min)), 
+                  width = 0.2, position = position_dodge(width = 0.4)) +
+    geom_point(stat = "identity", aes(shape = EXP, fill = FIELD),
+               color = "black", size = 3, position = position_dodge(width = 0.4)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#de2d26", "#1c9099")) +
+    facet_wrap(VARIABLE_ORDER ~ ., scales = "free", 
+               strip.position = c("left"), labeller = label_parsed) +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          axis.text.x = element_text(color="black", size = 11, 
+                                     angle = 45, hjust = 1, vjust = 1), 
+          axis.text.y = element_text(color="black", size = 11),
+          axis.title =element_text(color="black", size = 11),
+          axis.ticks = element_line(),
+          legend.title = element_blank(),
+          strip.placement = "outside",
+          strip.text.y = element_text(color="black", size = 11),
+          strip.text.x = element_blank())+
+    guides(fill = guide_legend(override.aes = list(shape = c(21))),
+           shape = guide_legend(override.aes = list(fill = "black"))) +
+    labs(x = "", y = "")
+# class(grazing_rate)
+# head(biomass_rate_plot)
+# svg("plot-grazing-withscale.svg", h = 7, w = 6)
+grazing_rate
+# plot_grid(grazing_rate + scale_y_continuous(limits = c(0,2000)),
+          # grazing_rate,
+          # ncol = 1, rel_heights = c(0.6,1))
+# dev.off()
+```
+
+## Log scale y axis
+
+
+# Comparison with Gorda Ridge
+Import data from Gorda Ridge
+```{r}
+gr <- read.delim("../../GordaRidgeCruise_2019/protist-gordaridge-2021/Grazing-at-GordaRidge-SKH-2021/data-input/Grazing-calc-wCarbon-results.txt")
+
+temps <- read.delim("/Users/sarahhu/Desktop/Projects/GordaRidgeCruise_2019/protist-gordaridge-2019-analysis/temperature-allvents.txt")
+
+mcr_graze <- read.delim("output-data/table-wcalc.txt")
+```
+
+## Combine GR and MCR data
+```{r}
+all_vents <- mcr_graze %>%
+  type.convert(as.is = TRUE) %>%
+  select(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max, BAC_TURNOVER_PERC, ugC_L_perday) %>% 
+  rbind(gr %>%
+          add_column(FIELD = "Gorda Ridge") %>% 
+          add_column(EUK_ml = NA) %>% 
+          separate(SAMPLE, c("SAMPLE", "NAME"), sep = "-") %>% 
+          select(FIELD, NAME, SAMPLE, EXP = Bottle, PROK_ml = prok_avg, EUK_ml, GRAZING_EFFECT_hr = GrazingRate_hr, GRAZING_EFFECT_hr_min = GrazingRate_hr_min, GRAZING_EFFECT_hr_max = GrazingRate_hr_max, BAC_TURNOVER_PERC = Prok_turnover, ugC_L_perday = ugC_L_perday_morono)) %>% 
+  left_join(temps) %>% 
+  mutate(SAMPLE_TYPE = case_when(
+    grepl("BSW", NAME) ~ "Background",
+    grepl("Near vent BW", NAME) ~ "Background",
+    grepl("Background", NAME) ~ "Background", 
+    grepl("Plume", NAME) ~ "Background",
+    TRUE ~ "Vent"
+  ))
+# View(all_vents)
+# all_vents
+# write_delim(all_vents, file = "output-data/grazing-cellcounts-GR_MCR.txt", delim = "\t")
+```
+
+## Plot combined results
+
+```{r}
+allrates <- all_vents %>% 
+  select(FIELD, NAME, SAMPLE, EXP, SAMPLE_TYPE, starts_with("GRAZING_EFFECT_")) %>% 
+  distinct() %>% 
+    ggplot(aes(y = GRAZING_EFFECT_hr, x = NAME, fill = FIELD, shape = SAMPLE_TYPE)) +
+    geom_errorbar(aes(ymax = (GRAZING_EFFECT_hr_max), ymin = (GRAZING_EFFECT_hr_min)), 
+                  width = 0.2, position = position_dodge(width = 0.4)) +
+    geom_point(stat = "identity", aes(fill = FIELD, shape = SAMPLE_TYPE),
+               color = "black", size = 3, position = position_dodge(width = 0.4)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#de2d26", "#1c9099", "#addd8e")) +
+    facet_grid(. ~ SAMPLE_TYPE, scales = "free", space = "free") +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          axis.text.x = element_text(color="black", size = 11, 
+                                     angle = 45, hjust = 1, vjust = 1), 
+          axis.text.y = element_text(color="black", size = 11),
+          axis.title =element_text(color="black", size = 11),
+          axis.ticks = element_line(),
+          legend.title = element_blank(),
+          strip.placement = "outside",
+          strip.text.y = element_text(color="black", size = 11),
+          strip.text.x = element_blank())+
+    guides(fill = guide_legend(override.aes = list(shape = c(21))),
+           shape = guide_legend(override.aes = list(fill = "black"))) +
+    labs(x = "", y = bquote("cells"~ml^-1~hr^-1))
+```
+
+Add Gorda Ridge comparison to supplementary?
+```{r}
+allrates
+allrates + scale_y_log10()
+# allrates + scale_y_continuous(limits = c(0,1000))
+```
+### Remove undetected grazing rate
+Repeat grazing rate plot, but removed undetectable
+```{r}
+# unique(all_vents$GRAZING_EFFECT_hr)
+allrates_nonzero <- all_vents %>% 
+  filter(GRAZING_EFFECT_hr > 0) %>% 
+  select(FIELD, NAME, SAMPLE, EXP, SAMPLE_TYPE, starts_with("GRAZING_EFFECT_")) %>% 
+  distinct() %>% 
+    ggplot(aes(y = GRAZING_EFFECT_hr, x = NAME, fill = FIELD, shape = SAMPLE_TYPE)) +
+    geom_errorbar(aes(ymax = (GRAZING_EFFECT_hr_max), ymin = (GRAZING_EFFECT_hr_min)), 
+                  width = 0.2, position = position_dodge(width = 0.4)) +
+    geom_point(stat = "identity", aes(fill = FIELD, shape = SAMPLE_TYPE),
+               color = "black", size = 3, position = position_dodge(width = 0.4)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#de2d26", "#1c9099", "#addd8e")) +
+    facet_grid(. ~ SAMPLE_TYPE, scales = "free", space = "free") +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          axis.text.x = element_text(color="black", size = 11, 
+                                     angle = 45, hjust = 1, vjust = 1), 
+          axis.text.y = element_text(color="black", size = 11),
+          axis.title =element_text(color="black", size = 11),
+          axis.ticks = element_line(),
+          legend.title = element_blank(),
+          strip.placement = "outside",
+          strip.text.y = element_text(color="black", size = 11),
+          strip.text.x = element_blank())+
+    guides(fill = guide_legend(override.aes = list(shape = c(21))),
+           shape = guide_legend(override.aes = list(fill = "black"))) +
+    labs(x = "", y = bquote("cells"~ml^-1~hr^-1))
+```
+
+```{r, fig.height=4, fig.width=7}
+# svg("compare-all-rates-color-nonZero.svg", h = 4, w = 7)
+allrates_nonzero + scale_y_log10()
+# dev.off()
+```
+
+Panel plot, cells per ml and grazing rate
+```{r Plot cell conc and rates, fig.width=6, fig.height=10}
+# svg("plot-gcellconc-grazing-log.svg", h = 10, w = 6)
+# grazing_rate + scale_y_log10(limits = c(1e-1,1e5), breaks=10^(0:7))
+plot_grid(conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem"),
+          conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem"),
+allrates_nonzero + scale_y_log10(), ncol = 1)
+# dev.off()
+```
+```{r, fig.width=7, fig.height=7}
+# svg("cells-per-ml.svg", h = 7, w = 7)
+conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem") + conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem") + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a") 
+# dev.off()
+```
+
+# Linear regression
+
+Use tidymodels to perform linear regression. Include MCR and GR data.
+```{r}
+library(broom)
+# ?pivot_longer
+# e	IGT
+# head(all_vents)
+regression_input <- all_vents %>% 
+  filter(!(SAMPLE == "Piccard-Shrimpocalypse" & EXP == "IGT")) %>% 
+  filter(!is.na(Highest.Temp)) %>% 
+    select(FIELD, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday, TEMP = Highest.Temp) %>% 
+  mutate(PROK_EUK_RATIO = (PROK_ml/EUK_ml)) %>% 
+  pivot_longer(cols = c(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday), names_to = "RATE", values_to = "RATE_VALUE") %>% 
+  pivot_longer(cols = c(PROK_ml, EUK_ml, PROK_EUK_RATIO, TEMP), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>% 
+  data.frame
+
+regression_tmp <- regression_input %>% 
+  # Set up the linear regression
+  group_by(RATE, PARAMS) %>% 
+  nest(-RATE, -PARAMS) %>% 
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)), 
+    tidied = map(lm_fit, tidy)) %>% 
+  unnest(tidied) %>% 
+  select(RATE, PARAMS, 
+    term, estimate) %>% 
+  pivot_wider(names_from = term, values_from = estimate) %>% 
+  select(everything(), SLOPE = PARAMS_VALUE) %>%
+  data.frame
+
+regression_results <- regression_input %>% 
+  group_by(RATE, PARAMS) %>% 
+  nest(-RATE, -PARAMS) %>% 
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
+    glanced = map(lm_fit, glance)) %>% 
+  unnest(glanced) %>% 
+  select(RATE, PARAMS, r.squared, adj.r.squared) %>% 
+  right_join(regression_tmp) %>%
+  right_join(regression_input) %>%
+  data.frame
+
+# View(regression_results)
+```
+
+Plot results from regression
+```{r, fig.height=10, fig.width=15}
+regression_results %>% 
+  # filter(RATE == "GRAZING_EFFECT_hr") %>%
+  # filter(PARAMS == "TEMP") %>% 
+  ggplot(aes(x = PARAMS_VALUE, y = RATE_VALUE, shape = SAMPLE_TYPE, fill = FIELD)) +
+    geom_abline(aes(slope = SLOPE, intercept = `X.Intercept.`), color = "black", linetype = "dashed", size = 0.5) +
+    geom_point(color = "black", aes(shape = SAMPLE_TYPE, fill = FIELD)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#476AA7","#7299CE", "#A2937A")) +
+    facet_wrap(PARAMS ~ RATE + round(r.squared, 3), scales = "free", ncol = 5,
+             strip.position = "bottom", labeller = label_parsed) +
+  theme_bw() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    strip.text = element_text(color = "black", size = 10),
+    axis.title = element_text(color = "black", size = 10),
+    legend.title = element_blank()) # +
+  # labs(y = bquote("Cells "~mL^-1 ~hr^-1), x = "Temperature (C)")
+```
+
+_Regression thoughts_: Unremarkable r squared values (numbers at the bottom of each plot). Some trends, mainly associated with temperature.
+
+# Grazing & environmental parameters
+
+* What parameters influence grazing rates of protists on bacteria?
+
+
+
+## Plot temperature by euk:prok
+Plot temperature by euk and prok per ml individually too.
+
+Bacterial abundance typically increases with temperature (White et al. 1991) - which could ultimately increase bacterial ingestion rate and total protist cells. But at this type of niche environment, I hypothesize that there is a trend but threshold of not detected grazing under certain conditions.
+
+If euk per ml numbers are high, but we see lower grazing rates, could this be competition? Curds and Cockburn 1968. Additionally with temperature... in Vaque et al GRF (specific grazing rates of flagellates) increased with temperature, but overall grazing rate reached a plateau at 18C. Does this mean that temperature will be an important factor depending on the community diversity?
+
+## Plot temperature by grazing rate
+
+## Plot euk per ml with temperature and grazing rate
+
+# Prediction of MCR data with parameters
+
+Best model to estimate commuiyt grazing rate in Vaque et al. considered FLP uptake and similar experiments (in contrast to disappearance experiments)
+
+From Vaque et al. 1994 paper equation (1):
+
+See Figure 6
+
+> log(GT) = -3.21 + 0.99 log (HNF) + 0.028 (T) + 0.55 log(BAC)
+
+*GT* = grazing rate (cells ml-1 hr-1)
+*HNF* = heterotrophic nanoflagellates (cells ml-1) T = temperature (C)
+*BAC* = prokaryote abundance (cells ml-1)
+
+
+Start with non-zero grazing rate values, etc. 
+Where... 
+*GT* == Grazing effect hr
+*HNF* == Euk_ml
+*BAC* == PROK_ml
+*T* == highest temp
+
+We only have these for MCR data.. can include GR for the "predicting euk_ml"
+
+Function to use above formula and estimate 
+```{r}
+est_predicted <- function(df, TITLE){
+  df_out <- df %>% 
+  select(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, Highest.Temp) %>% 
+  group_by(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr) %>% 
+  summarise(TEMP = mean(Highest.Temp)) %>% 
+  distinct() %>% 
+  mutate(PREDICTED_TEMP = (((log10(GRAZING_EFFECT_hr)) + 3.21 - (0.99*log10(EUK_ml)) - (0.55*log10(PROK_ml))) / 0.028),
+         PREDICTED_GRAZING_EFFECT_hr = (10^(-3.21 + (0.99*log10(EUK_ml)) + (0.028*TEMP) + (0.55*(log10(PROK_ml))))),
+         PREDICTED_EUK = (10^(((log10(GRAZING_EFFECT_hr)) + 3.21 - (0.55*log10(PROK_ml)) - (0.028*TEMP))/0.99)),
+         PREDICTED_PROK = (10^(((log10(GRAZING_EFFECT_hr)) + 3.21 - (0.99*log10(EUK_ml)) - (0.028*TEMP))/0.55)))
+  # Plots
+  df_out %>% 
+  ggplot(aes(x = PREDICTED_GRAZING_EFFECT_hr, y = GRAZING_EFFECT_hr)) +
+    geom_point(size = 3, color = "black", fill = "red", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = log10(PREDICTED_GRAZING_EFFECT_hr), y = log10(GRAZING_EFFECT_hr))) +
+    geom_point(size = 3, color = "black", fill = "red", shape = 21) + theme_bw() +  geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = PREDICTED_EUK, y = EUK_ml)) +
+    geom_point(size = 3, color = "black", fill = "darkgreen", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = log10(PREDICTED_EUK), y = log10(EUK_ml))) +
+    geom_point(size = 3, color = "black", fill = "darkgreen", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = PREDICTED_PROK, y = PROK_ml)) +
+    geom_point(size = 3, color = "black", fill = "blue", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = log10(PREDICTED_PROK), y = log10(PROK_ml))) +
+    geom_point(size = 3, color = "black", fill = "blue", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = PREDICTED_TEMP, y = TEMP)) +
+    geom_point(size = 3, color = "black", fill = "orange", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  df_out %>% 
+  ggplot(aes(x = log10(PREDICTED_TEMP), y = log10(TEMP))) +
+    geom_point(size = 3, color = "black", fill = "orange", shape = 21) + theme_bw() + geom_abline(slope = 1, intercept = 0) +
+  patchwork::plot_layout(ncol = 4) + plot_annotation(title = TITLE)
+  # return(df_out)
+  }
+# head(all_vents)
+# unique(all_vents$NAME)
+# range(all_vents$Highest.Temp)
+```
+
+
+
+```{r, fig.width=, fig.height=8, fig.width=15}
+est_predicted(all_vents, "all values")
+```
+```{r, fig.height=8, fig.width=15}
+mcr <- c("Von Damm", "Piccard")
+bsw <- c("Backgound", "BSW", "Plume", "Near vent BW")
+
+# est_predicted(all_vents %>% filter(FIELD %in% mcr), "Mid-Cayman Rise only")
+
+est_predicted(all_vents %>% filter(FIELD %in% mcr) %>% filter(GRAZING_EFFECT_hr > 0), "Mid-Cayman Rise only, no undetected")
+
+# est_predicted(all_vents %>% filter(FIELD %in% mcr) %>% filter(GRAZING_EFFECT_hr > 0) %>% filter(!(NAME %in% bsw)), "Mid-Cayman Rise only, no undetected, vents only")
+```
+
+```{r, fig.height=8, fig.width=15}
+est_predicted(all_vents %>%  filter(GRAZING_EFFECT_hr > 0), "All samples where grazing was detected")
+```
+```{r, fig.height=8, fig.width=15}
+# View(all_vents)
+# est_predicted(all_vents %>% filter(!(NAME %in% bsw)), "Vent samples only")
+
+est_predicted(all_vents %>% filter(!(NAME %in% bsw)) %>% filter(GRAZING_EFFECT_hr > 0), "Vent samples only where grazing was detected")
+```
+```{r, fig.height=8, fig.width=15}
+# View(all_vents)
+est_predicted(all_vents %>% 
+                filter(!(NAME %in% bsw)) %>% 
+                filter(FIELD %in% mcr) %>% 
+                filter(GRAZING_EFFECT_hr > 0), "MCR vent samples only where grazing was detected")
+
+est_predicted(all_vents %>% 
+                filter(!(NAME %in% bsw)) %>% 
+                filter(FIELD == "Von Damm") %>% 
+                filter(GRAZING_EFFECT_hr > 0), "MCR vent samples only where grazing was detected")
+
+# not really enough in Piccard to make this statistically sound.
+# est_predicted(all_vents %>% 
+#                 filter(!(NAME %in% bsw)) %>% 
+#                 filter(FIELD == "Piccard") %>% 
+#                 filter(GRAZING_EFFECT_hr > 0), "MCR vent samples only where grazing was detected")
+```
+
+```{r}
+hist(all_vents$Highest.Temp)
+```
+
+What about a temperature threshold? Perhaps this exists, but maybe not enough data to include.
+
+```{r, fig.height=8, fig.width=15}
+est_predicted(all_vents %>% 
+                # filter(!(NAME %in% bsw)) %>% 
+                filter(Highest.Temp > 60), "All samples, temps higher than 60C")
+
+est_predicted(all_vents %>% 
+                # filter(!(NAME %in% bsw)) %>% 
+                filter(Highest.Temp < 60), "All samples, temps lower than 60C")
+```
+
+```{r, fig.height=8, fig.width=15}
+est_predicted(all_vents %>% 
+                filter(GRAZING_EFFECT_hr > 0) %>%
+                filter(Highest.Temp > 60), "Removed undetected, temps higher than 60C")
+
+est_predicted(all_vents %>% 
+                filter(GRAZING_EFFECT_hr > 0) %>%
+                filter(Highest.Temp < 60), "Removed undetected, temps lower than 60C")
+```
+
+# Session
+```{r}
+sessionInfo()
 ```
 
