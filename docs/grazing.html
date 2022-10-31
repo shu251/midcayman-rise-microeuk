@@ -126,7 +126,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="floating nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -149,7 +149,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="nav-link active" href="./grazing.html" aria-current="page">Grazing analysis</a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./asv.html">Sequence processing</a>
+    <a class="nav-link" href="./asv.html">Sequence analysis</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./sequence-qc.html">Sequence QC &amp; import</a>
   </li>  
 </ul>
               <div id="quarto-search" class="" title="Search"></div>
@@ -160,67 +163,87 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-<!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#import-format-data" id="toc-import-format-data" class="nav-link active" data-scroll-target="#import-format-data">Import &amp; format data</a>
+  <li><a href="#import-format-data" id="toc-import-format-data" class="nav-link active" data-scroll-target="#import-format-data"><span class="toc-section-number">1</span>  Import &amp; format data</a>
   <ul class="collapse">
-  <li><a href="#set-up-working-r-environment" id="toc-set-up-working-r-environment" class="nav-link" data-scroll-target="#set-up-working-r-environment">Set up working R environment</a></li>
-  <li><a href="#import-raw-count-data" id="toc-import-raw-count-data" class="nav-link" data-scroll-target="#import-raw-count-data">Import raw count data</a></li>
+  <li><a href="#set-up-working-r-environment" id="toc-set-up-working-r-environment" class="nav-link" data-scroll-target="#set-up-working-r-environment"><span class="toc-section-number">1.1</span>  Set up working R environment</a></li>
+  <li><a href="#import-raw-count-data" id="toc-import-raw-count-data" class="nav-link" data-scroll-target="#import-raw-count-data"><span class="toc-section-number">1.2</span>  Import raw count data</a></li>
   </ul></li>
-  <li><a href="#calculate-cells-per-ml-euk" id="toc-calculate-cells-per-ml-euk" class="nav-link" data-scroll-target="#calculate-cells-per-ml-euk">Calculate cells per ml (euk)</a>
+  <li><a href="#calculate-cells-per-ml-euk" id="toc-calculate-cells-per-ml-euk" class="nav-link" data-scroll-target="#calculate-cells-per-ml-euk"><span class="toc-section-number">2</span>  Calculate cells per ml (euk)</a>
   <ul class="collapse">
-  <li><a href="#plot-eukaryote-cells-per-ml" id="toc-plot-eukaryote-cells-per-ml" class="nav-link" data-scroll-target="#plot-eukaryote-cells-per-ml">Plot eukaryote cells per ml</a></li>
-  <li><a href="#isolate-t0-only-counts-for-cellsml-plot" id="toc-isolate-t0-only-counts-for-cellsml-plot" class="nav-link" data-scroll-target="#isolate-t0-only-counts-for-cellsml-plot">Isolate T0 only counts for cells/ml plot</a></li>
+  <li><a href="#plot-eukaryote-cells-per-ml" id="toc-plot-eukaryote-cells-per-ml" class="nav-link" data-scroll-target="#plot-eukaryote-cells-per-ml"><span class="toc-section-number">2.1</span>  Plot eukaryote cells per ml</a></li>
+  <li><a href="#isolate-t0-only-counts-for-cellsml-plot" id="toc-isolate-t0-only-counts-for-cellsml-plot" class="nav-link" data-scroll-target="#isolate-t0-only-counts-for-cellsml-plot"><span class="toc-section-number">2.2</span>  Isolate T0 only counts for cells/ml plot</a></li>
   </ul></li>
-  <li><a href="#bacteria-archaea-cell-counts" id="toc-bacteria-archaea-cell-counts" class="nav-link" data-scroll-target="#bacteria-archaea-cell-counts">Bacteria &amp; archaea cell counts</a>
+  <li><a href="#bacteria-archaea-cell-counts" id="toc-bacteria-archaea-cell-counts" class="nav-link" data-scroll-target="#bacteria-archaea-cell-counts"><span class="toc-section-number">3</span>  Bacteria &amp; archaea cell counts</a>
   <ul class="collapse">
-  <li><a href="#cells-per-ml-prok" id="toc-cells-per-ml-prok" class="nav-link" data-scroll-target="#cells-per-ml-prok">Cells per ml (prok)</a>
+  <li><a href="#cells-per-ml-prok" id="toc-cells-per-ml-prok" class="nav-link" data-scroll-target="#cells-per-ml-prok"><span class="toc-section-number">3.1</span>  Cells per ml (prok)</a>
   <ul class="collapse">
   <li><a href="#combine-with-previous-mcr-cell-counts" id="toc-combine-with-previous-mcr-cell-counts" class="nav-link" data-scroll-target="#combine-with-previous-mcr-cell-counts">Combine with previous MCR cell counts</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#estimate-grazing-effect" id="toc-estimate-grazing-effect" class="nav-link" data-scroll-target="#estimate-grazing-effect">Estimate grazing effect</a>
+  <li><a href="#estimate-grazing-effect" id="toc-estimate-grazing-effect" class="nav-link" data-scroll-target="#estimate-grazing-effect"><span class="toc-section-number">4</span>  Estimate grazing effect</a>
   <ul class="collapse">
-  <li><a href="#determine-flp-per-euk-cell" id="toc-determine-flp-per-euk-cell" class="nav-link" data-scroll-target="#determine-flp-per-euk-cell">Determine FLP per euk cell</a></li>
-  <li><a href="#calculate-flp-per-euk-cell-calculation" id="toc-calculate-flp-per-euk-cell-calculation" class="nav-link" data-scroll-target="#calculate-flp-per-euk-cell-calculation">Calculate FLP per euk cell calculation</a></li>
-  <li><a href="#calculate-linear-regression-to-obtain-slope" id="toc-calculate-linear-regression-to-obtain-slope" class="nav-link" data-scroll-target="#calculate-linear-regression-to-obtain-slope">Calculate linear regression to obtain slope</a>
+  <li><a href="#determine-flp-per-euk-cell" id="toc-determine-flp-per-euk-cell" class="nav-link" data-scroll-target="#determine-flp-per-euk-cell"><span class="toc-section-number">4.1</span>  Determine FLP per euk cell</a></li>
+  <li><a href="#calculate-flp-per-euk-cell-calculation" id="toc-calculate-flp-per-euk-cell-calculation" class="nav-link" data-scroll-target="#calculate-flp-per-euk-cell-calculation"><span class="toc-section-number">4.2</span>  Calculate FLP per euk cell calculation</a></li>
+  <li><a href="#calculate-linear-regression-to-obtain-slope" id="toc-calculate-linear-regression-to-obtain-slope" class="nav-link" data-scroll-target="#calculate-linear-regression-to-obtain-slope"><span class="toc-section-number">4.3</span>  Calculate linear regression to obtain slope</a>
   <ul class="collapse">
   <li><a href="#plot-linear-regression-trend" id="toc-plot-linear-regression-trend" class="nav-link" data-scroll-target="#plot-linear-regression-trend">Plot linear regression trend</a></li>
   </ul></li>
-  <li><a href="#remove-igt-tf-time-points." id="toc-remove-igt-tf-time-points." class="nav-link" data-scroll-target="#remove-igt-tf-time-points.">Remove IGT Tf time points.</a></li>
-  <li><a href="#compile-and-save-grazing-experiment-results" id="toc-compile-and-save-grazing-experiment-results" class="nav-link" data-scroll-target="#compile-and-save-grazing-experiment-results">Compile and save grazing experiment results</a></li>
+  <li><a href="#remove-igt-tf-time-points." id="toc-remove-igt-tf-time-points." class="nav-link" data-scroll-target="#remove-igt-tf-time-points."><span class="toc-section-number">4.4</span>  Remove IGT Tf time points.</a></li>
+  <li><a href="#compile-and-save-grazing-experiment-results" id="toc-compile-and-save-grazing-experiment-results" class="nav-link" data-scroll-target="#compile-and-save-grazing-experiment-results"><span class="toc-section-number">4.5</span>  Compile and save grazing experiment results</a></li>
   </ul></li>
-  <li><a href="#check-flp-control-experiments" id="toc-check-flp-control-experiments" class="nav-link" data-scroll-target="#check-flp-control-experiments">Check FLP control experiments</a>
+  <li><a href="#check-flp-control-experiments" id="toc-check-flp-control-experiments" class="nav-link" data-scroll-target="#check-flp-control-experiments"><span class="toc-section-number">5</span>  Check FLP control experiments</a>
   <ul class="collapse">
-  <li><a href="#bag-grazing-experiment-controls" id="toc-bag-grazing-experiment-controls" class="nav-link" data-scroll-target="#bag-grazing-experiment-controls">Bag grazing experiment controls</a></li>
-  <li><a href="#igt-experiment-controls" id="toc-igt-experiment-controls" class="nav-link" data-scroll-target="#igt-experiment-controls">IGT experiment controls</a></li>
+  <li><a href="#bag-grazing-experiment-controls" id="toc-bag-grazing-experiment-controls" class="nav-link" data-scroll-target="#bag-grazing-experiment-controls"><span class="toc-section-number">5.1</span>  Bag grazing experiment controls</a></li>
+  <li><a href="#igt-experiment-controls" id="toc-igt-experiment-controls" class="nav-link" data-scroll-target="#igt-experiment-controls"><span class="toc-section-number">5.2</span>  IGT experiment controls</a></li>
   </ul></li>
-  <li><a href="#generate-complete-table-with-grazing-rates-and-values" id="toc-generate-complete-table-with-grazing-rates-and-values" class="nav-link" data-scroll-target="#generate-complete-table-with-grazing-rates-and-values">Generate complete table with grazing rates and values</a>
+  <li><a href="#generate-complete-table-with-grazing-rates-and-values" id="toc-generate-complete-table-with-grazing-rates-and-values" class="nav-link" data-scroll-target="#generate-complete-table-with-grazing-rates-and-values"><span class="toc-section-number">6</span>  Generate complete table with grazing rates and values</a>
   <ul class="collapse">
-  <li><a href="#plot-flpgrazer-minute" id="toc-plot-flpgrazer-minute" class="nav-link" data-scroll-target="#plot-flpgrazer-minute">Plot FLP/grazer /minute</a></li>
+  <li><a href="#plot-flpgrazer-minute" id="toc-plot-flpgrazer-minute" class="nav-link" data-scroll-target="#plot-flpgrazer-minute"><span class="toc-section-number">6.1</span>  Plot FLP/grazer /minute</a></li>
   </ul></li>
-  <li><a href="#grazing-rate-calculations" id="toc-grazing-rate-calculations" class="nav-link" data-scroll-target="#grazing-rate-calculations">Grazing rate calculations</a>
+  <li><a href="#grazing-rate-calculations" id="toc-grazing-rate-calculations" class="nav-link" data-scroll-target="#grazing-rate-calculations"><span class="toc-section-number">7</span>  Grazing rate calculations</a>
   <ul class="collapse">
   <li><a href="#gt-table-option" id="toc-gt-table-option" class="nav-link" data-scroll-target="#gt-table-option">gt table option</a></li>
-  <li><a href="#carbon-biomass" id="toc-carbon-biomass" class="nav-link" data-scroll-target="#carbon-biomass">Carbon biomass</a></li>
-  <li><a href="#compare-carbon-biomass-with-literature" id="toc-compare-carbon-biomass-with-literature" class="nav-link" data-scroll-target="#compare-carbon-biomass-with-literature">Compare carbon biomass with literature</a>
+  <li><a href="#carbon-biomass" id="toc-carbon-biomass" class="nav-link" data-scroll-target="#carbon-biomass"><span class="toc-section-number">7.1</span>  Carbon biomass</a></li>
+  <li><a href="#compare-carbon-biomass-with-literature" id="toc-compare-carbon-biomass-with-literature" class="nav-link" data-scroll-target="#compare-carbon-biomass-with-literature"><span class="toc-section-number">7.2</span>  Compare carbon biomass with literature</a>
   <ul class="collapse">
   <li><a href="#carbon-biomass-for-prokaryotes" id="toc-carbon-biomass-for-prokaryotes" class="nav-link" data-scroll-target="#carbon-biomass-for-prokaryotes">Carbon biomass for prokaryotes</a></li>
   </ul></li>
-  <li><a href="#amend-table-with-bounded-carbon-estimates" id="toc-amend-table-with-bounded-carbon-estimates" class="nav-link" data-scroll-target="#amend-table-with-bounded-carbon-estimates">Amend table with ‘bounded’ carbon estimates</a></li>
+  <li><a href="#amend-table-with-bounded-carbon-estimates" id="toc-amend-table-with-bounded-carbon-estimates" class="nav-link" data-scroll-target="#amend-table-with-bounded-carbon-estimates"><span class="toc-section-number">7.3</span>  Amend table with ‘bounded’ carbon estimates</a></li>
   </ul></li>
-  <li><a href="#compare-with-axial-euk-cell-count" id="toc-compare-with-axial-euk-cell-count" class="nav-link" data-scroll-target="#compare-with-axial-euk-cell-count">Compare with Axial euk cell count</a></li>
-  <li><a href="#environmental-parameters---mcr" id="toc-environmental-parameters---mcr" class="nav-link" data-scroll-target="#environmental-parameters---mcr">Environmental parameters - MCR</a></li>
-  <li><a href="#analysis-of-grazing-rate-results" id="toc-analysis-of-grazing-rate-results" class="nav-link" data-scroll-target="#analysis-of-grazing-rate-results">Analysis of grazing rate results</a>
+  <li><a href="#compare-with-axial-euk-cell-count" id="toc-compare-with-axial-euk-cell-count" class="nav-link" data-scroll-target="#compare-with-axial-euk-cell-count"><span class="toc-section-number">8</span>  Compare with Axial euk cell count</a></li>
+  <li><a href="#environmental-parameters---mcr" id="toc-environmental-parameters---mcr" class="nav-link" data-scroll-target="#environmental-parameters---mcr"><span class="toc-section-number">9</span>  Environmental parameters - MCR</a></li>
+  <li><a href="#analysis-of-grazing-rate-results" id="toc-analysis-of-grazing-rate-results" class="nav-link" data-scroll-target="#analysis-of-grazing-rate-results"><span class="toc-section-number">10</span>  Analysis of grazing rate results</a>
   <ul class="collapse">
-  <li><a href="#function-to-plot-grazing-results" id="toc-function-to-plot-grazing-results" class="nav-link" data-scroll-target="#function-to-plot-grazing-results">Function to plot grazing results</a></li>
+  <li><a href="#function-to-plot-grazing-results" id="toc-function-to-plot-grazing-results" class="nav-link" data-scroll-target="#function-to-plot-grazing-results"><span class="toc-section-number">10.1</span>  Function to plot grazing results</a></li>
+  <li><a href="#log-scale-y-axis" id="toc-log-scale-y-axis" class="nav-link" data-scroll-target="#log-scale-y-axis"><span class="toc-section-number">10.2</span>  Log scale y axis</a></li>
   </ul></li>
+  <li><a href="#comparison-with-gorda-ridge" id="toc-comparison-with-gorda-ridge" class="nav-link" data-scroll-target="#comparison-with-gorda-ridge"><span class="toc-section-number">11</span>  Comparison with Gorda Ridge</a>
+  <ul class="collapse">
+  <li><a href="#combine-gr-and-mcr-data" id="toc-combine-gr-and-mcr-data" class="nav-link" data-scroll-target="#combine-gr-and-mcr-data"><span class="toc-section-number">11.1</span>  Combine GR and MCR data</a></li>
+  <li><a href="#plot-combined-results" id="toc-plot-combined-results" class="nav-link" data-scroll-target="#plot-combined-results"><span class="toc-section-number">11.2</span>  Plot combined results</a>
+  <ul class="collapse">
+  <li><a href="#remove-undetected-grazing-rate" id="toc-remove-undetected-grazing-rate" class="nav-link" data-scroll-target="#remove-undetected-grazing-rate">Remove undetected grazing rate</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#linear-regression" id="toc-linear-regression" class="nav-link" data-scroll-target="#linear-regression"><span class="toc-section-number">12</span>  Linear regression</a></li>
+  <li><a href="#grazing-environmental-parameters" id="toc-grazing-environmental-parameters" class="nav-link" data-scroll-target="#grazing-environmental-parameters"><span class="toc-section-number">13</span>  Grazing &amp; environmental parameters</a>
+  <ul class="collapse">
+  <li><a href="#plot-temperature-by-eukprok" id="toc-plot-temperature-by-eukprok" class="nav-link" data-scroll-target="#plot-temperature-by-eukprok"><span class="toc-section-number">13.1</span>  Plot temperature by euk:prok</a></li>
+  <li><a href="#plot-temperature-by-grazing-rate" id="toc-plot-temperature-by-grazing-rate" class="nav-link" data-scroll-target="#plot-temperature-by-grazing-rate"><span class="toc-section-number">13.2</span>  Plot temperature by grazing rate</a></li>
+  <li><a href="#plot-euk-per-ml-with-temperature-and-grazing-rate" id="toc-plot-euk-per-ml-with-temperature-and-grazing-rate" class="nav-link" data-scroll-target="#plot-euk-per-ml-with-temperature-and-grazing-rate"><span class="toc-section-number">13.3</span>  Plot euk per ml with temperature and grazing rate</a></li>
+  </ul></li>
+  <li><a href="#prediction-of-mcr-data-with-parameters" id="toc-prediction-of-mcr-data-with-parameters" class="nav-link" data-scroll-target="#prediction-of-mcr-data-with-parameters"><span class="toc-section-number">14</span>  Prediction of MCR data with parameters</a></li>
+  <li><a href="#session" id="toc-session" class="nav-link" data-scroll-target="#session"><span class="toc-section-number">15</span>  Session</a></li>
   </ul>
 </nav>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -241,20 +264,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<section id="import-format-data" class="level1">
-<h1>Import &amp; format data</h1>
+<section id="import-format-data" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Import &amp; format data</h1>
 <p>Code below details how to import cell count (FLP count) information from Mid-Cayman Rise protistan grazing incubations and estimate grazing rate and cell biomass.</p>
-<section id="set-up-working-r-environment" class="level2">
-<h2 class="anchored" data-anchor-id="set-up-working-r-environment">Set up working R environment</h2>
+<section id="set-up-working-r-environment" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="set-up-working-r-environment"><span class="header-section-number">1.1</span> Set up working R environment</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse); <span class="fu">library</span>(cowplot); <span class="fu">library</span>(broom)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse); <span class="fu">library</span>(cowplot); <span class="fu">library</span>(broom)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
-<section id="import-raw-count-data" class="level2">
-<h2 class="anchored" data-anchor-id="import-raw-count-data">Import raw count data</h2>
+<section id="import-raw-count-data" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="import-raw-count-data"><span class="header-section-number">1.2</span> Import raw count data</h2>
 <p>Import eukaryotic cell count data from grazing experiments. In this section, we will calculate cells per ml from raw counts (Field of view, etc.) and use to estimate protist cell concentration. These will be used below in grazing experiment calculations.</p>
 <div class="cell">
 <details>
@@ -301,8 +325,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 </section>
 </section>
-<section id="calculate-cells-per-ml-euk" class="level1">
-<h1>Calculate cells per ml (euk)</h1>
+<section id="calculate-cells-per-ml-euk" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Calculate cells per ml (euk)</h1>
 <p>Input data are the raw microscopy counts by FOV. Code below calculations cells/ml based on these values. Additionaly, variance and standard deviation are also calculated. Eukaryotic cells were also classified by size, where micro equates to &gt;20um and nano is &lt;20um. All counts were done at 100x magnification, confirm this: <code>unique(counts_occur$MAG)</code>.</p>
 <p>Calculate cell concentration (cells/ml).</p>
 <div class="cell">
@@ -409,8 +433,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>plot_euk_conc<span class="sc">$</span>NameOrder <span class="ot">&lt;-</span> <span class="fu">factor</span>(plot_euk_conc<span class="sc">$</span>Name, <span class="at">levels =</span> vent_ids, <span class="at">labels =</span> vent_fullname)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<section id="plot-eukaryote-cells-per-ml" class="level2">
-<h2 class="anchored" data-anchor-id="plot-eukaryote-cells-per-ml">Plot eukaryote cells per ml</h2>
+<section id="plot-eukaryote-cells-per-ml" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="plot-eukaryote-cells-per-ml"><span class="header-section-number">2.1</span> Plot eukaryote cells per ml</h2>
 <p><a href="#fig-boxplot-all">Figure&nbsp;1</a> reports all eukaryote cells per ml counts from all grazing assay counts..</p>
 <div class="cell">
 <details>
@@ -506,8 +530,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
 <p>note there is an overall drop in euk cells/ml in the final time point. Especially with the IGT samples. Take this into consideration</p>
 </blockquote>
 </section>
-<section id="isolate-t0-only-counts-for-cellsml-plot" class="level2">
-<h2 class="anchored" data-anchor-id="isolate-t0-only-counts-for-cellsml-plot">Isolate T0 only counts for cells/ml plot</h2>
+<section id="isolate-t0-only-counts-for-cellsml-plot" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="isolate-t0-only-counts-for-cellsml-plot"><span class="header-section-number">2.2</span> Isolate T0 only counts for cells/ml plot</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -587,8 +611,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
 </div>
 </section>
 </section>
-<section id="bacteria-archaea-cell-counts" class="level1">
-<h1>Bacteria &amp; archaea cell counts</h1>
+<section id="bacteria-archaea-cell-counts" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Bacteria &amp; archaea cell counts</h1>
 <p>DAPI slide counts from prokaryotes from same sites. Import and compare.</p>
 <div class="cell">
 <details>
@@ -606,8 +630,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  data.frame</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<section id="cells-per-ml-prok" class="level2">
-<h2 class="anchored" data-anchor-id="cells-per-ml-prok">Cells per ml (prok)</h2>
+<section id="cells-per-ml-prok" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="cells-per-ml-prok"><span class="header-section-number">3.1</span> Cells per ml (prok)</h2>
 <p>Visualize counts</p>
 <p>Factor site names, etc.</p>
 <div class="cell">
@@ -731,8 +755,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
 </section>
 </section>
 </section>
-<section id="estimate-grazing-effect" class="level1">
-<h1>Estimate grazing effect</h1>
+<section id="estimate-grazing-effect" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Estimate grazing effect</h1>
 <p>Calculate FLP per eukaryotic cell over time. Goal is to make these calculations and then determine best fit line. Slope of best fit line is the grazing rate. Need to take into account euk cells with FLPs and then the euk cells withOUT FLPs, these will be zeroes to take into account for FLPs/euk averages.</p>
 <div class="cell">
 <details>
@@ -746,8 +770,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
   counts_occur</code></pre>
 </div>
 </div>
-<section id="determine-flp-per-euk-cell" class="level2">
-<h2 class="anchored" data-anchor-id="determine-flp-per-euk-cell">Determine FLP per euk cell</h2>
+<section id="determine-flp-per-euk-cell" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="determine-flp-per-euk-cell"><span class="header-section-number">4.1</span> Determine FLP per euk cell</h2>
 <p>Isolate euk cell counts with FLPs (comma separated for counts). These need to be separated into rows, use <code>counts_occur</code> data frame from above.</p>
 <div class="cell">
 <details>
@@ -855,8 +879,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
 </details>
 </div>
 </section>
-<section id="calculate-flp-per-euk-cell-calculation" class="level2">
-<h2 class="anchored" data-anchor-id="calculate-flp-per-euk-cell-calculation">Calculate FLP per euk cell calculation</h2>
+<section id="calculate-flp-per-euk-cell-calculation" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="calculate-flp-per-euk-cell-calculation"><span class="header-section-number">4.2</span> Calculate FLP per euk cell calculation</h2>
 <p>First need to import and compile with metadata to get exact timing of experiments.</p>
 <div class="cell">
 <details>
@@ -897,8 +921,8 @@ Transformation introduced infinite values in continuous y-axis</code></pre>
 <p>COLS: Replicate_ID, REP, and IGT_REP = full replicate identified for IGTs and Bags, designation of biological replicates, and designation of technical replicates for IGT experiments</p>
 </blockquote>
 </section>
-<section id="calculate-linear-regression-to-obtain-slope" class="level2">
-<h2 class="anchored" data-anchor-id="calculate-linear-regression-to-obtain-slope">Calculate linear regression to obtain slope</h2>
+<section id="calculate-linear-regression-to-obtain-slope" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="calculate-linear-regression-to-obtain-slope"><span class="header-section-number">4.3</span> Calculate linear regression to obtain slope</h2>
 <p>Use <code>lm()</code> function in R to calculate linear regression for each experiment. Slope equates to grazing rate. Function inputs the FLP per euk cell data, performs regression and then adds a column for slope and r-squared values.</p>
 <p>Function to estimate slope. Uses broom and tidymodels, then extracts slope.</p>
 <div class="cell">
@@ -1023,8 +1047,8 @@ Joining, by = c("SAMPLE", "Site", "Experiment", "Name", "REP", "SizeFrac")</code
 <p>Data points represent the FLP per euk cells (based on total eukaryote cells counts). Y-axis represents the duration of incubation (in minutes). The dashed purple line reprents the slope and intercept of the experiment.</p>
 </section>
 </section>
-<section id="remove-igt-tf-time-points." class="level2">
-<h2 class="anchored" data-anchor-id="remove-igt-tf-time-points.">Remove IGT Tf time points.</h2>
+<section id="remove-igt-tf-time-points." class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="remove-igt-tf-time-points."><span class="header-section-number">4.4</span> Remove IGT Tf time points.</h2>
 <p>IGT experiment results appear to have bottle effect, especially in the final time point. Additionally, due to the lack of biological replicates in the IGT experiments, technical replicates are treated as biological replicates in the regression below.</p>
 <div class="cell">
 <details>
@@ -1083,8 +1107,8 @@ Joining, by = c("SAMPLE", "Site", "Experiment", "Name", "REP", "SizeFrac")</code
 <p>results are more consistent across experiments.</p>
 </blockquote>
 </section>
-<section id="compile-and-save-grazing-experiment-results" class="level2">
-<h2 class="anchored" data-anchor-id="compile-and-save-grazing-experiment-results">Compile and save grazing experiment results</h2>
+<section id="compile-and-save-grazing-experiment-results" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="compile-and-save-grazing-experiment-results"><span class="header-section-number">4.5</span> Compile and save grazing experiment results</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -1108,8 +1132,8 @@ Joining, by = c("SAMPLE", "Site", "Experiment", "Name", "REP", "SizeFrac")</code
 </div>
 </section>
 </section>
-<section id="check-flp-control-experiments" class="level1">
-<h1>Check FLP control experiments</h1>
+<section id="check-flp-control-experiments" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Check FLP control experiments</h1>
 <p>All incubations had control experiments run alongside them. This was to ensure added FLP did not decrease or change in concentration over time.</p>
 <div class="cell">
 <details>
@@ -1141,8 +1165,8 @@ Joining, by = c("SAMPLE", "Site", "Experiment", "Name", "REP", "SizeFrac")</code
 override using the `.groups` argument.</code></pre>
 </div>
 </div>
-<section id="bag-grazing-experiment-controls" class="level2">
-<h2 class="anchored" data-anchor-id="bag-grazing-experiment-controls">Bag grazing experiment controls</h2>
+<section id="bag-grazing-experiment-controls" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="bag-grazing-experiment-controls"><span class="header-section-number">5.1</span> Bag grazing experiment controls</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -1169,8 +1193,8 @@ override using the `.groups` argument.</code></pre>
 </div>
 </div>
 </section>
-<section id="igt-experiment-controls" class="level2">
-<h2 class="anchored" data-anchor-id="igt-experiment-controls">IGT experiment controls</h2>
+<section id="igt-experiment-controls" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="igt-experiment-controls"><span class="header-section-number">5.2</span> IGT experiment controls</h2>
 <p>Repeat for IGT experiments.</p>
 <div class="cell">
 <details>
@@ -1199,8 +1223,8 @@ override using the `.groups` argument.</code></pre>
 </div>
 </section>
 </section>
-<section id="generate-complete-table-with-grazing-rates-and-values" class="level1">
-<h1>Generate complete table with grazing rates and values</h1>
+<section id="generate-complete-table-with-grazing-rates-and-values" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Generate complete table with grazing rates and values</h1>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -1271,8 +1295,8 @@ can override using the `.groups` argument.</code></pre>
 <span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>table_grazerate_wflp<span class="sc">$</span>NAME <span class="ot">&lt;-</span> <span class="fu">factor</span>(table_grazerate_wflp<span class="sc">$</span>Name, <span class="at">levels =</span> vent_fullname)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<section id="plot-flpgrazer-minute" class="level2">
-<h2 class="anchored" data-anchor-id="plot-flpgrazer-minute">Plot FLP/grazer /minute</h2>
+<section id="plot-flpgrazer-minute" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="plot-flpgrazer-minute"><span class="header-section-number">6.1</span> Plot FLP/grazer /minute</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -1338,8 +1362,8 @@ can override using the `.groups` argument.</code></pre>
 </div>
 </section>
 </section>
-<section id="grazing-rate-calculations" class="level1">
-<h1>Grazing rate calculations</h1>
+<section id="grazing-rate-calculations" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Grazing rate calculations</h1>
 <p>Based on Unrein et al.&nbsp;2007, we use the estimated grazing rate, in situ prok abundance, in situ euk abundance, and the concentration of FLP to make additional estimates.</p>
 <div class="cell">
 <details>
@@ -1458,8 +1482,8 @@ can override using the `.groups` argument.</code></pre>
 </details>
 </div>
 </section>
-<section id="carbon-biomass" class="level2">
-<h2 class="anchored" data-anchor-id="carbon-biomass">Carbon biomass</h2>
+<section id="carbon-biomass" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="carbon-biomass"><span class="header-section-number">7.1</span> Carbon biomass</h2>
 <p>References for estimating biovolume <em>Pernice, M.C., Forn, I., Gomes, A., Lara, E., Alonso-Sáez, L., Arrieta, J.M., et al.&nbsp;(2015) Global abundance of planktonic heterotrophic protists in the deep ocean. ISME J 9: 782–792.</em></p>
 <div class="cell">
 <details>
@@ -1577,8 +1601,8 @@ can override using the `.groups` argument.</code></pre>
 </div>
 <p>Avg euk biomass pg C per individual cell == <code>{r}euk_carbon</code></p>
 </section>
-<section id="compare-carbon-biomass-with-literature" class="level2">
-<h2 class="anchored" data-anchor-id="compare-carbon-biomass-with-literature">Compare carbon biomass with literature</h2>
+<section id="compare-carbon-biomass-with-literature" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="compare-carbon-biomass-with-literature"><span class="header-section-number">7.2</span> Compare carbon biomass with literature</h2>
 <p>Compare with Menden-Deuer and Lessard 2000, Table 2 - using only the heterotrophic species measured. Based on Table 2, the min volume was 4745 and the maximum was 1.2 x10^7 µm^3. Carbon content was measured at pg per cell, this was 469.48-35,339 pg per cell.</p>
 <p>Import the heterotroph species volume and carbon content to compare to my measured values.</p>
 <div class="cell">
@@ -1701,8 +1725,8 @@ can override using the `.groups` argument.</code></pre>
 </ul>
 </section>
 </section>
-<section id="amend-table-with-bounded-carbon-estimates" class="level2">
-<h2 class="anchored" data-anchor-id="amend-table-with-bounded-carbon-estimates">Amend table with ‘bounded’ carbon estimates</h2>
+<section id="amend-table-with-bounded-carbon-estimates" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="amend-table-with-bounded-carbon-estimates"><span class="header-section-number">7.3</span> Amend table with ‘bounded’ carbon estimates</h2>
 <p>Also make a “bounded” table that demonstrates the ug C consumed in the context of McNichol et al.</p>
 <div class="cell">
 <details>
@@ -1730,8 +1754,8 @@ can override using the `.groups` argument.</code></pre>
 </div>
 </section>
 </section>
-<section id="compare-with-axial-euk-cell-count" class="level1">
-<h1>Compare with Axial euk cell count</h1>
+<section id="compare-with-axial-euk-cell-count" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Compare with Axial euk cell count</h1>
 <p>From Axial Seamount cruise (July 2022) - have Anemone vent and plume euk cell counts to compare.</p>
 <div class="cell">
 <details>
@@ -1799,8 +1823,8 @@ can override using the `.groups` argument.</code></pre>
 <p>Thoughts on cell counts. Combining nano and micro for now, as the de-pressurization can cause issues in size. Likely underestimates for these counts.</p>
 <p>This is further supported because the biovolumes of all cells were pretty low.</p>
 </section>
-<section id="environmental-parameters---mcr" class="level1">
-<h1>Environmental parameters - MCR</h1>
+<section id="environmental-parameters---mcr" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Environmental parameters - MCR</h1>
 <p>Import from Hu et al.&nbsp;(<em>Molecular Ecology</em>).</p>
 <div class="cell">
 <details>
@@ -1831,8 +1855,8 @@ can override using the `.groups` argument.</code></pre>
 </details>
 </div>
 </section>
-<section id="analysis-of-grazing-rate-results" class="level1">
-<h1>Analysis of grazing rate results</h1>
+<section id="analysis-of-grazing-rate-results" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Analysis of grazing rate results</h1>
 <p>Re-import table from output table with all grazing values</p>
 <div class="cell">
 <details>
@@ -1975,8 +1999,8 @@ can override using the `.groups` argument.</code></pre>
 <span id="cb108-32"><a href="#cb108-32" aria-hidden="true" tabindex="-1"></a>                                                      <span class="st">"Cell~carbon~%~day^{-1}"</span>, <span class="st">"Cell~carbon~%~day^{-1}~(lit)"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<section id="function-to-plot-grazing-results" class="level2">
-<h2 class="anchored" data-anchor-id="function-to-plot-grazing-results">Function to plot grazing results</h2>
+<section id="function-to-plot-grazing-results" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="function-to-plot-grazing-results"><span class="header-section-number">10.1</span> Function to plot grazing results</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -2028,14 +2052,744 @@ can override using the `.groups` argument.</code></pre>
 <div class="cell-output-display">
 <p><img src="grazing_files/figure-html/unnamed-chunk-58-1.png" class="img-fluid" width="672"></p>
 </div>
+</div>
+<div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co"># conc_rate_plot_mcr(biomass_rate_plot, "GRAZING_EFFECT_hr")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co"># scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>grazing_rate <span class="ot">&lt;-</span> biomass_rate_plot <span class="sc">%&gt;%</span> </span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">type.convert</span>(<span class="at">as.is =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(Variable <span class="sc">==</span> <span class="st">"GRAZING_EFFECT_hr"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(SEM_variable <span class="sc">==</span> <span class="st">"GRAZING_EFFECT_hr_min"</span> <span class="sc">|</span> SEM_variable <span class="sc">==</span> <span class="st">"GRAZING_EFFECT_hr_max"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> SEM_variable, <span class="at">values_from =</span> SEM) <span class="sc">%&gt;%</span> </span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> Value, <span class="at">x =</span> NAME_ORDER, <span class="at">shape =</span> EXP, <span class="at">fill =</span> FIELD)) <span class="sc">+</span></span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymax =</span> (GRAZING_EFFECT_hr_max), <span class="at">ymin =</span> (GRAZING_EFFECT_hr_min)), </span>
+<span id="cb111-9"><a href="#cb111-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">width =</span> <span class="fl">0.2</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.4</span>)) <span class="sc">+</span></span>
+<span id="cb111-10"><a href="#cb111-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="fu">aes</span>(<span class="at">shape =</span> EXP, <span class="at">fill =</span> FIELD),</span>
+<span id="cb111-11"><a href="#cb111-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.4</span>)) <span class="sc">+</span></span>
+<span id="cb111-12"><a href="#cb111-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="dv">21</span>, <span class="dv">24</span>)) <span class="sc">+</span></span>
+<span id="cb111-13"><a href="#cb111-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#de2d26"</span>, <span class="st">"#1c9099"</span>)) <span class="sc">+</span></span>
+<span id="cb111-14"><a href="#cb111-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(VARIABLE_ORDER <span class="sc">~</span> ., <span class="at">scales =</span> <span class="st">"free"</span>, </span>
+<span id="cb111-15"><a href="#cb111-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">strip.position =</span> <span class="fu">c</span>(<span class="st">"left"</span>), <span class="at">labeller =</span> label_parsed) <span class="sc">+</span></span>
+<span id="cb111-16"><a href="#cb111-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb111-17"><a href="#cb111-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_line</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb111-18"><a href="#cb111-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.background =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb111-19"><a href="#cb111-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.line =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">"black"</span>), </span>
+<span id="cb111-20"><a href="#cb111-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>, </span>
+<span id="cb111-21"><a href="#cb111-21" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="dv">1</span>), </span>
+<span id="cb111-22"><a href="#cb111-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb111-23"><a href="#cb111-23" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.title =</span><span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb111-24"><a href="#cb111-24" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.ticks =</span> <span class="fu">element_line</span>(),</span>
+<span id="cb111-25"><a href="#cb111-25" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb111-26"><a href="#cb111-26" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.placement =</span> <span class="st">"outside"</span>,</span>
+<span id="cb111-27"><a href="#cb111-27" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb111-28"><a href="#cb111-28" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.x =</span> <span class="fu">element_blank</span>())<span class="sc">+</span></span>
+<span id="cb111-29"><a href="#cb111-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">shape =</span> <span class="fu">c</span>(<span class="dv">21</span>))),</span>
+<span id="cb111-30"><a href="#cb111-30" aria-hidden="true" tabindex="-1"></a>           <span class="at">shape =</span> <span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">fill =</span> <span class="st">"black"</span>))) <span class="sc">+</span></span>
+<span id="cb111-31"><a href="#cb111-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">""</span>)</span>
+<span id="cb111-32"><a href="#cb111-32" aria-hidden="true" tabindex="-1"></a><span class="co"># class(grazing_rate)</span></span>
+<span id="cb111-33"><a href="#cb111-33" aria-hidden="true" tabindex="-1"></a><span class="co"># head(biomass_rate_plot)</span></span>
+<span id="cb111-34"><a href="#cb111-34" aria-hidden="true" tabindex="-1"></a><span class="co"># svg("plot-grazing-withscale.svg", h = 7, w = 6)</span></span>
+<span id="cb111-35"><a href="#cb111-35" aria-hidden="true" tabindex="-1"></a>grazing_rate</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-59-1.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot_grid(grazing_rate + scale_y_continuous(limits = c(0,2000)),</span></span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>          <span class="co"># grazing_rate,</span></span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>          <span class="co"># ncol = 1, rel_heights = c(0.6,1))</span></span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a><span class="co"># dev.off()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="log-scale-y-axis" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="log-scale-y-axis"><span class="header-section-number">10.2</span> Log scale y axis</h2>
+</section>
+</section>
+<section id="comparison-with-gorda-ridge" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Comparison with Gorda Ridge</h1>
+<p>Import data from Gorda Ridge</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>gr <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"../../GordaRidgeCruise_2019/protist-gordaridge-2021/Grazing-at-GordaRidge-SKH-2021/data-input/Grazing-calc-wCarbon-results.txt"</span>)</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>temps <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"/Users/sarahhu/Desktop/Projects/GordaRidgeCruise_2019/protist-gordaridge-2019-analysis/temperature-allvents.txt"</span>)</span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a>mcr_graze <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"output-data/table-wcalc.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="combine-gr-and-mcr-data" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="combine-gr-and-mcr-data"><span class="header-section-number">11.1</span> Combine GR and MCR data</h2>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>all_vents <span class="ot">&lt;-</span> mcr_graze <span class="sc">%&gt;%</span></span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">type.convert</span>(<span class="at">as.is =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max, BAC_TURNOVER_PERC, ugC_L_perday) <span class="sc">%&gt;%</span> </span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rbind</span>(gr <span class="sc">%&gt;%</span></span>
+<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">add_column</span>(<span class="at">FIELD =</span> <span class="st">"Gorda Ridge"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb114-6"><a href="#cb114-6" aria-hidden="true" tabindex="-1"></a>          <span class="fu">add_column</span>(<span class="at">EUK_ml =</span> <span class="cn">NA</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb114-7"><a href="#cb114-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">separate</span>(SAMPLE, <span class="fu">c</span>(<span class="st">"SAMPLE"</span>, <span class="st">"NAME"</span>), <span class="at">sep =</span> <span class="st">"-"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb114-8"><a href="#cb114-8" aria-hidden="true" tabindex="-1"></a>          <span class="fu">select</span>(FIELD, NAME, SAMPLE, <span class="at">EXP =</span> Bottle, <span class="at">PROK_ml =</span> prok_avg, EUK_ml, <span class="at">GRAZING_EFFECT_hr =</span> GrazingRate_hr, <span class="at">GRAZING_EFFECT_hr_min =</span> GrazingRate_hr_min, <span class="at">GRAZING_EFFECT_hr_max =</span> GrazingRate_hr_max, <span class="at">BAC_TURNOVER_PERC =</span> Prok_turnover, <span class="at">ugC_L_perday =</span> ugC_L_perday_morono)) <span class="sc">%&gt;%</span> </span>
+<span id="cb114-9"><a href="#cb114-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(temps) <span class="sc">%&gt;%</span> </span>
+<span id="cb114-10"><a href="#cb114-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">SAMPLE_TYPE =</span> <span class="fu">case_when</span>(</span>
+<span id="cb114-11"><a href="#cb114-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">grepl</span>(<span class="st">"BSW"</span>, NAME) <span class="sc">~</span> <span class="st">"Background"</span>,</span>
+<span id="cb114-12"><a href="#cb114-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">grepl</span>(<span class="st">"Near vent BW"</span>, NAME) <span class="sc">~</span> <span class="st">"Background"</span>,</span>
+<span id="cb114-13"><a href="#cb114-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">grepl</span>(<span class="st">"Background"</span>, NAME) <span class="sc">~</span> <span class="st">"Background"</span>, </span>
+<span id="cb114-14"><a href="#cb114-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">grepl</span>(<span class="st">"Plume"</span>, NAME) <span class="sc">~</span> <span class="st">"Background"</span>,</span>
+<span id="cb114-15"><a href="#cb114-15" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Vent"</span></span>
+<span id="cb114-16"><a href="#cb114-16" aria-hidden="true" tabindex="-1"></a>  ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining, by = c("NAME", "SAMPLE")</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View(all_vents)</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a><span class="co"># all_vents</span></span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a><span class="co"># write_delim(all_vents, file = "output-data/grazing-cellcounts-GR_MCR.txt", delim = "\t")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="plot-combined-results" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="plot-combined-results"><span class="header-section-number">11.2</span> Plot combined results</h2>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>allrates <span class="ot">&lt;-</span> all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(FIELD, NAME, SAMPLE, EXP, SAMPLE_TYPE, <span class="fu">starts_with</span>(<span class="st">"GRAZING_EFFECT_"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> GRAZING_EFFECT_hr, <span class="at">x =</span> NAME, <span class="at">fill =</span> FIELD, <span class="at">shape =</span> SAMPLE_TYPE)) <span class="sc">+</span></span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymax =</span> (GRAZING_EFFECT_hr_max), <span class="at">ymin =</span> (GRAZING_EFFECT_hr_min)), </span>
+<span id="cb117-6"><a href="#cb117-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">width =</span> <span class="fl">0.2</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.4</span>)) <span class="sc">+</span></span>
+<span id="cb117-7"><a href="#cb117-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="fu">aes</span>(<span class="at">fill =</span> FIELD, <span class="at">shape =</span> SAMPLE_TYPE),</span>
+<span id="cb117-8"><a href="#cb117-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.4</span>)) <span class="sc">+</span></span>
+<span id="cb117-9"><a href="#cb117-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="dv">21</span>, <span class="dv">24</span>)) <span class="sc">+</span></span>
+<span id="cb117-10"><a href="#cb117-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#de2d26"</span>, <span class="st">"#1c9099"</span>, <span class="st">"#addd8e"</span>)) <span class="sc">+</span></span>
+<span id="cb117-11"><a href="#cb117-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>(. <span class="sc">~</span> SAMPLE_TYPE, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">space =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb117-12"><a href="#cb117-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb117-13"><a href="#cb117-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_line</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb117-14"><a href="#cb117-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.background =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb117-15"><a href="#cb117-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.line =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">"black"</span>), </span>
+<span id="cb117-16"><a href="#cb117-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>, </span>
+<span id="cb117-17"><a href="#cb117-17" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="dv">1</span>), </span>
+<span id="cb117-18"><a href="#cb117-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb117-19"><a href="#cb117-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.title =</span><span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb117-20"><a href="#cb117-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.ticks =</span> <span class="fu">element_line</span>(),</span>
+<span id="cb117-21"><a href="#cb117-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb117-22"><a href="#cb117-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.placement =</span> <span class="st">"outside"</span>,</span>
+<span id="cb117-23"><a href="#cb117-23" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb117-24"><a href="#cb117-24" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.x =</span> <span class="fu">element_blank</span>())<span class="sc">+</span></span>
+<span id="cb117-25"><a href="#cb117-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">shape =</span> <span class="fu">c</span>(<span class="dv">21</span>))),</span>
+<span id="cb117-26"><a href="#cb117-26" aria-hidden="true" tabindex="-1"></a>           <span class="at">shape =</span> <span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">fill =</span> <span class="st">"black"</span>))) <span class="sc">+</span></span>
+<span id="cb117-27"><a href="#cb117-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="fu">bquote</span>(<span class="st">"cells"</span><span class="sc">~</span>ml<span class="sc">^-</span><span class="dv">1</span><span class="sc">~</span>hr<span class="sc">^-</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Add Gorda Ridge comparison to supplementary?</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a>allrates</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-63-1.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>allrates <span class="sc">+</span> <span class="fu">scale_y_log10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Transformation introduced infinite values in continuous y-axis
+Transformation introduced infinite values in continuous y-axis
+Transformation introduced infinite values in continuous y-axis
+Transformation introduced infinite values in continuous y-axis</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-63-2.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="co"># allrates + scale_y_continuous(limits = c(0,1000))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="remove-undetected-grazing-rate" class="level3">
+<h3 class="anchored" data-anchor-id="remove-undetected-grazing-rate">Remove undetected grazing rate</h3>
+<p>Repeat grazing rate plot, but removed undetectable</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="co"># unique(all_vents$GRAZING_EFFECT_hr)</span></span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>allrates_nonzero <span class="ot">&lt;-</span> all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(FIELD, NAME, SAMPLE, EXP, SAMPLE_TYPE, <span class="fu">starts_with</span>(<span class="st">"GRAZING_EFFECT_"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb122-6"><a href="#cb122-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> GRAZING_EFFECT_hr, <span class="at">x =</span> NAME, <span class="at">fill =</span> FIELD, <span class="at">shape =</span> SAMPLE_TYPE)) <span class="sc">+</span></span>
+<span id="cb122-7"><a href="#cb122-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymax =</span> (GRAZING_EFFECT_hr_max), <span class="at">ymin =</span> (GRAZING_EFFECT_hr_min)), </span>
+<span id="cb122-8"><a href="#cb122-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">width =</span> <span class="fl">0.2</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.4</span>)) <span class="sc">+</span></span>
+<span id="cb122-9"><a href="#cb122-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="fu">aes</span>(<span class="at">fill =</span> FIELD, <span class="at">shape =</span> SAMPLE_TYPE),</span>
+<span id="cb122-10"><a href="#cb122-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.4</span>)) <span class="sc">+</span></span>
+<span id="cb122-11"><a href="#cb122-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="dv">21</span>, <span class="dv">24</span>)) <span class="sc">+</span></span>
+<span id="cb122-12"><a href="#cb122-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#de2d26"</span>, <span class="st">"#1c9099"</span>, <span class="st">"#addd8e"</span>)) <span class="sc">+</span></span>
+<span id="cb122-13"><a href="#cb122-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>(. <span class="sc">~</span> SAMPLE_TYPE, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">space =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
+<span id="cb122-14"><a href="#cb122-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb122-15"><a href="#cb122-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_line</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb122-16"><a href="#cb122-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.background =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb122-17"><a href="#cb122-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.line =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">"black"</span>), </span>
+<span id="cb122-18"><a href="#cb122-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>, </span>
+<span id="cb122-19"><a href="#cb122-19" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="dv">1</span>), </span>
+<span id="cb122-20"><a href="#cb122-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb122-21"><a href="#cb122-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.title =</span><span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb122-22"><a href="#cb122-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.ticks =</span> <span class="fu">element_line</span>(),</span>
+<span id="cb122-23"><a href="#cb122-23" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb122-24"><a href="#cb122-24" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.placement =</span> <span class="st">"outside"</span>,</span>
+<span id="cb122-25"><a href="#cb122-25" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">color=</span><span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb122-26"><a href="#cb122-26" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.x =</span> <span class="fu">element_blank</span>())<span class="sc">+</span></span>
+<span id="cb122-27"><a href="#cb122-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">shape =</span> <span class="fu">c</span>(<span class="dv">21</span>))),</span>
+<span id="cb122-28"><a href="#cb122-28" aria-hidden="true" tabindex="-1"></a>           <span class="at">shape =</span> <span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">fill =</span> <span class="st">"black"</span>))) <span class="sc">+</span></span>
+<span id="cb122-29"><a href="#cb122-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="fu">bquote</span>(<span class="st">"cells"</span><span class="sc">~</span>ml<span class="sc">^-</span><span class="dv">1</span><span class="sc">~</span>hr<span class="sc">^-</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="co"># svg("compare-all-rates-color-nonZero.svg", h = 4, w = 7)</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>allrates_nonzero <span class="sc">+</span> <span class="fu">scale_y_log10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-65-1.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dev.off()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Panel plot, cells per ml and grazing rate</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="co"># svg("plot-gcellconc-grazing-log.svg", h = 10, w = 6)</span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a><span class="co"># grazing_rate + scale_y_log10(limits = c(1e-1,1e5), breaks=10^(0:7))</span></span>
+<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(<span class="fu">conc_rate_plot_mcr</span>(biomass_rate_plot, <span class="st">"PROK_ml"</span>, <span class="st">"PROK_sem"</span>),</span>
+<span id="cb125-4"><a href="#cb125-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">conc_rate_plot_mcr</span>(biomass_rate_plot, <span class="st">"EUK_ml"</span>, <span class="st">"EUK_sem"</span>),</span>
+<span id="cb125-5"><a href="#cb125-5" aria-hidden="true" tabindex="-1"></a>allrates_nonzero <span class="sc">+</span> <span class="fu">scale_y_log10</span>(), <span class="at">ncol =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/Plot%20cell%20conc%20and%20rates-1.png" class="img-fluid" width="576"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dev.off()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="co"># svg("cells-per-ml.svg", h = 7, w = 7)</span></span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a><span class="fu">conc_rate_plot_mcr</span>(biomass_rate_plot, <span class="st">"EUK_ml"</span>, <span class="st">"EUK_sem"</span>) <span class="sc">+</span> <span class="fu">conc_rate_plot_mcr</span>(biomass_rate_plot, <span class="st">"PROK_ml"</span>, <span class="st">"PROK_sem"</span>) <span class="sc">+</span> patchwork<span class="sc">::</span><span class="fu">plot_layout</span>(<span class="at">ncol =</span> <span class="dv">1</span>) <span class="sc">+</span> patchwork<span class="sc">::</span><span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">"a"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-66-1.png" class="img-fluid" width="672"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dev.off()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+</section>
+<section id="linear-regression" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Linear regression</h1>
+<p>Use tidymodels to perform linear regression. Include MCR and GR data.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ?pivot_longer</span></span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a><span class="co"># e IGT</span></span>
+<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a><span class="co"># head(all_vents)</span></span>
+<span id="cb129-5"><a href="#cb129-5" aria-hidden="true" tabindex="-1"></a>regression_input <span class="ot">&lt;-</span> all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb129-6"><a href="#cb129-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>(SAMPLE <span class="sc">==</span> <span class="st">"Piccard-Shrimpocalypse"</span> <span class="sc">&amp;</span> EXP <span class="sc">==</span> <span class="st">"IGT"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-7"><a href="#cb129-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Highest.Temp)) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-8"><a href="#cb129-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(FIELD, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday, <span class="at">TEMP =</span> Highest.Temp) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-9"><a href="#cb129-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">PROK_EUK_RATIO =</span> (PROK_ml<span class="sc">/</span>EUK_ml)) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-10"><a href="#cb129-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday), <span class="at">names_to =</span> <span class="st">"RATE"</span>, <span class="at">values_to =</span> <span class="st">"RATE_VALUE"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-11"><a href="#cb129-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(PROK_ml, EUK_ml, PROK_EUK_RATIO, TEMP), <span class="at">names_to =</span> <span class="st">"PARAMS"</span>, <span class="at">values_to =</span> <span class="st">"PARAMS_VALUE"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-12"><a href="#cb129-12" aria-hidden="true" tabindex="-1"></a>  data.frame</span>
+<span id="cb129-13"><a href="#cb129-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb129-14"><a href="#cb129-14" aria-hidden="true" tabindex="-1"></a>regression_tmp <span class="ot">&lt;-</span> regression_input <span class="sc">%&gt;%</span> </span>
+<span id="cb129-15"><a href="#cb129-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Set up the linear regression</span></span>
+<span id="cb129-16"><a href="#cb129-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(RATE, PARAMS) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-17"><a href="#cb129-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nest</span>(<span class="sc">-</span>RATE, <span class="sc">-</span>PARAMS) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-18"><a href="#cb129-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lm_fit =</span> <span class="fu">map</span>(data, <span class="sc">~</span><span class="fu">lm</span>(RATE_VALUE <span class="sc">~</span> PARAMS_VALUE, <span class="at">data =</span> .)), </span>
+<span id="cb129-19"><a href="#cb129-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">tidied =</span> <span class="fu">map</span>(lm_fit, tidy)) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-20"><a href="#cb129-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(tidied) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-21"><a href="#cb129-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(RATE, PARAMS, </span>
+<span id="cb129-22"><a href="#cb129-22" aria-hidden="true" tabindex="-1"></a>    term, estimate) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-23"><a href="#cb129-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> term, <span class="at">values_from =</span> estimate) <span class="sc">%&gt;%</span> </span>
+<span id="cb129-24"><a href="#cb129-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">everything</span>(), <span class="at">SLOPE =</span> PARAMS_VALUE) <span class="sc">%&gt;%</span></span>
+<span id="cb129-25"><a href="#cb129-25" aria-hidden="true" tabindex="-1"></a>  data.frame</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: All elements of `...` must be named.
+Did you want `data = c(-RATE, -PARAMS)`?</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a>regression_results <span class="ot">&lt;-</span> regression_input <span class="sc">%&gt;%</span> </span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(RATE, PARAMS) <span class="sc">%&gt;%</span> </span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nest</span>(<span class="sc">-</span>RATE, <span class="sc">-</span>PARAMS) <span class="sc">%&gt;%</span> </span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lm_fit =</span> <span class="fu">map</span>(data, <span class="sc">~</span><span class="fu">lm</span>(RATE_VALUE <span class="sc">~</span> PARAMS_VALUE, <span class="at">data =</span> .)),</span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">glanced =</span> <span class="fu">map</span>(lm_fit, glance)) <span class="sc">%&gt;%</span> </span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(glanced) <span class="sc">%&gt;%</span> </span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(RATE, PARAMS, r.squared, adj.r.squared) <span class="sc">%&gt;%</span> </span>
+<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">right_join</span>(regression_tmp) <span class="sc">%&gt;%</span></span>
+<span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">right_join</span>(regression_input) <span class="sc">%&gt;%</span></span>
+<span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a>  data.frame</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: All elements of `...` must be named.
+Did you want `data = c(-RATE, -PARAMS)`?</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining, by = c("RATE", "PARAMS")
+Joining, by = c("RATE", "PARAMS")</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb134"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View(regression_results)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Plot results from regression</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>regression_results <span class="sc">%&gt;%</span> </span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># filter(RATE == "GRAZING_EFFECT_hr") %&gt;%</span></span>
+<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># filter(PARAMS == "TEMP") %&gt;% </span></span>
+<span id="cb135-4"><a href="#cb135-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> PARAMS_VALUE, <span class="at">y =</span> RATE_VALUE, <span class="at">shape =</span> SAMPLE_TYPE, <span class="at">fill =</span> FIELD)) <span class="sc">+</span></span>
+<span id="cb135-5"><a href="#cb135-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>(<span class="fu">aes</span>(<span class="at">slope =</span> SLOPE, <span class="at">intercept =</span> <span class="st">`</span><span class="at">X.Intercept.</span><span class="st">`</span>), <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb135-6"><a href="#cb135-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="fu">aes</span>(<span class="at">shape =</span> SAMPLE_TYPE, <span class="at">fill =</span> FIELD)) <span class="sc">+</span></span>
+<span id="cb135-7"><a href="#cb135-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_shape_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="dv">21</span>, <span class="dv">24</span>)) <span class="sc">+</span></span>
+<span id="cb135-8"><a href="#cb135-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#476AA7"</span>,<span class="st">"#7299CE"</span>, <span class="st">"#A2937A"</span>)) <span class="sc">+</span></span>
+<span id="cb135-9"><a href="#cb135-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(PARAMS <span class="sc">~</span> RATE <span class="sc">+</span> <span class="fu">round</span>(r.squared, <span class="dv">3</span>), <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">ncol =</span> <span class="dv">5</span>,</span>
+<span id="cb135-10"><a href="#cb135-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">strip.position =</span> <span class="st">"bottom"</span>, <span class="at">labeller =</span> label_parsed) <span class="sc">+</span></span>
+<span id="cb135-11"><a href="#cb135-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb135-12"><a href="#cb135-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb135-13"><a href="#cb135-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.background =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb135-14"><a href="#cb135-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.placement =</span> <span class="st">"outside"</span>,</span>
+<span id="cb135-15"><a href="#cb135-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb135-16"><a href="#cb135-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb135-17"><a href="#cb135-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.title =</span> <span class="fu">element_blank</span>()) <span class="co"># +</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 24 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-68-1.png" class="img-fluid" width="1440"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># labs(y = bquote("Cells "~mL^-1 ~hr^-1), x = "Temperature (C)")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><em>Regression thoughts</em>: Unremarkable r squared values (numbers at the bottom of each plot). Some trends, mainly associated with temperature.</p>
+</section>
+<section id="grazing-environmental-parameters" class="level1" data-number="13">
+<h1 data-number="13"><span class="header-section-number">13</span> Grazing &amp; environmental parameters</h1>
+<ul>
+<li>What parameters influence grazing rates of protists on bacteria?</li>
+</ul>
+<section id="plot-temperature-by-eukprok" class="level2" data-number="13.1">
+<h2 data-number="13.1" class="anchored" data-anchor-id="plot-temperature-by-eukprok"><span class="header-section-number">13.1</span> Plot temperature by euk:prok</h2>
+<p>Plot temperature by euk and prok per ml individually too.</p>
+<p>Bacterial abundance typically increases with temperature (White et al.&nbsp;1991) - which could ultimately increase bacterial ingestion rate and total protist cells. But at this type of niche environment, I hypothesize that there is a trend but threshold of not detected grazing under certain conditions.</p>
+<p>If euk per ml numbers are high, but we see lower grazing rates, could this be competition? Curds and Cockburn 1968. Additionally with temperature… in Vaque et al GRF (specific grazing rates of flagellates) increased with temperature, but overall grazing rate reached a plateau at 18C. Does this mean that temperature will be an important factor depending on the community diversity?</p>
+</section>
+<section id="plot-temperature-by-grazing-rate" class="level2" data-number="13.2">
+<h2 data-number="13.2" class="anchored" data-anchor-id="plot-temperature-by-grazing-rate"><span class="header-section-number">13.2</span> Plot temperature by grazing rate</h2>
+</section>
+<section id="plot-euk-per-ml-with-temperature-and-grazing-rate" class="level2" data-number="13.3">
+<h2 data-number="13.3" class="anchored" data-anchor-id="plot-euk-per-ml-with-temperature-and-grazing-rate"><span class="header-section-number">13.3</span> Plot euk per ml with temperature and grazing rate</h2>
+</section>
+</section>
+<section id="prediction-of-mcr-data-with-parameters" class="level1" data-number="14">
+<h1 data-number="14"><span class="header-section-number">14</span> Prediction of MCR data with parameters</h1>
+<p>Best model to estimate commuiyt grazing rate in Vaque et al.&nbsp;considered FLP uptake and similar experiments (in contrast to disappearance experiments)</p>
+<p>From Vaque et al.&nbsp;1994 paper equation (1):</p>
+<p>See Figure 6</p>
+<blockquote class="blockquote">
+<p>log(GT) = -3.21 + 0.99 log (HNF) + 0.028 (T) + 0.55 log(BAC)</p>
+</blockquote>
+<p><em>GT</em> = grazing rate (cells ml-1 hr-1) <em>HNF</em> = heterotrophic nanoflagellates (cells ml-1) T = temperature (C) <em>BAC</em> = prokaryote abundance (cells ml-1)</p>
+<p>Start with non-zero grazing rate values, etc. Where… <em>GT</em> == Grazing effect hr <em>HNF</em> == Euk_ml <em>BAC</em> == PROK_ml <em>T</em> == highest temp</p>
+<p>We only have these for MCR data.. can include GR for the “predicting euk_ml”</p>
+<p>Function to use above formula and estimate</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb138"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a>est_predicted <span class="ot">&lt;-</span> <span class="cf">function</span>(df, TITLE){</span>
+<span id="cb138-2"><a href="#cb138-2" aria-hidden="true" tabindex="-1"></a>  df_out <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
+<span id="cb138-3"><a href="#cb138-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, Highest.Temp) <span class="sc">%&gt;%</span> </span>
+<span id="cb138-4"><a href="#cb138-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr) <span class="sc">%&gt;%</span> </span>
+<span id="cb138-5"><a href="#cb138-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">TEMP =</span> <span class="fu">mean</span>(Highest.Temp)) <span class="sc">%&gt;%</span> </span>
+<span id="cb138-6"><a href="#cb138-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb138-7"><a href="#cb138-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">PREDICTED_TEMP =</span> (((<span class="fu">log10</span>(GRAZING_EFFECT_hr)) <span class="sc">+</span> <span class="fl">3.21</span> <span class="sc">-</span> (<span class="fl">0.99</span><span class="sc">*</span><span class="fu">log10</span>(EUK_ml)) <span class="sc">-</span> (<span class="fl">0.55</span><span class="sc">*</span><span class="fu">log10</span>(PROK_ml))) <span class="sc">/</span> <span class="fl">0.028</span>),</span>
+<span id="cb138-8"><a href="#cb138-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">PREDICTED_GRAZING_EFFECT_hr =</span> (<span class="dv">10</span><span class="sc">^</span>(<span class="sc">-</span><span class="fl">3.21</span> <span class="sc">+</span> (<span class="fl">0.99</span><span class="sc">*</span><span class="fu">log10</span>(EUK_ml)) <span class="sc">+</span> (<span class="fl">0.028</span><span class="sc">*</span>TEMP) <span class="sc">+</span> (<span class="fl">0.55</span><span class="sc">*</span>(<span class="fu">log10</span>(PROK_ml))))),</span>
+<span id="cb138-9"><a href="#cb138-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">PREDICTED_EUK =</span> (<span class="dv">10</span><span class="sc">^</span>(((<span class="fu">log10</span>(GRAZING_EFFECT_hr)) <span class="sc">+</span> <span class="fl">3.21</span> <span class="sc">-</span> (<span class="fl">0.55</span><span class="sc">*</span><span class="fu">log10</span>(PROK_ml)) <span class="sc">-</span> (<span class="fl">0.028</span><span class="sc">*</span>TEMP))<span class="sc">/</span><span class="fl">0.99</span>)),</span>
+<span id="cb138-10"><a href="#cb138-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">PREDICTED_PROK =</span> (<span class="dv">10</span><span class="sc">^</span>(((<span class="fu">log10</span>(GRAZING_EFFECT_hr)) <span class="sc">+</span> <span class="fl">3.21</span> <span class="sc">-</span> (<span class="fl">0.99</span><span class="sc">*</span><span class="fu">log10</span>(EUK_ml)) <span class="sc">-</span> (<span class="fl">0.028</span><span class="sc">*</span>TEMP))<span class="sc">/</span><span class="fl">0.55</span>)))</span>
+<span id="cb138-11"><a href="#cb138-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plots</span></span>
+<span id="cb138-12"><a href="#cb138-12" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-13"><a href="#cb138-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> PREDICTED_GRAZING_EFFECT_hr, <span class="at">y =</span> GRAZING_EFFECT_hr)) <span class="sc">+</span></span>
+<span id="cb138-14"><a href="#cb138-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"red"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-15"><a href="#cb138-15" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-16"><a href="#cb138-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">log10</span>(PREDICTED_GRAZING_EFFECT_hr), <span class="at">y =</span> <span class="fu">log10</span>(GRAZING_EFFECT_hr))) <span class="sc">+</span></span>
+<span id="cb138-17"><a href="#cb138-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"red"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-18"><a href="#cb138-18" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-19"><a href="#cb138-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> PREDICTED_EUK, <span class="at">y =</span> EUK_ml)) <span class="sc">+</span></span>
+<span id="cb138-20"><a href="#cb138-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"darkgreen"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-21"><a href="#cb138-21" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-22"><a href="#cb138-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">log10</span>(PREDICTED_EUK), <span class="at">y =</span> <span class="fu">log10</span>(EUK_ml))) <span class="sc">+</span></span>
+<span id="cb138-23"><a href="#cb138-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"darkgreen"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-24"><a href="#cb138-24" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-25"><a href="#cb138-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> PREDICTED_PROK, <span class="at">y =</span> PROK_ml)) <span class="sc">+</span></span>
+<span id="cb138-26"><a href="#cb138-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"blue"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-27"><a href="#cb138-27" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-28"><a href="#cb138-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">log10</span>(PREDICTED_PROK), <span class="at">y =</span> <span class="fu">log10</span>(PROK_ml))) <span class="sc">+</span></span>
+<span id="cb138-29"><a href="#cb138-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"blue"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-30"><a href="#cb138-30" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-31"><a href="#cb138-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> PREDICTED_TEMP, <span class="at">y =</span> TEMP)) <span class="sc">+</span></span>
+<span id="cb138-32"><a href="#cb138-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-33"><a href="#cb138-33" aria-hidden="true" tabindex="-1"></a>  df_out <span class="sc">%&gt;%</span> </span>
+<span id="cb138-34"><a href="#cb138-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">log10</span>(PREDICTED_TEMP), <span class="at">y =</span> <span class="fu">log10</span>(TEMP))) <span class="sc">+</span></span>
+<span id="cb138-35"><a href="#cb138-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">shape =</span> <span class="dv">21</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb138-36"><a href="#cb138-36" aria-hidden="true" tabindex="-1"></a>  patchwork<span class="sc">::</span><span class="fu">plot_layout</span>(<span class="at">ncol =</span> <span class="dv">4</span>) <span class="sc">+</span> <span class="fu">plot_annotation</span>(<span class="at">title =</span> TITLE)</span>
+<span id="cb138-37"><a href="#cb138-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># return(df_out)</span></span>
+<span id="cb138-38"><a href="#cb138-38" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb138-39"><a href="#cb138-39" aria-hidden="true" tabindex="-1"></a><span class="co"># head(all_vents)</span></span>
+<span id="cb138-40"><a href="#cb138-40" aria-hidden="true" tabindex="-1"></a><span class="co"># unique(all_vents$NAME)</span></span>
+<span id="cb138-41"><a href="#cb138-41" aria-hidden="true" tabindex="-1"></a><span class="co"># range(all_vents$Highest.Temp)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents, <span class="st">"all values"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in FUN(X[[i]], ...): NaNs produced
+
+Warning in FUN(X[[i]], ...): NaNs produced</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 8 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-70-1.png" class="img-fluid" width="1440"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a>mcr <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Von Damm"</span>, <span class="st">"Piccard"</span>)</span>
+<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a>bsw <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Backgound"</span>, <span class="st">"BSW"</span>, <span class="st">"Plume"</span>, <span class="st">"Near vent BW"</span>)</span>
+<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb144-4"><a href="#cb144-4" aria-hidden="true" tabindex="-1"></a><span class="co"># est_predicted(all_vents %&gt;% filter(FIELD %in% mcr), "Mid-Cayman Rise only")</span></span>
+<span id="cb144-5"><a href="#cb144-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb144-6"><a href="#cb144-6" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> <span class="fu">filter</span>(FIELD <span class="sc">%in%</span> mcr) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>), <span class="st">"Mid-Cayman Rise only, no undetected"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-71-1.png" class="img-fluid" width="1440"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb146"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a><span class="co"># est_predicted(all_vents %&gt;% filter(FIELD %in% mcr) %&gt;% filter(GRAZING_EFFECT_hr &gt; 0) %&gt;% filter(!(NAME %in% bsw)), "Mid-Cayman Rise only, no undetected, vents only")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb147"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb147-1"><a href="#cb147-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span>  <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>), <span class="st">"All samples where grazing was detected"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).
+Removed 5 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-72-1.png" class="img-fluid" width="1440"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb150"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View(all_vents)</span></span>
+<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a><span class="co"># est_predicted(all_vents %&gt;% filter(!(NAME %in% bsw)), "Vent samples only")</span></span>
+<span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb150-4"><a href="#cb150-4" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>(NAME <span class="sc">%in%</span> bsw)) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>), <span class="st">"Vent samples only where grazing was detected"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).
+Removed 4 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-73-1.png" class="img-fluid" width="1440"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb153"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb153-1"><a href="#cb153-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View(all_vents)</span></span>
+<span id="cb153-2"><a href="#cb153-2" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb153-3"><a href="#cb153-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(<span class="sc">!</span>(NAME <span class="sc">%in%</span> bsw)) <span class="sc">%&gt;%</span> </span>
+<span id="cb153-4"><a href="#cb153-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(FIELD <span class="sc">%in%</span> mcr) <span class="sc">%&gt;%</span> </span>
+<span id="cb153-5"><a href="#cb153-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>), <span class="st">"MCR vent samples only where grazing was detected"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-74-1.png" class="img-fluid" width="1440"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb155"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb155-2"><a href="#cb155-2" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(<span class="sc">!</span>(NAME <span class="sc">%in%</span> bsw)) <span class="sc">%&gt;%</span> </span>
+<span id="cb155-3"><a href="#cb155-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(FIELD <span class="sc">==</span> <span class="st">"Von Damm"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb155-4"><a href="#cb155-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>), <span class="st">"MCR vent samples only where grazing was detected"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-74-2.png" class="img-fluid" width="1440"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="co"># not really enough in Piccard to make this statistically sound.</span></span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a><span class="co"># est_predicted(all_vents %&gt;% </span></span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a><span class="co">#                 filter(!(NAME %in% bsw)) %&gt;% </span></span>
+<span id="cb157-4"><a href="#cb157-4" aria-hidden="true" tabindex="-1"></a><span class="co">#                 filter(FIELD == "Piccard") %&gt;% </span></span>
+<span id="cb157-5"><a href="#cb157-5" aria-hidden="true" tabindex="-1"></a><span class="co">#                 filter(GRAZING_EFFECT_hr &gt; 0), "MCR vent samples only where grazing was detected")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb158"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(all_vents<span class="sc">$</span>Highest.Temp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-75-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>What about a temperature threshold? Perhaps this exists, but maybe not enough data to include.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb159"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb159-2"><a href="#cb159-2" aria-hidden="true" tabindex="-1"></a>                <span class="co"># filter(!(NAME %in% bsw)) %&gt;% </span></span>
+<span id="cb159-3"><a href="#cb159-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(Highest.Temp <span class="sc">&gt;</span> <span class="dv">60</span>), <span class="st">"All samples, temps higher than 60C"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in FUN(X[[i]], ...): NaNs produced
+
+Warning in FUN(X[[i]], ...): NaNs produced</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 2 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-76-1.png" class="img-fluid" width="1440"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb164"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb164-2"><a href="#cb164-2" aria-hidden="true" tabindex="-1"></a>                <span class="co"># filter(!(NAME %in% bsw)) %&gt;% </span></span>
+<span id="cb164-3"><a href="#cb164-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(Highest.Temp <span class="sc">&lt;</span> <span class="dv">60</span>), <span class="st">"All samples, temps lower than 60C"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in FUN(X[[i]], ...): NaNs produced
+
+Warning in FUN(X[[i]], ...): NaNs produced</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 5 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-76-2.png" class="img-fluid" width="1440"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb170"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb170-2"><a href="#cb170-2" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb170-3"><a href="#cb170-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(Highest.Temp <span class="sc">&gt;</span> <span class="dv">60</span>), <span class="st">"Removed undetected, temps higher than 60C"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).
+Removed 1 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-77-1.png" class="img-fluid" width="1440"></p>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb173"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb173-1"><a href="#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="fu">est_predicted</span>(all_vents <span class="sc">%&gt;%</span> </span>
+<span id="cb173-2"><a href="#cb173-2" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(GRAZING_EFFECT_hr <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb173-3"><a href="#cb173-3" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(Highest.Temp <span class="sc">&lt;</span> <span class="dv">60</span>), <span class="st">"Removed undetected, temps lower than 60C"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'FIELD', 'NAME', 'SAMPLE', 'EXP',
+'PROK_ml', 'EUK_ml'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).
+Removed 3 rows containing missing values (geom_point).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="grazing_files/figure-html/unnamed-chunk-77-2.png" class="img-fluid" width="1440"></p>
+</div>
+</div>
+</section>
+<section id="session" class="level1" data-number="15">
+<h1 data-number="15"><span class="header-section-number">15</span> Session</h1>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb177"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb177-1"><a href="#cb177-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.2.1 (2022-06-23)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Big Sur ... 10.16
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] patchwork_1.1.2 broom_1.0.1     cowplot_1.1.1   forcats_0.5.2  
+ [5] stringr_1.4.1   dplyr_1.0.10    purrr_0.3.5     readr_2.1.2    
+ [9] tidyr_1.2.1     tibble_3.1.8    ggplot2_3.3.6   tidyverse_1.3.2
+
+loaded via a namespace (and not attached):
+ [1] lubridate_1.8.0     assertthat_0.2.1    digest_0.6.30      
+ [4] utf8_1.2.2          R6_2.5.1            cellranger_1.1.0   
+ [7] backports_1.4.1     reprex_2.0.2        evaluate_0.16      
+[10] httr_1.4.4          pillar_1.8.1        rlang_1.0.6        
+[13] googlesheets4_1.0.1 readxl_1.4.1        rstudioapi_0.14    
+[16] rmarkdown_2.16      labeling_0.4.2      googledrive_2.0.0  
+[19] htmlwidgets_1.5.4   munsell_0.5.0       compiler_4.2.1     
+[22] modelr_0.1.9        xfun_0.33           pkgconfig_2.0.3    
+[25] htmltools_0.5.3     tidyselect_1.2.0    fansi_1.0.3        
+[28] crayon_1.5.2        tzdb_0.3.0          dbplyr_2.2.1       
+[31] withr_2.5.0         grid_4.2.1          jsonlite_1.8.0     
+[34] gtable_0.3.1        lifecycle_1.0.3     DBI_1.1.3          
+[37] magrittr_2.0.3      scales_1.2.1        cli_3.4.1          
+[40] stringi_1.7.8       farver_2.1.1        fs_1.5.2           
+[43] xml2_1.3.3          ellipsis_0.3.2      generics_0.1.3     
+[46] vctrs_0.5.0         RColorBrewer_1.1-3  tools_4.2.1        
+[49] glue_1.6.2          hms_1.1.2           fastmap_1.1.0      
+[52] yaml_2.3.5          colorspace_2.0-3    gargle_1.2.1       
+[55] rvest_1.0.3         knitr_1.40          haven_2.5.1        </code></pre>
+</div>
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
