@@ -36,10 +36,15 @@ metadata_formatted <- metadata %>%
   mutate_all(as.character) %>%
   filter(Sample_or_Control == "Sample") %>%
   filter(!(SAMPLETYPE == "Microcolonizer")) %>%
-  select(SAMPLE, VENT, SITE, SAMPLEID, DEPTH, SAMPLETYPE, YEAR, TEMP = starts_with("TEMP"), pH, PercSeawater = starts_with("Perc"), Mg = starts_with("Mg"), H2 = starts_with("H2."), H2S = starts_with("H2S"), CH4 = starts_with("CH4"), ProkConc, Sample_or_Control)
+  mutate(SAMPLETYPE_BIN = case_when(
+    SAMPLETYPE == "Vent" ~ "vent",
+    TRUE ~ "non-vent"
+  )) %>% 
+  select(SAMPLE, VENT, SITE, SAMPLEID, DEPTH, SAMPLETYPE, SAMPLETYPE_BIN, YEAR, TEMP = starts_with("TEMP"), pH, PercSeawater = starts_with("Perc"), Mg = starts_with("Mg"), H2 = starts_with("H2."), H2S = starts_with("H2S"), CH4 = starts_with("CH4"), ProkConc, Sample_or_Control)
 ```
 
 ### Import decontam results to QC ASV table
+
 ```{r}
 #| warning: false
 load("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/seq-analysis/contam-asvs.RData", verbose= TRUE)
@@ -73,7 +78,7 @@ tax_matrix <- asv_wtax_qc %>%
                   "Family", "Genus", "Species"), sep = ";") %>%
   column_to_rownames(var = "FeatureID") %>%
   as.matrix
-# dim(tax_matrix)
+
 asv_matrix <- asv_wtax_qc %>%
   select(FeatureID, SAMPLE, value) %>%
   pivot_wider(names_from = SAMPLE, values_from = value, values_fill = 0) %>%
@@ -117,28 +122,26 @@ ntaxa(physeq_wnames) #17878
 nsamples(physeq_wnames) #23
 # # physeq_wnames # run with sample, 1000 tax.
 # # head(taxa_names(physeq_wnames))
+?rtree
 mcr_tree <- rtree(ntaxa(physeq_wnames), rooted = TRUE, tip.label = taxa_names(physeq_wnames))
 # class(mcr_tree)
 # ?merge_phyloseq
 physeq_mcr <- merge_phyloseq(physeq_wnames, mcr_tree)
+# taxa_names(physeq_wnames)
 ```
 
 ### Save output ASV tables for downstream analyses
 
 ```{r}
 #| warning: false
-# phylo_obj <- phyloseq(ASV, TAX)
-# samplenames <- sample_data(metadata_formatted)
-# physeq_wnames = merge_phyloseq(phylo_obj, samplenames)
-# dim(asv_wtax_qc)
-# physeq_wnames
 # 
-# save(phylo_obj, samplenames, physeq_wnames, metadata_mcr, asv_wtax_qc, TAX, tax_matrix, physeq_mcr, file = "input-data/MCR-amplicon-data.RData")
+save(phylo_obj, samplenames, physeq_wnames, metadata_mcr, asv_wtax_qc, TAX, tax_matrix, physeq_mcr, file = "input-data/MCR-amplicon-data.RData")
 ```
 
 ## Sequence stats
 
 Total ASVs and sequences for each sample.
+
 ```{r}
 asv_wtax_qc %>% 
   filter(value > 0) %>% 
@@ -155,6 +158,7 @@ asv_wtax_qc %>%
 ```
 
 Create supplementary table with ASV and sequence stats.
+
 ```{r}
 table_supp_seqstats <- asv_wtax_qc %>% 
   filter(value > 0) %>% 
@@ -163,5 +167,3 @@ table_supp_seqstats <- asv_wtax_qc %>%
             ASV_stats = n_distinct(FeatureID))
 # write.csv(table_supp_seqstats, file = "output-data/supp-table-sequencestats.csv")
 ```
-
-
