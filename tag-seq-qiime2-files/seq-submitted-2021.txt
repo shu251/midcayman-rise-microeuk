@@ -1,0 +1,53 @@
+Tube_Number	SAMPLENAME	Type	Site	Name	Rep	Cycles	RNAextract_date	Gelimage	Sequencing run	Note
+51	51_CTRL_control_blank_labblank_0_0_Jun2021	blank	control	labblank	0	0	06-03-2021	5/28/21	was not sequenced	
+52	52_MCR_Piccard_expTf_LotsOShrimp_A_0_Jun2021	expTf	Piccard	LotsOShrimp	A	0	06-03-2021	5/28/21		
+53	53_MCR_Piccard_expTf_LotsOShrimp_B_0_Jun2021	expTf	Piccard	LotsOShrimp	B	0	06-03-2021	5/28/21		
+54	54_MCR_VonDamm_expTf_MustardStand_0_0_Jun2021	expTf	VonDamm	MustardStand	0	0	06-03-2021	5/28/21		
+55	55_MCR_VonDamm_expTf_ShrimpHole_0_0_Jun2021	expTf	VonDamm	ShrimpHole	0	0	06-03-2021	5/28/21		
+56	56_MCR_Piccard_expTf_Plume_0_5_Jun2021	expTf	Piccard	Plume	0	5	06-03-2021	5/28/21		
+57	57_MCR_Piccard_expTf_Shrimpocalypse_0_0_Jun2021	expTf	Piccard	Shrimpocalypse	0	0	07-03-2021	5/28/21		missing R1
+58	58_MCR_VonDamm_expTf_Plume_0_0_Jun2021	expTf	VonDamm	Plume	0	0	07-03-2021	5/28/21		missing R1
+59	59_MCR_VonDamm_expTf_X18_0_0_Jun2021	expTf	VonDamm	X18	0	0	07-03-2021	5/28/21		
+60	60_MCR_VonDamm_expTf_BSW_0_0_Jun2021	expTf	VonDamm	BSW	0	0	07-03-2021	5/28/21		
+61	61_MCR_VonDamm_expTf_Rav2_0_0_Jun2021	expTf	VonDamm	Rav2	0	0	07-03-2021	5/28/21		
+62	62_MCR_Piccard_CTD_Quakeplume_CTD005_5_Jun2021	CTD	Piccard	Quakeplume	CTD005	5	07-03-2021	5/28/21	was not sequenced	
+63	63_MCR_VonDamm_CTD_BSW_CTD002_0_Jun2021	CTD	VonDamm	BSW	CTD002	0	07-03-2021	5/28/21		missing R2
+64	64_CTRL_control_blank_shipboard_0_0_Jun2021	blank	control	shipboard	0	0	07-03-2021	5/28/21		
+65	65_MCR_VonDamm_CTD_Plume_CTD003_0_Jun2021	CTD	VonDamm	Plume	CTD003	0	14-03-2021	5/28/21		missing R2
+66	66_MCR_VonDamm_HOG_ArrowLoop_J21243HOG18_5_Jun2021	HOG	VonDamm	ArrowLoop	J21243HOG18	5	14-03-2021	5/28/21		
+67	67_MCR_VonDamm_HOG_WhiteCastle_J21235HOG12_5_Jun2021	HOG	VonDamm	WhiteCastle	J21235HOG12	5	14-03-2021	6/1/21		
+68	68_MCR_Piccard_HOG_LotsOShrimp_J21242HOG14_0_Jun2021	HOG	Piccard	LotsOShrimp	J21242HOG14	0	14-03-2021	6/1/21		
+69	69_MCR_VonDamm_HOG_MustardStand_J21243HOG14_5_Jun2021	HOG	VonDamm	MustardStand	J21243HOG14	5	14-03-2021	6/1/21		
+70	70_MCR_VonDamm_HOG_Rav2_J21238HOG14_5_Jun2021	HOG	VonDamm	Rav2	J21238HOG14	5	14-03-2021	6/1/21		
+71	71_MCR_VonDamm_HOG_OldManTree_J21238HOG20_5_Jun2021	HOG	VonDamm	OldManTree	J21238HOG20	5	14-03-2021	6/1/21		
+72	72_MCR_VonDamm_HOG_ShrimpHole_J21244HOG18_0_Jun2021	HOG	VonDamm	ShrimpHole	J21244HOG18	0	14-03-2021	6/1/21		
+73	73_MCR_Piccard_CTD_BSW_CTD005_0_Jun2021	CTD	Piccard	BSW	CTD005	0	17-03-2021	6/1/21		
+74	74_MCR_Piccard_CTD_Plume_CTD004_5_Jun2021	CTD	Piccard	Plume	CTD004	5	17-03-2021	6/1/21		missing R1
+75	75_CTRL_control_Control_shipboard_0_0_Jun2021	Control	control	shipboard	0	0	17-03-2021	6/1/21	was not sequenced	
+76	76_MCR_VonDamm_HOG_X18_J21235HOG20_0_Jun2021	HOG	VonDamm	X18	J21235HOG20	0	17-03-2021	6/1/21		
+77	77_MCR_Piccard_HOG_Shrimpocalypse_J21240HOG14_0_Jun2021	HOG	Piccard	Shrimpocalypse	J21240HOG14	0	17-03-2021	6/1/21		
+78	78_MCR_Piccard_HOG_LotsOShrimp_J21241HOG14_0_Jun2021	HOG	Piccard	LotsOShrimp	J21241HOG14	0	17-03-2021	6/1/21		
+79	79_MCR_VonDamm_HOG_Bartizan_J21244HOG12_5_Jun2021	HOG	VonDamm	Bartizan	J21244HOG12	5	17-03-2021	6/1/21		
+80	80_MCR_VonDamm_HOG_Rav2_J21244HOG20_0_Jun2021	HOG	VonDamm	Rav2	J21244HOG20	0	17-03-2021	6/1/21		
+81	81_CTRL_substrate_blank_Quartz2_na_0_Jun2021	blank	substrate	Quartz2	na	0	19-05-2021	6/3/21	was not sequenced	
+82	82_CTRL_substrate_blank_Riftia_na_0_Jun2021	blank	substrate	Riftia	na	0	19-05-2021	6/3/21	was not sequenced	
+83	83_CTRL_substrate_blank_Shell_na_0_Jun2021	blank	substrate	Shell	na	0	19-05-2021	6/3/21	was not sequenced	
+84	84_GR_substrate_MC1_Quartz2_7_0_Jun2021	MC1	substrate	Quartz2	7	0	19-05-2021	6/3/21		
+85	85_GR_substrate_MC1_Riftia_7_0_Jun2021	MC1	substrate	Riftia	7	0	19-05-2021	6/3/21		
+86	86_GR_substrate_MC1_Shell_7_5_Jun2021	MC1	substrate	Shell	7	5	19-05-2021	6/3/21		
+87	87_GR_substrate_MC4_Quartz2_7_0_Jun2021	MC4	substrate	Quartz2	7	0	19-05-2021	6/3/21		
+88	88_GR_substrate_MC4_Riftia_7_0_Jun2021	MC4	substrate	Riftia	7	0	19-05-2021	6/3/21		
+89	89_GR_substrate_MC4_Shell_7_5_Jun2021	MC4	substrate	Shell	7	5	19-05-2021	6/3/21		
+90	90_GR_substrate_MC5_Quartz2_8_0_Jun2021	MC5	substrate	Quartz2	8	0	19-05-2021	6/3/21		missing R2
+91	91_GR_substrate_MC5_Riftia_8_0_Jun2021	MC5	substrate	Riftia	8	0	19-05-2021	6/3/21		
+92	92_GR_substrate_MC5_Shell_8_5_Jun2021	MC5	substrate	Shell	8	5	19-05-2021	6/3/21		
+93	93_GR_substrate_MC6_Quartz2_8_0_Jun2021	MC6	substrate	Quartz2	8	0	19-05-2021	6/3/21		
+94	94_GR_substrate_MC6_Riftia_8_0_Jun2021	MC6	substrate	Riftia	8	0	19-05-2021	6/3/21		
+95	95_GR_substrate_MC6_Shell_8_5_Jun2021	MC6	substrate	Shell	8	5	19-05-2021	6/3/21		missing R2
+96	96_CTRL_substrate_blank_blank_na_0_Jun2021	blank	substrate	blank	na	0	19-05-2021	6/3/21	was not sequenced	
+97	97_GR_substrate_MC2_Quartz2_6_0_Jun2021	MC2	substrate	Quartz2	6	0	26-05-2021	6/3/21		
+98	98_GR_substrate_MC2_Riftia_6_0_Jun2021	MC2	substrate	Riftia	6	0	26-05-2021	6/3/21		
+99	99_GR_substrate_MC2_Shell_6_5_Jun2021	MC2	substrate	Shell	6	5	26-05-2021	6/3/21		
+100	100_GR_substrate_MC3_Quartz2_6_0_Jun2021	MC3	substrate	Quartz2	6	0	26-05-2021	6/3/21		
+101	101_GR_substrate_MC3_Riftia_6_0_Jun2021	MC3	substrate	Riftia	6	0	26-05-2021	6/3/21		
+102	102_GR_substrate_MC3_Shell_6_5_Jun2021	MC3	substrate	Shell	6	5	26-05-2021	6/3/21		
