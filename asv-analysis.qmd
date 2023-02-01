@@ -1,0 +1,962 @@
+---
+title: "18S rRNA gene amplicon survey"
+format:
+  html:
+    code-fold: true
+    code-tools: true
+    code-copy: true
+    toc: true
+    toc-location: left
+    number-sections: true
+    number-depth: 2
+editor: visual
+---
+
+Goals for this analysis are to investigate specific protistan taxonomic groups in the context of elevated grazing activity, cell biomass, and hydrothermal vent sample type. 
+
+Data originate from in situ MCR samples from a tag-sequence survey and the Tf time point from the grazing experiments. Additionally, in situ and grazing experiments were conducted within vent sites, at the plume, and in the background.
+
+
+# Import sequence and metadata
+
+Set up R environment
+
+```{r}
+#| message: false
+library(tidyverse); library(phyloseq); library(ape)
+library(ggupset)
+```
+
+Import previously sequenced and analyzed tag-sequence data. See https://shu251.github.io/microeuk-amplicon-survey/ for additional information.
+
+## Import ASV R objects
+
+```{r}
+#| warning: false
+load("input-data/MCR-amplicon-data.RData", verbose = T)
+# physeq_mcr
+```
+
+## Factor - legend/color key
+
+```{r}
+vent_ids <- c("BSW", "Plume")
+
+vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "OldManTree", "Rav2", "MustardStand", "ShrimpHole", "WhiteCastle", "ArrowLoop")
+vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "White Castle", "Arrow Loop")
+site_ids <- c("VD", "Piccard")
+
+site_fullname <- c("Von Damm", "Piccard")
+site_color <- c("#264653", "#E76F51")
+names(site_color) <- site_fullname
+
+whole_pal <- c("#264653", "#2A9D8F", "#E9C46A","#F4A261", "#E76F51")
+
+extra <- c("#eae2b7", "#5f0f40", "#90be6d", "#941b0c", "#577590")
+# Colors for VD and Piccard
+site_colors <- c("#418b84", "#943b36")
+# site_colors
+
+# Vent colors
+vent_colors <- c("#253494","#1d91c0", "#E9C46A", "#E76F51", "#264653", "#2A9D8F", "#2A9D8F", "#90be6d", "#941b0c", "#577590", "#eae2b7", "#deebf7")
+# vent_colors <- c("")
+names(vent_colors) <- vent_fullname
+# all_taxa_color = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#deebf7", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525", "#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525")
+```
+
+
+# Preliminary look at all samples
+
+## Cluster analysis
+
+Ordination analysis and methods to look at whole protistan communities at MCR.
+
+```{r}
+# | message: false
+library(vegan); library(ggdendro); library(compositions)
+```
+
+### with grazing assays
+
+```{r}
+# head(asv_wtax_qc)
+asv_mcr_numeric <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  group_by(FeatureID, SAMPLENAME) %>% 
+  summarise(MEAN_ACROSS_REPS = mean(value)) %>% 
+  select(FeatureID, SAMPLENAME, MEAN_ACROSS_REPS) %>% 
+  pivot_wider(names_from = SAMPLENAME, values_from = MEAN_ACROSS_REPS, values_fill = 0) %>% 
+  column_to_rownames(var = "FeatureID")
+```
+
+Transform compositional data, center log ratio.
+
+```{r}
+logratio_mcr <- data.frame(compositions::clr(t(asv_mcr_numeric)))
+# dim(logratio_mcr)
+# ?alr()
+# ?ilr()
+
+pca_logratio <- prcomp(logratio_mcr)
+
+variance_logratio <- (pca_logratio$sdev^2)/sum(pca_logratio$sdev^2)
+
+barplot(variance_logratio, main = "Log-Ratio PCA Screeplot", xlab = "PC Axis", ylab = "% Variance", 
+    cex.names = 1.5, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+
+```
+
+```{r}
+# Extract PCA points
+mcr_pca_pts <- data.frame(pca_logratio$x, SAMPLE = rownames(pca_logratio$x)) %>% 
+  rownames_to_column(var = "SAMPLENAME") %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
+        remove = FALSE) 
+```
+
+PCoA with all samples
+
+```{r, fig.height=5, fig.width=6}
+mcr_pca_pts %>% 
+  mutate(VENT_ORDER = factor(VENT, levels = vent_ids, labels = vent_fullname),
+         SITE_ORDER = factor(SITE, levels = c("VonDamm", "Piccard"), labels = site_fullname)) %>% 
+  mutate(TYPE = case_when(
+    SAMPLETYPE == "Incubation" ~ "Incubation",
+    TRUE ~ "in situ"
+  )) %>% 
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(color = "black", stroke = 1.3, size = 5, aes(shape = TYPE, fill = VENT_ORDER, alpha = SITE)) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_alpha_manual(values = c(0.6, 1)) +
+  scale_fill_manual(values = vent_colors) +
+  theme_linedraw() +
+  guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0)
+
+```
+
+#### Dendrogram analysis
+
+```{r}
+# ?decostand()
+# Relative abundance
+rel_abun <- decostand(asv_mcr_numeric, MARGIN = 2, method = "total")
+# Cluster dendrogram (average hierarchical clustering)
+cluster_mcr <- hclust(dist(t(rel_abun)), method = "average")
+dendro <- as.dendrogram(cluster_mcr)
+mcr_dendro <- dendro_data(dendro, type = "rectangle")
+
+```
+
+```{r, fig.height=8, fig.width=4}
+mcr_dendro_plot <- ggplot(segment(mcr_dendro)) +
+  geom_segment(aes(x = x, y = y, xend = xend, 
+    yend = yend)) + 
+  coord_flip() + 
+  scale_y_reverse(expand = c(0.2, 0.5), breaks = c(0, 0.2, 0.4, 0.6, 0.8)) +
+  geom_text(aes(x = x, y = y, label = label, angle = 0, hjust = 0), data = label(mcr_dendro)) +
+  theme_dendro() + labs(y = "Dissimilarity") +
+    theme(axis.text.x = element_text(color = "black", size = 14), axis.line.x = element_line(color = "#252525"), 
+        axis.ticks.x = element_line(), axis.title.x = element_text(color = "black", 
+            size = 14))
+# svg('figs/SUPPLEMENTARY-dendrogram-wreps.svg', w = 10, h = 8)
+mcr_dendro_plot
+```
+
+### insitu only
+
+PCoA with in situ only
+
+```{r}
+asv_mcr_numeric_insitu <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  group_by(FeatureID, SAMPLENAME) %>% 
+  summarise(MEAN_ACROSS_REPS = mean(value)) %>% 
+  select(FeatureID, SAMPLENAME, MEAN_ACROSS_REPS) %>% 
+  pivot_wider(names_from = SAMPLENAME, values_from = MEAN_ACROSS_REPS, values_fill = 0) %>% 
+  column_to_rownames(var = "FeatureID")
+
+insitu_logratio_mcr <- data.frame(compositions::clr(t(asv_mcr_numeric_insitu)))
+
+insitu_pca_logratio <- prcomp(insitu_logratio_mcr)
+
+insitu_variance_logratio <- (insitu_pca_logratio$sdev^2)/sum(insitu_pca_logratio$sdev^2)
+
+barplot(insitu_variance_logratio, main = "Log-Ratio PCA Screeplot", xlab = "PC Axis", ylab = "% Variance", 
+    cex.names = 1.5, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+```
+
+```{r}
+# Extract PCA points for only insitu samples
+insitu_mcr_pca_pts <- data.frame(insitu_pca_logratio$x, SAMPLE = rownames(insitu_pca_logratio$x)) %>% 
+  rownames_to_column(var = "SAMPLENAME") %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
+        remove = FALSE) 
+```
+
+```{r, fig.height=5, fig.width=6}
+insitu_mcr_pca_pts %>% 
+  mutate(VENT_ORDER = factor(VENT, levels = vent_ids, labels = vent_fullname),
+         SITE_ORDER = factor(SITE, levels = c("VonDamm", "Piccard"), labels = site_fullname)) %>% 
+  mutate(TYPE = case_when(
+    SAMPLETYPE == "Incubation" ~ "Incubation",
+    TRUE ~ "in situ"
+  )) %>% 
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(color = "black", stroke = 1.3, size = 5, aes(shape = SITE_ORDER, fill = VENT_ORDER)) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_fill_manual(values = vent_colors) +
+  theme_linedraw() +
+  guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0)
+```
+
+## Community taxonomic composition (richness & sequence relative abundance)
+
+```{r}
+out_labels <- as.data.frame(mcr_dendro$labels)
+mcr_sample_order <- as.character(out_labels$label)
+```
+
+```{r, fig.height=8, fig.width=11}
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
+# head(asv_wtax_qc)
+
+bubble <- asv_wtax_qc %>% 
+    filter(value > 0) %>% 
+  # Avg seq count by ASV across replicates
+  group_by(SAMPLENAME, SITE, VENT, SAMPLETYPE, Taxon, FeatureID) %>% 
+  summarise(avg_seq = mean(value)) %>% 
+  # Separate and curate taxa information
+  # filter(SAMPLETYPE != "Incubation") %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";") %>%
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  # Taxa to supergroup
+  mutate(SupergroupPhylum = SUPERGROUP) %>% 
+  group_by(SAMPLENAME, SITE, VENT, SAMPLETYPE) %>% 
+    mutate(TOTAL_SEQ = sum(avg_seq)) %>% 
+  ungroup() %>% 
+  group_by(SAMPLENAME, SITE, VENT, SAMPLETYPE, SUPERGROUP) %>% 
+  summarise(SUM = sum(avg_seq),
+            REL_ABUN = SUM/TOTAL_SEQ) %>% 
+  mutate(SAMPLENAME_ORDER = factor(SAMPLENAME, levels = mcr_sample_order)) %>% 
+  ggplot(aes(x = SAMPLENAME_ORDER, y = SUPERGROUP, size = REL_ABUN)) +
+    geom_point(shape = 21, color = "white", aes(size = REL_ABUN, fill = SUPERGROUP, alpha = 0.4)) +
+    scale_size_continuous(range = c(2,14)) +
+  # facet_grid(. ~ SITE, scales = "free", space = "free") +
+  theme_minimal() +coord_flip() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1))
+
+bubble
+```
+### Dendrogram with bubble plot
+
+```{r, fig.width=20, fig.height=11}
+# mcr_dendro_plot + bubble + patchwork::plot_layout(ncol = 2) + patchwork::plot_annotation(tag_levels = "a")
+```
+
+### Relative abundance
+
+```{r}
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
+
+asv_wtax_qc %>% 
+    filter(value > 0) %>% 
+  # Avg seq count by ASV across replicates
+  group_by(SAMPLENAME, SITE, VENT, SAMPLETYPE, Taxon, FeatureID) %>% 
+  summarise(avg_seq = mean(value)) %>% 
+  # Separate and curate taxa information
+  # filter(SAMPLETYPE != "Incubation") %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";") %>%
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  # Taxa to supergroup
+  mutate(SupergroupPhylum = SUPERGROUP) %>% 
+  group_by(SAMPLENAME, SITE, VENT, SAMPLETYPE, SUPERGROUP) %>% 
+  summarise(SUM = sum(avg_seq)) %>% 
+  mutate(SAMPLENAME_ORDER = factor(SAMPLENAME, levels = mcr_sample_order)) %>% 
+  ggplot(aes(x = SAMPLENAME_ORDER, y = SUM)) +
+    geom_bar(stat = "identity", position = "fill", color = "black", aes(fill = SUPERGROUP)) +
+  facet_grid(. ~ VENT + SITE, scales = "free", space = "free") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1))
+```
+In bar plot above, in situ and Tf incubation samples are paired for each site.
+
+
+# ASV overlap comparison
+
+```{r}
+# load("input-data/MCR-amplicon-data.RData", verbose=TRUE)
+```
+
+## Supergroup to phylum level comparisons
+
+Generate upsetR plots with varied taxonomic levels.
+
+Questions:
+
+-   How which major supergroups and phyla are shared among vent sites within Von Damm and Piccard?
+
+```{r, fig.height=8, fig.width=11}
+# options for taxa: SupergroupPhylum, Supergroup, Phylum, Class, Order, Family, Genus, Species
+alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
+
+all_taxa_color = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#deebf7", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525", "#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525")
+
+asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";") %>%
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  # Taxa to supergroup
+  mutate(SupergroupPhylum = SUPERGROUP) %>% #add modified "supergroup-phylum category"
+  # Average across replicates
+    group_by(FeatureID, SAMPLENAME, VENT, SupergroupPhylum) %>% 
+    summarise(AVG = mean(value)) %>% 
+  ungroup() %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "Sample_tmp"), remove = TRUE) %>%
+  mutate(REGION = "Mid-Cayman Rise") %>%  
+  mutate(VENTNAME = paste(SITE, VENT, sep = " ")) %>% 
+    select(-Sample_tmp) %>% 
+  unite(SAMPLE, SITE, SAMPLETYPE, VENT, sep = " ", remove = FALSE) %>% 
+  
+  group_by(SupergroupPhylum, SAMPLE) %>% 
+    summarise(SUM = sum(AVG)) %>%
+  ungroup() %>%
+  distinct(SupergroupPhylum, SUM, SAMPLE, .keep_all = TRUE) %>% 
+  group_by(SupergroupPhylum) %>% 
+  summarise(SAMPLE = list(SAMPLE)) %>% 
+  ggplot(aes(x = SAMPLE)) +
+    geom_bar(color = "black", width = 0.7, aes(fill = SupergroupPhylum)) +
+    scale_x_upset(n_intersections = 25) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "", y = "Shared at taxonomic level") +
+  theme_linedraw() +
+  theme(axis.text.y = element_text(color="black", size=14, face = "bold"),
+        axis.text.x = element_text(color="black", size=14, face = "bold"),
+        axis.title = element_text(color="black", size=14, face = "bold"),
+        legend.text = element_text(color = "black", size = 12, face = "bold"),
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.margin = margin(1, 1, 1, 5, "cm")) + 
+  scale_fill_manual(values = all_taxa_color)
+
+# Filter data to reduce noise and show sample type to vent ecosystem variability.
+# 
+```
+
+```{r, fig.width=15, fig.height=12}
+asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";", remove = FALSE) %>%
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  # Taxa to supergroup
+  mutate(SupergroupPhylum = SUPERGROUP) %>% #add modified "supergroup-phylum category"
+  # Average across replicates
+    group_by(FeatureID, SAMPLENAME, VENT, SupergroupPhylum, Taxon) %>% 
+    summarise(AVG = mean(value)) %>% 
+  ungroup() %>% 
+  separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "Sample_tmp"), remove = TRUE) %>%
+  mutate(REGION = "Mid-Cayman Rise") %>%  
+  mutate(VENTNAME = paste(SITE, VENT, sep = " ")) %>% 
+    select(-Sample_tmp) %>% 
+  unite(SAMPLE, SITE, SAMPLETYPE, VENT, sep = " ", remove = FALSE) %>% 
+  group_by(SupergroupPhylum, Taxon, SAMPLE) %>% 
+    summarise(SUM = sum(AVG)) %>%
+  ungroup() %>%
+  distinct(Taxon, SupergroupPhylum, SUM, SAMPLE, .keep_all = TRUE) %>% 
+  group_by(SupergroupPhylum, Taxon) %>% 
+  summarise(SAMPLE = list(SAMPLE)) %>% 
+  ggplot(aes(x = SAMPLE)) +
+    geom_bar(color = "black", width = 0.7, aes(fill = SupergroupPhylum)) +
+    scale_x_upset(n_intersections = 25) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "", y = "Shared at taxonomic level") +
+  theme_linedraw() +
+  theme(axis.text.y = element_text(color="black", size=14, face = "bold"),
+        axis.text.x = element_text(color="black", size=14, face = "bold"),
+        axis.title = element_text(color="black", size=14, face = "bold"),
+        legend.text = element_text(color = "black", size = 12, face = "bold"),
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.margin = margin(1, 1, 1, 5, "cm")) + 
+  scale_fill_manual(values = all_taxa_color)
+```
+
+## ASVs shared across MCR vents
+
+ID ASVs that are shared across Piccard and Von Damm, and those that are shared at vent and non-vent samples.
+
+```{r}
+head(asv_wtax_qc)
+shared_across <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  select(FeatureID, SITE, SAMPLETYPE, SAMPLETYPE_BIN, VENT) %>% 
+  add_column(PRESENCE = 1) %>% 
+  select(FeatureID, SITE, PRESENCE) %>% 
+    pivot_wider(names_from = SITE, values_from = PRESENCE, values_fn = sum) %>% 
+  mutate(FIELD_PA = case_when(
+    is.na(Piccard) ~ "VonDamm only",
+    is.na(VonDamm) ~ "Piccard only",
+    (VonDamm > 0 & Piccard > 0) ~ "Shared across"
+  )) %>% 
+  select(FeatureID, FIELD_PA)
+
+```
+
+```{r}
+head(asv_wtax_qc)
+shared_type <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  select(FeatureID, SITE, SAMPLETYPE, SAMPLETYPE_BIN, VENT) %>% 
+  add_column(PRESENCE = 1) %>% 
+  select(FeatureID, SAMPLETYPE_BIN, PRESENCE) %>% 
+    pivot_wider(names_from = SAMPLETYPE_BIN, values_from = PRESENCE, values_fn = sum) %>% 
+  mutate(TYPE_PA = case_when(
+    (`non-vent` > 0 & vent > 0) ~ "Cosmo",
+    `non-vent` > 0 ~ "Vent only",
+    vent > 0 ~ "Non-vent only",
+  )) %>% 
+  select(FeatureID, TYPE_PA)
+str(shared_type)
+```
+
+
+## ASVs shared in situ & Tf for each experiment
+
+```{r}
+# head(asv_wtax_qc)
+# unique(asv_wtax_qc$SAMPLETYPE)
+shared_exp <- asv_wtax_qc %>% 
+  filter(value > 0) %>% 
+  mutate(EXP_BIN = case_when(
+    SAMPLETYPE == "Incubation" ~ "Incubation",
+    TRUE ~ "in situ"
+  )) %>% 
+  select(FeatureID, SITE, EXP_BIN, SAMPLETYPE_BIN, VENT) %>% 
+  add_column(PRESENCE = 1) %>% 
+  select(FeatureID, EXP_BIN, SITE, VENT, PRESENCE) %>% 
+    pivot_wider(names_from = EXP_BIN, values_from = PRESENCE, values_fn = sum) %>% 
+  mutate(EXP_PA = case_when(
+    (`in situ` > 0 & Incubation > 0) ~ "Shared",
+    `in situ` > 0 ~ "In situ only",
+    Incubation > 0 ~ "Incubation only",
+  )) %>% 
+  select(FeatureID, EXP_PA)
+```
+
+
+### Table to present shared ASVs and taxa
+
+Number of ASVs that are shared or unique at Piccard and Von Damm
+```{r}
+table(left_join(shared_across, shared_exp) %>% 
+  left_join(shared_type) %>% select(FIELD_PA))
+```
+Number of ASVs that are shared between in situ and incubation experiments
+```{r}
+table(left_join(shared_across, shared_exp) %>% 
+  left_join(shared_type) %>% select(EXP_PA))
+```
+```{r}
+table(left_join(shared_across, shared_exp) %>% 
+  left_join(shared_type) %>% select(TYPE_PA))
+```
+For ASVs shared between in situ and experiment (Tf)
+```{r}
+table(left_join(shared_across, shared_exp) %>% 
+  left_join(shared_type) %>% 
+    filter(EXP_PA == "Shared") %>% 
+    select(TYPE_PA))
+    # select(FIELD_PA))
+```
+
+What is the taxonomic composition of those that are shared between the grazing experiments and in situ?
+```{r, fig.height=10, fig.width=7}
+left_join(shared_across, shared_exp) %>% 
+  left_join(shared_type) %>% 
+  right_join(asv_wtax_qc %>% filter(value > 0)) %>% 
+  # filter(EXP_PA == "Shared") %>% 
+  group_by(SAMPLENAME, SITE, VENT, SAMPLETYPE, Taxon, FeatureID, EXP_PA) %>% 
+  summarise(avg_seq = mean(value)) %>% 
+  separate(Taxon, c("Domain", "Supergroup", 
+                  "Phylum", "Class", "Order",
+                  "Family", "Genus", "Species"), sep = ";", remove = FALSE) %>%
+  filter(Domain == "Eukaryota") %>% #select eukaryotes only
+  filter(Supergroup != "Opisthokonta") %>% # remove multicellular metazoa
+  mutate(Supergroup = ifelse(is.na(Supergroup), "Unknown Eukaryota", Supergroup),
+         Phylum = ifelse(is.na(Phylum), "Unknown", Phylum),
+         Phylum = ifelse(Phylum == "Alveolata_X", "Ellobiopsidae", Phylum),
+         Supergroup = ifelse(Supergroup == "Alveolata", paste(Supergroup, Phylum, sep = "-"), Supergroup)) %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup %in% alv ~ "Other Alveolata",
+    Supergroup == "Eukaryota_X" ~ "Unknown Eukaryota",
+    Phylum == "Cercozoa" ~ "Rhizaria-Cercozoa",
+    Phylum == "Radiolaria" ~ "Rhizaria-Radiolaria",
+    Phylum == "Ochrophyta" ~ "Stramenopiles-Ochrophyta",
+    Phylum == "Opalozoa" ~ "Stramenopiles-Opalozoa",
+    Phylum == "Sagenista" ~ "Stramenopiles-Sagenista",
+    TRUE ~ Supergroup
+  )) %>% 
+  group_by(SITE, VENT, SUPERGROUP, EXP_PA) %>% 
+  summarise(SUM = sum(avg_seq)) %>% 
+  # mutate(SAMPLENAME_ORDER = factor(SAMPLENAME, levels = mcr_sample_order)) %>% 
+  ggplot(aes(x = VENT, y = SUM)) +
+    geom_bar(stat = "identity", position = "fill", color = "black", aes(fill = SUPERGROUP)) +
+  facet_grid(EXP_PA ~ SITE, scales = "free", space = "free") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1))
+```
+
+
+
+# In situ vs. Tf relative changes
+
+# Corncob enriched taxa
+
+Corncob analysis can be used to identify specific ASVs that may be enriched when we compare non-vent to vent samples.
+
+Questions:
+
+-   For vent vs. non-vent ASVs, what ASVs are enriched at Piccard?
+
+-   For vent vs. non-vent ASVs, what ASVs are enriched at Von Damm?
+
+-   For vent vs. non-vent ASVs, what ASVs are enriched at both sites?
+
+```{r}
+# | message: false
+# devtools::install_github("bryandmartin/corncob")
+library(corncob); library(phyloseq)
+```
+
+```{r}
+load("input-data/MCR-amplicon-data.RData", verbose = TRUE)
+```
+
+Explore data input for corncob
+
+```{r}
+# otu_table(physeq_mcr)[1:10, 1:3]
+# sample_data(physeq_mcr)
+# tax_table(physeq_mcr)[1:3, ]
+
+# Designated vent vs. non-vent
+unique(sample_data(physeq_mcr)$SAMPLETYPE_BIN)
+
+#Designats Piccard vs. vondamm.
+unique(sample_data(physeq_mcr)$SITE)
+```
+
+Start by removing incubation samples for now. Subset to eukaryotes only and use phyloseq's tax glom to summarize to Supergroup, Phylum, Class, Order, Genus, & species.
+
+```{r}
+head(tax_table(physeq_mcr))
+
+mcr_super <- physeq_mcr %>%
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>%
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>%
+  tax_glom("Supergroup")
+
+mcr_phy <- physeq_mcr %>% 
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>% 
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>% 
+  tax_glom("Phylum")
+
+mcr_class <- physeq_mcr %>% 
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>% 
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>% 
+  tax_glom("Class")
+
+mcr_order <- physeq_mcr %>% 
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>% 
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>% 
+  tax_glom("Order")
+
+mcr_fam <- physeq_mcr %>% 
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>% 
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>% 
+  tax_glom("Family")
+
+mcr_genera <- physeq_mcr %>% 
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>% 
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>% 
+  tax_glom("Genus")
+
+mcr_spp <- physeq_mcr %>% 
+  phyloseq::subset_samples(SAMPLETYPE %in% c("Background", "Plume", "Vent")) %>% 
+  phyloseq::subset_taxa(Domain == "Eukaryota") %>% 
+  tax_glom("Species")
+
+# sample_data(mcr_order)
+```
+
+Differential tests in corncob
+
+These tests work to see if taxa are differentially-abundant or variable across a given variable. In this study we have different taxonomic levels, are there more general or species-specific trends? We also have across sample types and site Below set up differential tests across sample types and site (and either or) at different taxonomic levels.
+
+Function to perform specific differential tests across vent fields. Below use **SITE_PICK** parameter to choose between vent fields. Then use the df, to specify the taxonomic level.
+
+```{r}
+corncob_mcr <- function(df_in){
+  # da_analysis_output <- differentialTest(formula = ~ SAMPLETYPE + SITE,
+  #                               phi.formula = ~ SAMPLETYPE+ SITE,
+  #                               formula_null = ~ 1,
+  #                               phi.formula_null = ~ SAMPLETYPE + SITE,
+  #                               test = "Wald", boot = FALSE,
+  #                               data = df_in,
+  #                               fdr_cutoff = 0.05)
+  ## SAMPLETYPE_BIN specifically compares vent to non-vent.
+  da_analysis_output <- differentialTest(formula = ~ SAMPLETYPE_BIN,
+                                phi.formula = ~ SAMPLETYPE_BIN,
+                                formula_null = ~ 1,
+                                phi.formula_null = ~ SAMPLETYPE_BIN,
+                                test = "Wald", boot = FALSE,
+                                data = df_in,
+                                fdr_cutoff = 0.05)
+  # da_analysis_output <- differentialTest(formula = ~ SITE,
+  #                               phi.formula = ~ SITE,
+  #                               formula_null = ~ 1,
+  #                               phi.formula_null = ~ SITE,
+  #                               test = "Wald", boot = FALSE,
+  #                               data = df_in,
+  #                               fdr_cutoff = 0.05)
+  #
+  list_ofsig <- as.character(da_analysis_output$significant_taxa)
+  total_number <- length(list_ofsig)[1]
+  #
+  sig_taxa_names <- as.data.frame(tax_table(df_in)) %>% 
+    rownames_to_column(var = "FEATURE") %>% 
+    filter(FEATURE %in% list_ofsig) %>% 
+    rownames_to_column(var = "NUMBER")
+  #
+  for(var in 1:total_number){
+    out_0 <- data.frame(da_analysis_output$significant_models[[var]]$coefficients) %>% 
+      add_column(NUMBER = as.character(var))
+    cat("extracted # ",var, "\n")
+  if (!exists("extracted_coef")){
+        extracted_coef <- out_0 # create the final count table
+    } else {
+        extracted_coef <- rbind(extracted_coef, out_0)
+    }
+    rm(out_0) # remove excess df
+  }
+  output_full <- extracted_coef %>% 
+    rownames_to_column(var = "variable") %>%
+    filter(grepl("mu.", variable)) %>% 
+    left_join(sig_taxa_names, by = c("NUMBER" = "NUMBER")) %>% 
+      mutate(VARIABLE = str_remove(variable, "[:digit:]+")) %>% select(-variable) #%>% 
+    # pivot_wider(names_from = VARIABLE, names_glue = "{VARIABLE}_{.value}", values_from = c(Estimate, Std..Error, t.value, Pr...t..))
+  rm(extracted_coef)
+  return(output_full)}
+
+```
+
+Define SITE_PICK
+
+```{r}
+mcr <- c("Piccard", "VonDamm")
+picc <- c("Piccard")
+vd <- c("VonDamm")
+```
+
+Function to visualize output from corncob
+
+```{r}
+plot_corn <- function(cob_out, LEVEL, TITLE){
+  level <- enquo(LEVEL)
+  cob_out %>%
+  filter(VARIABLE != "mu.(Intercept)") %>% 
+  ggplot(aes(y = level, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = level), shape = 21, color = "black") +
+  facet_grid(. ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = TITLE)
+}
+```
+
+### Supergroup corncob
+
+What main supergroups are enriched at MCR?
+
+```{r}
+# # vd
+# analysis_super_vd <- corncob_mcr(mcr_super %>% 
+#                                 phyloseq::subset_samples(SITE %in% vd))
+# 
+# analysis_super_picc <- corncob_mcr(mcr_super %>% 
+#                                 phyloseq::subset_samples(SITE %in% picc))
+
+analysis_super_all <- corncob_mcr(mcr_super %>% 
+                                phyloseq::subset_samples(SITE %in% mcr))
+
+# analysis_super_vd %>%
+#   filter(VARIABLE != "mu.(Intercept)") %>% 
+#   ggplot(aes(y = Supergroup, x = Estimate)) +
+#     geom_vline(xintercept = 0, alpha = 0.2) +
+#     geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+#     geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+#   facet_grid(. ~ VARIABLE, space = "free", scales = "free") +
+#   theme(legend.position = element_blank(),
+#         axis.text.y = element_text(color = "black")) +
+#   theme_minimal() +
+#   labs(x = "Coefficient", y = "", title = "VD supergroup")
+
+# analysis_super_picc %>%
+#   filter(VARIABLE != "mu.(Intercept)") %>% 
+#   ggplot(aes(y = Supergroup, x = Estimate)) +
+#     geom_vline(xintercept = 0, alpha = 0.2) +
+#     geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+#     geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+#   facet_grid(. ~ VARIABLE, space = "free", scales = "free") +
+#   theme(legend.position = element_blank(),
+#         axis.text.y = element_text(color = "black")) +
+#   theme_minimal() +
+#   labs(x = "Coefficient", y = "", title = "piccard supergroup")
+```
+
+Plot supergroup enrichment
+
+```{r}
+analysis_super_all %>%
+  filter(VARIABLE != "mu.(Intercept)") %>% 
+  ggplot(aes(y = Supergroup, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+  facet_grid(. ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "MCR supergroup")
+```
+
+### Phylum corncob analysis
+
+```{r}
+analysis_phylum <- corncob_mcr(mcr_phy)
+```
+
+```{r}
+analysis_phylum %>%
+  filter(VARIABLE != "mu.(Intercept)") %>% 
+  ggplot(aes(y = Phylum, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Phylum), shape = 21, color = "black") +
+  facet_grid(Supergroup ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "MCR Phylum")
+```
+
+### Class corncob analysis
+
+```{r}
+
+analysis_class <- corncob_mcr(mcr_class %>%
+                                phyloseq::subset_samples(SITE %in% mcr))
+```
+
+```{r, fig.height=10, fig.width=10}
+# head(analysis_class)
+# unique(analysis_class$VARIABLE)
+analysis_class %>%
+  unite(Class, c(Phylum, Class), sep = " ", remove = FALSE) %>%
+  filter(VARIABLE != "mu.(Intercept)") %>% 
+  ggplot(aes(y = Class, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+  facet_grid(Supergroup ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "Class level test for differential abundance")
+```
+
+> Class level looks pretty good. Keep this one. Looks at major taxonomic groups that were more enriched at vents? Work on the language here. Repeat vent vs. plume at ASV level. ID some of the core ASVs that can help elaborate on what we see above (table in supplementary)
+
+> *Interpretation* :
+
+### Order corncob
+
+```{r}
+analysis_order <- corncob_mcr(mcr_order)
+```
+
+```{r, fig.height=10, fig.width=10}
+# head(analysis_class)
+# unique(analysis_class$VARIABLE)
+analysis_order %>%
+  unite(Order, c(Phylum, Class, Order), sep = " ", remove = FALSE) %>%
+  filter(VARIABLE != "mu.(Intercept)") %>%
+  ggplot(aes(y = Order, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+  facet_grid(Supergroup ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "Order level test for differential abundance")
+# ?geom_errorbar
+```
+
+### Family corncob
+
+Plan to pairing with tree below
+
+```{r}
+analysis_fam <- corncob_mcr(mcr_fam)
+```
+
+```{r}
+analysis_fam %>%
+  unite(Family, c(Class, Order, Family), sep = " ", remove = FALSE) %>%
+  filter(VARIABLE != "mu.(Intercept)") %>%
+  ggplot(aes(y = Family, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+  facet_grid(Supergroup + Phylum ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "Family level test for differential abundance")
+```
+
+### Genus corncob
+
+Plan to pairing with tree below
+
+```{r}
+analysis_genus <- corncob_mcr(mcr_genera)
+```
+
+```{r}
+analysis_genus %>%
+  unite(Genus, c(Phylum, Genus), sep = " ", remove = FALSE) %>%
+  filter(VARIABLE != "mu.(Intercept)") %>%
+  ggplot(aes(y = Genus, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+  facet_grid(Supergroup ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "Genus level test for differential abundance")
+```
+
+### Species corncob
+
+```{r}
+analysis_spp <- corncob_mcr(mcr_spp)
+```
+
+```{r, fig.height=10, fig.width=10}
+analysis_spp %>%
+  unite(Species, c(Genus, Species), sep = " ", remove = FALSE) %>%
+  filter(VARIABLE != "mu.(Intercept)") %>%
+  ggplot(aes(y = Species, x = Estimate)) +
+    geom_vline(xintercept = 0, alpha = 0.2) +
+    geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
+    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
+  facet_grid(Supergroup + Order ~ VARIABLE, space = "free", scales = "free") +
+  theme(legend.position = element_blank(),
+        axis.text.y = element_text(color = "black")) +
+  theme_minimal() +
+  labs(x = "Coefficient", y = "", title = "Species level test for differential abundance")
+```
+
+# Corncob + P/A info
+
+Which ASVs were enriched within vent site, and also found in grazing experiments?
+
+
+
+# Info
+```{r}
+sessionInfo()
+```
+
+
