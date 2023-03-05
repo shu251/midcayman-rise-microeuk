@@ -1,8 +1,10 @@
 ---
 title: "Protistan grazing analysis"
-format: 
+format:
   html:
     code-fold: true
+    code-tools: true
+    code-copy: true
     toc: true
     toc-location: left
     number-sections: true
@@ -22,6 +24,19 @@ library(tidyverse); library(cowplot); library(broom)
 library(patchwork)
 ```
 
+Set color schematic
+```{r}
+vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
+vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+site_ids <- c("VD", "Piccard")
+site_fullname <- c("Von Damm", "Piccard")
+site_color <- c("#264653", "#E76F51")
+names(site_color) <- site_fullname
+
+whole_pal <- c("#264653", "#2A9D8F", "#E9C46A","#F4A261", "#E76F51")
+
+extra <- c("#eae2b7", "#5f0f40", "#90be6d", "#941b0c", "#577590")
+```
 ## Import raw count data
 
 Import eukaryotic cell count data from grazing experiments. In this section, we will calculate cells per ml from raw counts (Field of view, etc.) and use to estimate protist cell concentration. These will be used below in grazing experiment calculations.
@@ -196,7 +211,6 @@ Eukaryote cell concentration (cells/ml) are lower in the background and plume sa
 
 > eukCONC is the sum of micro and nano. Because there was a discrepency between the micro and nano cell counts, we plan to combine for most of the analysis. Here we show that the cell concentration across replicate samples was similar throughout experiments. And that the bag versus IGT experiment results were within range of one another.
 
-
 Plot eukaryote cell concentration over time.
 
 ```{r}
@@ -238,7 +252,8 @@ vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav
 vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
 
 plot_euk_format <- plot_euk_conc %>%
-  filter(TimePoint == "T0" & (VARIABLE == "eukCONC")) %>%
+  filter(TimePoint == "T0") %>% 
+  # filter(TimePoint == "T0" & (VARIABLE == "eukCONC")) %>%
   group_by(SiteOrder, NameOrder, TimePoint, EXP_TYPE, VARIABLE) %>%
   summarise(avg_conc = mean(CONCENTRATION),
             SEM_conc = (sd(CONCENTRATION)/sqrt(length(CONCENTRATION))),
@@ -246,15 +261,18 @@ plot_euk_format <- plot_euk_conc %>%
   unite(EXPERIMENT, SiteOrder, NameOrder, EXP_TYPE, remove = FALSE) %>%
   data.frame
 
+plot_euk_format
+
 # Factor
 plot_euk_format$Site_Order <- factor(plot_euk_format$SiteOrder, levels = site_fullname, labels = site_fullname)
 
 # View(plot_euk_format)
-euk_plot <- ggplot(plot_euk_format, aes(x = NameOrder, y = avg_conc, fill = Site_Order)) +
+# Isolate only total euk counts
+euk_plot <- ggplot((plot_euk_format %>% filter(VARIABLE == "eukCONC")), aes(x = NameOrder, y = avg_conc, fill = Site_Order)) +
   geom_errorbar(aes(ymax = (avg_conc + SEM_conc), ymin = (avg_conc - SEM_conc)), width = 0.2) +
   geom_point(aes(fill = Site_Order), color = "black", stat = "identity", size = 3, shape = 23) +
   facet_grid(.~ Site_Order, space = "free", scales = "free") +
-  scale_fill_manual(values = c("#1c9099", "#de2d26")) +
+  scale_fill_manual(values = site_color) +
   theme_minimal() +
     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
            panel.background = element_blank(), 
@@ -272,7 +290,7 @@ euk_plot
 
 ```
 
-Print table of eukaryote cell count information.
+Print table of eukaryote cell count information to include in results section summary.
 
 ```{r}
 plot_euk_format %>% 
@@ -288,16 +306,43 @@ plot_euk_format %>%
            min_cellml = format(min(avg_conc), scientific = T),
            max_cellml = format(max(avg_conc), scientific = T),
            num = n())
+
+plot_euk_format %>% 
+  type.convert(as.is = TRUE) %>%
+  # filter(VARIABLE == "eukCONC") %>% 
+  mutate(SAMPLE_TYPE = case_when(
+    NameOrder == "Background" ~ "Background",
+    NameOrder == "Plume" ~ "Plume",
+    TRUE ~ SiteOrder
+  )) %>%
+  group_by(SAMPLE_TYPE, VARIABLE) %>% 
+  summarise(MEAN_cellml = format(mean(avg_conc), scientific = T),
+           min_cellml = format(min(avg_conc), scientific = T),
+           max_cellml = format(max(avg_conc), scientific = T),
+           num = n())
+
+# unique(plot_euk_format$NameOrder)
+plot_euk_format %>% 
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  group_by(SAMPLE_TYPE_BIN, VARIABLE) %>% 
+  summarise(MEAN_cellml = format(mean(avg_conc), scientific = T),
+           min_cellml = format(min(avg_conc), scientific = T),
+           max_cellml = format(max(avg_conc), scientific = T),
+           num = n())
 ```
 
 ```{r}
 # save(counts_cellsml_all, counts_cellsml_avg, counts_occur, file = "output-data/MCR-cellcount-dfs")
 ```
 
-
 # Bacteria & archaea cell counts
 
 DAPI slide counts from prokaryotes from same sites. Import and compare.
+
 ```{r}
 prok <- read.delim("input-data/prokINSITU-counts-compiled.txt")
 
@@ -313,24 +358,46 @@ insitu_proks <- prok %>%
 ```
 
 ## Cells per ml (prok)
+
 Visualize counts
 
+Summary of prok counts
+```{r}
+head(insitu_proks)
+# insitu_proks$Name
+insitu_proks %>% filter(Name != "Quakeplume") %>% 
+  mutate(type = case_when(
+  Name == "BSW" ~ "non-vent",
+  Name == "Plume" ~ "non-vent",
+  TRUE ~ "vent"
+)) %>% 
+    # group_by(type) %>% 
+  group_by(type, Site) %>% 
+      summarize(mean = mean(MEAN),
+            min = min(MEAN),
+            max = max(MEAN))
+    
+```
+
+
 Factor site names, etc.
+
 ```{r}
 insitu_proks$Name_order <- factor(insitu_proks$Name, levels = c("BSW", "Plume", "Quakeplume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole", "HotChimlet1", "ShrimpGulley", "SouthofHotChimlet", "SouthofLungSnack", "ArrowLoop", "Bartizan", "Rav1"), labels = c("Background","Plume", "Quakeplume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "Hot Chimlet #1", "Shrimp Gulley", "South of Hot Chimlet", "South of LungSnack", "Arrow Loop", "Bartizan", "Ravelin #1"))
 
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
-
 insitu_proks$Site_order <- factor(insitu_proks$Site, levels = site_ids, labels = site_fullname)
+site_color <- c("#264653", "#E76F51")
+names(site_color) <- site_fullname
 ```
 
 ```{r}
 prok_plot <- ggplot(insitu_proks, aes(x = Name_order, y = MEAN)) +
   geom_errorbar(aes(ymax = (MEAN + SEM), ymin = (MEAN - SEM)), width = 0.2) +
-  geom_point(stat = "identity", shape = 23, aes(fill = Site), size = 3) +
+  geom_point(stat = "identity", shape = 23, aes(fill = Site_order), size = 3) +
   facet_grid(.~ Site_order, space = "free", scales = "free") +
-  scale_fill_manual(values = c("#de2d26", "#1c9099")) +
+  scale_fill_manual(values = site_color) +
   labs(y = bquote("Prokaryote cells "~mL^-1), x = "", title = "") +
   scale_y_log10() +
   theme_minimal() +
@@ -346,9 +413,17 @@ prok_plot <- ggplot(insitu_proks, aes(x = Name_order, y = MEAN)) +
 prok_plot
 ```
 
+### Euk and prok counts
+
+Combined eukaryote and prokaryote cell counts
+
+```{r}
+euk_prok_ab <- euk_plot + (prok_plot + theme(legend.position = "none")) + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a")
+```
 
 ### Combine with previous MCR cell counts
-Compare _in situ_ prokaryote cell counts from 2020 to previous years
+
+Compare *in situ* prokaryote cell counts from 2020 to previous years
 
 ```{r}
 prok_prev <- read.csv("input-data/cellcount_previousyr.csv")
@@ -367,6 +442,7 @@ prok_prev_formatted <- prok_prev %>%
 ```
 
 Re-import 2020 data to compare.
+
 ```{r}
 # Re-import 2020
 prok <- read.delim("input-data/prokINSITU-counts-compiled.txt")
@@ -394,6 +470,7 @@ proks_allyrs$VENTSITE_ORDER <- factor(proks_allyrs$VENTSITE, levels = c("Piccard
 ```
 
 Plot by year.
+
 ```{r}
 # pdf("compare-across-yr-cellcount-04052021.pdf", h = 8, w = 7)
 ggplot(proks_allyrs, aes(x = NAME_ORDER, y = as.numeric(CELLML), fill = factor(YEAR), shape = VENTSITE_ORDER)) +
@@ -416,8 +493,8 @@ ggplot(proks_allyrs, aes(x = NAME_ORDER, y = as.numeric(CELLML), fill = factor(Y
 # dev.off()
 ```
 
-
 # Estimate grazing effect
+
 Calculate FLP per eukaryotic cell over time. Goal is to make these calculations and then determine best fit line. Slope of best fit line is the grazing rate. Need to take into account euk cells with FLPs and then the euk cells withOUT FLPs, these will be zeroes to take into account for FLPs/euk averages.
 
 ```{r}
@@ -426,7 +503,7 @@ load("output-data/MCR-cellcount-dfs", verbose = TRUE)
 
 ## Determine FLP per euk cell
 
-Isolate euk cell counts with FLPs (comma separated for counts). These need to be separated into rows, use ```counts_occur``` data frame from above.
+Isolate euk cell counts with FLPs (comma separated for counts). These need to be separated into rows, use `counts_occur` data frame from above.
 
 ```{r}
 # Select nano and micro counts with FLPs
@@ -442,7 +519,8 @@ counts_sepflp <- counts_occur %>%
   data.frame
 ```
 
-_optional gut check of data table modification_
+*optional gut check of data table modification*
+
 ```{r}
 ## Check, see FOV 23, separated into rows.
 # View(counts_sepflp %>%
@@ -451,8 +529,8 @@ _optional gut check of data table modification_
 # filter(SAMPLE == "VD-Rav2" & EXPID == "T10-Rep1"))
 ```
 
+Isolate counts that are \>0, so only eukaryote cells that were observed to have FLPs are included. Then calculate FLP per euk cell by dividing by 1 (each row is a euk cell, based on data transformation above).
 
-Isolate counts that are >0, so only eukaryote cells that were observed to have FLPs are included. Then calculate FLP per euk cell by dividing by 1 (each row is a euk cell, based on data transformation above).
 ```{r}
 counts_flp <- counts_sepflp %>%
   select(SAMPLE, EXPID, nano_size = nanoFLP, micro_size = microFLP) %>%
@@ -472,17 +550,18 @@ counts_flp <- counts_sepflp %>%
             total_euks_wflp = n(),
             .groups = "rowwise") %>%
   data.frame
+
+head(counts_flp)
 ```
 
-OUTPUT COLUMNS:
-(1) total_FLP = sum of FLPs found inside a euk cell
-(2) total_euks_wflp = number of euks counted with ingested FLP
+OUTPUT COLUMNS: (1) total_FLP = sum of FLPs found inside a euk cell (2) total_euks_wflp = number of euks counted with ingested FLP
 
 Repeat above operation for euk cells without any FLP. Here, subset total number of observations where there was a euk cell without FLP. These need to be counted as euk cell without an FLP.
 
 > Below code repeats process and compiles with other FLP/euk cell data.
 
 Repeat above process for euk cells without FLPs (0 FLP per euk cell needs to be included in overall average).
+
 ```{r}
 counts_flp_compiled <- counts_occur %>% 
   filter(!(NOTES == "Discard")) %>% #Discard bad counts
@@ -528,12 +607,14 @@ counts_flp_compiled_all <- counts_flp_compiled %>%
 ## Calculate FLP per euk cell calculation
 
 First need to import and compile with metadata to get exact timing of experiments.
+
 ```{r}
 metadata <- read.delim("input-data/flp-exp-metadata-compiled.txt")
 exp_metadata <- read.csv("input-data/flp_exp_metadata.csv")
 ```
 
 Add metadata
+
 ```{r}
 counts_flp_calcs_all <- counts_flp_compiled_all %>% 
   # Add in metadata
@@ -561,9 +642,11 @@ counts_flp_calcs_all <- counts_flp_compiled_all %>%
 > COLS: Replicate_ID, REP, and IGT_REP = full replicate identified for IGTs and Bags, designation of biological replicates, and designation of technical replicates for IGT experiments
 
 ## Calculate linear regression to obtain slope
-Use ```lm()``` function in R to calculate linear regression for each experiment. Slope equates to grazing rate. Function inputs the FLP per euk cell data, performs regression and then adds a column for slope and r-squared values.
+
+Use `lm()` function in R to calculate linear regression for each experiment. Slope equates to grazing rate. Function inputs the FLP per euk cell data, performs regression and then adds a column for slope and r-squared values.
 
 Function to estimate slope. Uses broom and tidymodels, then extracts slope.
+
 ```{r}
 calculate_lm <- function(df){
   regression_1 <- df %>%
@@ -605,11 +688,13 @@ calculate_lm <- function(df){
 > Note that an error may occur when running the below function. This is due to the fact that some experiments did not have replicates.
 
 Apply to all data to obtain slope.
+
 ```{r}
 calcs_wslope_regression <- calculate_lm(counts_flp_calcs_all)
 ```
 
-_gut check_ linear regression work. Use below commands out to recalculate one linear regression. Above function uses the ```nest()``` capability of tidyverse. Below, one experiment is subset to check the value.
+*gut check* linear regression work. Use below commands out to recalculate one linear regression. Above function uses the `nest()` capability of tidyverse. Below, one experiment is subset to check the value.
+
 ```{r}
 # Extract only plume-bag experiment from VD
 # tmp_plume <- filter(counts_flp_calcs_all, Experiment == "Plume-Bag") %>% filter(Site == "VD") %>% filter(SizeFrac == "total_euks")
@@ -624,20 +709,29 @@ _gut check_ linear regression work. Use below commands out to recalculate one li
 ```
 
 ### Plot linear regression trend
+
 Plot all bag experiments with estimated slope.
+```{r}
+unique(calcs_wslope_regression$SITE)
+```
+
+
 ```{r}
 # | fig-width: 7
 # | fig-height: 8
 calcs_wslope_regression %>% 
-  filter(SizeFrac == "total_euks") %>% 
-  # filter(TYPE != "IGT") %>% 
-  unite(EXPERIMENT, SITE, Experiment, sep = " ", remove = FALSE) %>% 
-  ggplot(aes(x = Minutes, y = FLPperEuk, fill = Site, shape = TYPE, group = Experiment)) +
+  filter(SizeFrac == "total_euks") %>%
+  mutate(VENT_IDS = factor(Name, levels = vent_ids, labels = vent_fullname)) %>% 
+  mutate(SITE_ORDER = factor(SITE, levels = site_ids, labels = site_fullname)) %>%
+  # Filter out IGT samples for now
+  # filter(TYPE != "IGT") %>%
+  unite(EXPERIMENT, SITE_ORDER, Experiment, sep = " ", remove = FALSE) %>% 
+  ggplot(aes(x = Minutes, y = FLPperEuk, fill = SITE_ORDER, shape = TYPE)) +
   geom_abline(aes(slope = SLOPE, intercept = INTERCEPT), color = "black", linetype = "dashed", size = 1) +
   geom_point(stat = "identity", color = "black", 
-             size = 2, aes(shape = TYPE, fill = Site)) +
+             size = 2, aes(shape = TYPE, fill = SITE_ORDER)) +
   scale_shape_manual(values = c(21, 24)) +
-  scale_fill_manual(values = c("#de2d26", "#1c9099")) +
+  scale_fill_manual(values = site_color) +
   labs(x = "Minutes", y = bquote("FLP"~eukaryote^-1), title = "Grazing experiment regression") +
   facet_wrap(. ~ EXPERIMENT) +
   # Report r.squared
@@ -649,10 +743,11 @@ calcs_wslope_regression %>%
                      legend.title = element_blank(),
                      legend.position = "right")
 ```
+
 Data points represent the FLP per euk cells (based on total eukaryote cells counts). Y-axis represents the duration of incubation (in minutes). The dashed purple line reprents the slope and intercept of the experiment.
 
-
 ## Remove IGT Tf time points.
+
 IGT experiment results appear to have bottle effect, especially in the final time point. Additionally, due to the lack of biological replicates in the IGT experiments, technical replicates are treated as biological replicates in the regression below.
 
 ```{r}
@@ -666,18 +761,21 @@ IGT_lm_woTf <- counts_flp_calcs_all %>%
 # Recalculate lm(), keep replicates separate
 igt_regression_noTf <- calculate_lm(IGT_lm_woTf) # Recalculate
 ```
+
 Plot IGT grazing experiments with newly calculated grazing effect.
+
 ```{r}
 igt_regression_noTf %>% 
   # filter(SizeFrac == "total_euks") %>% 
   # filter(TYPE != "IGT") %>% 
+  mutate(SITE_ORDER = factor(SITE, levels = site_ids, labels = site_fullname)) %>%
   unite(EXPERIMENT, SITE, Experiment, sep = " ", remove = FALSE) %>% 
-  ggplot(aes(x = Minutes, y = FLPperEuk, fill = Site, shape = TYPE, group = Experiment)) +
+  ggplot(aes(x = Minutes, y = FLPperEuk, fill = SITE_ORDER, shape = TYPE, group = Experiment)) +
   geom_abline(aes(slope = SLOPE, intercept = INTERCEPT), color = "black", linetype = "dashed", size = 1) +
   geom_point(stat = "identity", color = "black", 
-             size = 2, aes(shape = TYPE, fill = Site)) +
+             size = 2, aes(shape = TYPE, fill = SITE_ORDER)) +
   scale_shape_manual(values = c(24)) +
-  scale_fill_manual(values = c("#de2d26", "#1c9099")) +
+  scale_fill_manual(values = site_color) +
   labs(x = "Minutes", y = bquote("FLP"~eukaryote^-1), title = "Grazing experiment regression") +
   facet_wrap(. ~ EXPERIMENT) +
   # Report r.squared
@@ -691,7 +789,6 @@ igt_regression_noTf %>%
 ```
 
 > results are more consistent across experiments.
-
 
 ## Compile and save grazing experiment results
 
@@ -711,10 +808,13 @@ calcs_wslope_regression_update$SiteOrder <- factor(calcs_wslope_regression_updat
 calcs_wslope_regression_update$NameOrder <- factor(calcs_wslope_regression_update$Name, levels = vent_ids, labels = vent_fullname)
 
 # View(calcs_wslope_regression_update)
-# write.csv(calcs_wslope_regression_update, file = "output-data/estimated-slopes-grazingexp.csv")
+calcs_wslope_regression_update %>%
+  select(SiteOrigin, SiteOrder, NameOrder, Experiment, SizeFrac, r.squared, INTERCEPT, SLOPE) %>% distinct()
+write.csv(calcs_wslope_regression_update, file = "output-data/estimated-slopes-grazingexp.csv")
 ```
 
 # Check FLP control experiments
+
 All incubations had control experiments run alongside them. This was to ensure added FLP did not decrease or change in concentration over time.
 
 ```{r}
@@ -735,6 +835,7 @@ dtaf_avg <- dtaf %>%
 ```
 
 ## Bag grazing experiment controls
+
 ```{r}
 dtaf_avg %>% 
   filter(Site != "IGT") %>% 
@@ -754,8 +855,11 @@ dtaf_avg %>%
                           axis.title = element_text(size = 9)) +
   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
 ```
+
 ## IGT experiment controls
+
 Repeat for IGT experiments.
+
 ```{r}
 dtaf_avg %>% 
   filter(Site == "IGT") %>% 
@@ -802,8 +906,30 @@ table_grazerate <- calcs_wslope_regression_update %>%
     EXP_TYPE == "Bag" ~ "Vent-Bag"
   )) %>%
   data.frame
+table_grazerate # view complete table of grazing rate results
+
+table_grazerate %>% 
+  group_by(EXP_TYPE, Site) %>% 
+  summarise(mean_rate = mean(GRAZE_RATE),
+            min_rate = min(GRAZE_RATE),
+            max = max(GRAZE_RATE))
+
+table_grazerate %>% 
+  mutate(TYPE = case_when(
+    Name == "Plume" ~ "non-vent",
+    Name == "Background" ~ "non-vent",
+    TRUE ~ "vent"
+  )) %>% 
+  # group_by(Site, TYPE) %>% 
+  # group_by(TYPE) %>%
+  group_by(TYPE, EXP_TYPE) %>% 
+  summarise(mean_rate = mean(GRAZE_RATE),
+            min_rate = min(GRAZE_RATE),
+            max = max(GRAZE_RATE))
 ```
+
 Amend table with estimated FLP concentration
+
 ```{r}
 # head(table_grazerate)
 dtaf_igt <- 5352.8278 # Manually insert FLP concentration for IGT experiments; this value is estimated from how IGT FLP spike-ins were calculated
@@ -820,6 +946,7 @@ table_grazerate_wflp <- bac_ctrl %>%
 ```
 
 Introduce factors in table for visualizations
+
 ```{r}
 type_order <- c("Vent-Bag", "Vent-IGT", "Plume", "Background")
 table_grazerate_wflp$TYPE <- factor(table_grazerate_wflp$type, levels = type_order)
@@ -827,21 +954,24 @@ vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav
 vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
-vent_colors <- c("#0868ac", "#41ab5d", "#e7298a", "#c994c7", "#fc4e2a", "#fed976", "#6a51a3", "#ffeda0", "#a1d99b")
-names(vent_colors) <- vent_fullname
-table_grazerate_wflp$NAME <- factor(table_grazerate_wflp$Name, levels = vent_fullname)
+site_color <- c("#264653", "#E76F51")
+names(site_color) <- site_fullname
+table_grazerate_wflp$FIELDORDER <- factor(table_grazerate_wflp$FIELD, levels = site_fullname)
+table_grazerate_wflp$VENTORDER <- factor(table_grazerate_wflp$Name, levels = vent_fullname)
+head(table_grazerate_wflp)
 ```
 
 ## Plot FLP/grazer /minute
+
 ```{r}
 # svg("", h =, w = )
 grazing_min_plot <- table_grazerate_wflp %>% 
-  ggplot(aes(y = GRAZE_RATE, x = NAME, shape = EXP_TYPE, fill = FIELD)) +
-  geom_jitter(stat = "identity", aes(shape = EXP_TYPE, fill = FIELD),
+  ggplot(aes(y = GRAZE_RATE, x = VENTORDER, shape = EXP_TYPE, fill = FIELDORDER)) +
+  geom_jitter(stat = "identity", aes(shape = EXP_TYPE, fill = FIELDORDER),
               color = "black", size = 3, width = 0.3) +
   scale_shape_manual(values = c(21, 24)) +
-  scale_fill_manual(values = c("#de2d26", "#1c9099")) +
-  facet_grid(.~Site, space = "free", scales = "free") +
+  scale_fill_manual(values = site_color) +
+  facet_grid(.~FIELDORDER, space = "free", scales = "free") +
   # coord_flip() +
     theme_minimal() +
     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
@@ -855,13 +985,12 @@ grazing_min_plot <- table_grazerate_wflp %>%
            strip.text =element_blank(), legend.title = element_blank())+
     guides(fill = guide_legend(override.aes = list(shape = c(21))),
        shape = guide_legend(override.aes = list(fill = "black"))) +
-    labs(x = "", y = bquote("FLP " ~grazer^-1 ~min^-1))
+    labs(x = "", y = bquote("Mean FLP " ~grazer^-1 ~min^-1))
 # dev.off()
 grazing_min_plot
 ```
 
-
-Amend table with eukaryote and prokaryote estimated biomass. 
+Amend table with eukaryote and prokaryote estimated biomass.
 
 ```{r}
 # Subset the average in situ prok cells/ml for non-background samples
@@ -883,10 +1012,23 @@ table_grazerate_wflp_wprok_weuk <- plot_euk_format %>%
   data.frame
 ```
 
+Description of variables above:
+
+-   FIELD - vent location
+-   NAME - name of vent site, or plume/background
+-   EXP - experiment type, bag or IGT
+-   SAMPLE - vent site
+-   RATE_MIN - FLPs per grazer per minute (SLOPE of best fitline)
+-   FLP_ml - FLP concentration at T0
+-   Prok_ml, sem - concentration and standard mean error of concentration of prokaryotes
+-   Euk_ml, sem - concentration and standard mean error of concentration of eukaryotes.
+
 # Grazing rate calculations
-Based on Unrein et al. 2007, we use the estimated grazing rate, in situ prok abundance, in situ euk abundance, and the concentration of FLP to make additional estimates. 
+
+Based on Unrein et al. 2007, we use the estimated grazing rate, in situ prok abundance, in situ euk abundance, and the concentration of FLP to make additional estimates.
 
 ```{r}
+head(table_grazerate_wflp_wprok_weuk)
 table_wcalcs <- table_grazerate_wflp_wprok_weuk %>%
   # Ingestion rate per hour
   mutate(RATE_hr = (RATE_min * 60),
@@ -917,19 +1059,20 @@ table_wcalcs <- table_grazerate_wflp_wprok_weuk %>%
 
 Explanation of units for table with calculated values.
 
-* RATE_min & RATE_hr = Grazing rate as 'FLPs per grazer per minute' and per hour
+-   RATE_min & RATE_hr = Grazing rate as 'FLPs per grazer per minute' and per hour
 
-* CLEARANCE_RATE = ml or nL per grazer per hour
+-   CLEARANCE_RATE = ml or nL per grazer per hour
 
-* SPEC_GRAZE_RATE (Specific grazing rate) = Prokaryotes per grazer per hour
+-   SPEC_GRAZE_RATE (Specific grazing rate) = Prokaryotes per grazer per hour
 
-* GRAZING EFFECT = bacteria per ml per hour
+-   GRAZING EFFECT = bacteria per ml per hour
 
-* Bacterial turnover rate = % per day
+-   Bacterial turnover rate = % per day
 
-### gt table option
+### gt table options
+
 ```{r}
-# colnames(table_wcalcs)
+
 # bkgd <- c("Background", "Plume")
 # 
 # library(gt)
@@ -1001,72 +1144,258 @@ Explanation of units for table with calculated values.
 #     table.width = pct(100))
 ```
 
+Table 1 and S1 - grazing experiment information only
 
-## Carbon biomass 
+```{r}
+# write_delim((table_wcalcs %>%
+#               select(FIELD, NAME, EXP, SAMPLE, TimePoints, starts_with("EXP_"), starts_with("CTRL_"), PROK_ml, PROK_sem, EUK_ml, EUK_sem, RATE_min, GRAZING_EFFECT_hr, CLEARANCE_RATE_ml, BAC_TURNOVER_PERC)), file = "output-data/table1-grazing-exp-list.txt", delim = "\t")
+```
 
-References for estimating biovolume _Pernice, M.C., Forn, I., Gomes, A., Lara, E., Alonso-Sáez, L., Arrieta, J.M., et al. (2015) Global abundance of planktonic heterotrophic protists in the deep ocean. ISME J 9: 782–792._
+
+# Carbon biomass for eukaryotes
+
+References for estimating biovolume *Pernice, M.C., Forn, I., Gomes, A., Lara, E., Alonso-Sáez, L., Arrieta, J.M., et al. (2015) Global abundance of planktonic heterotrophic protists in the deep ocean. ISME J 9: 782--792.*
 
 ```{r}
 # Import manual biovolume measurements
 biov <- read.delim("input-data/biovol-euk-12-10-2020.txt")
 # head(biov)
-
-# Calculate volume
-biov_calc <- biov %>% 
-  mutate(SizeFrac = case_when(
-    h >= 20 ~ "micro",
-    TRUE ~ "nano")) %>% 
-  mutate(Volume = ((pi/6) * (d^2) * d)) %>% # Calculate volume (um cubed) # Hillebrand et al. 1999
-  mutate(pgC_cell = (0.216 * (Volume^0.939))) %>% # Calculate Cell biomass in pg C per cell # Menden-Deuer and Lessard 2000
-  data.frame
-# View(biov_calc)
-biov_calc
-```
-> Volume is reported as um^3
-
-```{r Summary of biovolumes}
-# Volume by experiment type
-biov_calc %>% 
-  group_by(EXP) %>% summarise(VOL = mean(Volume), C = mean(pgC_cell))
-# Volume by euk size
-biov_calc %>% 
-  group_by(SizeFrac) %>% summarise(VOL = mean(Volume), C = mean(pgC_cell))
-# Volume by site
-biov_calc %>% 
-  group_by(VENT_BSW) %>% summarise(VOL = mean(Volume), C = mean(pgC_cell))
-# head(biov_calc)
-euk_vol <- mean(biov_calc$Volume);euk_vol # in um^3
-euk_carbon <- mean(biov_calc$pgC_cell); euk_carbon # in pg C per cell
-euk_carbon_min <- min(biov_calc$pgC_cell); euk_carbon_min
-euk_carbon_max <- max(biov_calc$pgC_cell); euk_carbon_max
-# euk_carbon
 ```
 
-Avg euk biomass pg C per individual cell == ```{r}euk_carbon```
+## C factor based on biovolume
 
-## Compare carbon biomass with literature
-
-Compare with Menden-Deuer and Lessard 2000, Table 2 - using only the heterotrophic species measured. Based on Table 2, the min volume was 4745 and the maximum was 1.2 x10^7 µm^3. Carbon content was measured at pg per cell, this was 469.48-35,339 pg per cell. 
-
-Import the heterotroph species volume and carbon content to compare to my measured values.
+(1) Calculate biovolume based on observed/imaged cells
 
 ```{r}
-# Hu-measured
-range(biov_calc$Volume)
-range(biov_calc$pgC_cell)
+# Calculate biovolume, then apply carbon by biomass estimate for protists derived from biovolume.
+biov_calc <- biov %>% 
+  mutate(BIOVOLUME = ((pi/6) * (d^2) * d)) %>% # Calculate volume (um cubed) # Hillebrand et al. 1999
+  mutate(pgC_cell_MD_dino = (0.760 * (BIOVOLUME^0.819))) %>% # Menden-Deuer and Lessard 2000
+  mutate(pgC_cell_MD_nodiatom = (0.216 * (BIOVOLUME^0.939))) %>% # Menden-Deuer and Lessard 2000
+  mutate(pgC_cell_RANGE_min = (80 * BIOVOLUME)/1000,
+         pgC_cell_RANGE_max = (360 * BIOVOLUME)/1000,
+         pgC_cell_RANGE_mean = (220 * BIOVOLUME)/1000)
+head(biov_calc)
+# biov_calc
+# mean(c(80, 360))
+```
 
+(2) Get a summary pg per cell for vent and background samples. This is derived from biovolume estimates.
+```{r}
+c_factor_biov <- 
+  biov_calc %>% select(-EXP, -h, -d) %>% 
+  pivot_longer(cols = c(BIOVOLUME, starts_with("pgC_")), names_to = "VARIABLES", values_to = "VALUES") %>% 
+  group_by(VENT_BSW, VARIABLES) %>% 
+    summarise(mean = mean(VALUES),
+              max = max(VALUES),
+              min = min(VALUES)) %>% 
+  pivot_wider(names_from = VENT_BSW, values_from = c(mean, max,min), names_sort = FALSE)
+# View(c_factor_biov)
+```
+
+(3) Assign a C conversion factor for background and within vents based on biovolume
+```{r}
+pgC_cell_BSW <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$mean_BSW
+
+pgC_cell_vent <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$mean_vent
+
+pgC_cell_BSW_min <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$min_BSW
+
+pgC_cell_vent_min <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$min_vent
+
+pgC_cell_BSW_max <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$max_BSW
+
+pgC_cell_vent_max <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$max_vent
+
+```
+
+(4) Combine with count table to estimate total standing stock in carbon
+
+Isolate at T0 all the euk cells per ml counts. Then add in the mean, min/max for the pg C per cell, based on the vent vs non-vent.
+```{r}
+pgC_ml_biov_bysample <- plot_euk_format %>% 
+  filter(TimePoint == "T0") %>%
+  filter(VARIABLE == "eukCONC") %>% 
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>% 
+  mutate(pgC_ml_mean = case_when(
+    SAMPLE_TYPE_BIN == "Non-vent" ~ avg_conc * pgC_cell_BSW,
+    SAMPLE_TYPE_BIN == "Vent" ~ avg_conc * pgC_cell_vent,
+  )) %>% 
+  mutate(pgC_ml_min = case_when(
+    SAMPLE_TYPE_BIN == "Non-vent" ~ avg_conc * pgC_cell_BSW_min,
+    SAMPLE_TYPE_BIN == "Vent" ~ avg_conc * pgC_cell_vent_min
+  )) %>% 
+  mutate(pgC_ml_max = case_when(
+    SAMPLE_TYPE_BIN == "Non-vent" ~ avg_conc * pgC_cell_BSW_max,
+    SAMPLE_TYPE_BIN == "Vent" ~ avg_conc * pgC_cell_vent_max
+  ))
+pgC_ml_biov_bysample
+```
+
+```{r}
+by_biovol_plot <- pgC_ml_biov_bysample %>% 
+  ggplot(aes(x = NameOrder, y = (pgC_ml_mean/1000))) +
+    geom_point(shape = 21, color = "black") + 
+    geom_linerange(aes(ymin = (pgC_ml_min/1000), ymax = (pgC_ml_max/1000))) +
+  facet_grid(.~Site_Order, space = "free", scales = "free") +
+  # coord_flip() +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), 
+           axis.line = element_line(colour = "black"), 
+           axis.text.x = element_text(color="black", size = 12, 
+                                      angle = 45, hjust = 1, vjust = 1), 
+           axis.text.y = element_text(color="black", size = 12),
+           axis.title =element_text(color="black", size = 12),
+           axis.ticks = element_line(),
+           strip.text =element_blank(), legend.title = element_blank())+
+    guides(fill = guide_legend(override.aes = list(shape = c(21))),
+       shape = guide_legend(override.aes = list(fill = "black"))) +
+    labs(x = "", y = bquote("Estimated total biomass: pg C " ~L^-1),
+         title = "Carbon pool of protists - derived from biovolume")
+```
+**What should I do with replicates?
+
+
+## C biomass based on size fraction
+
+Derived from Caron et al. 1995
+
+(1) Assign by size class
+```{r}
+c_n <- 2.6 # pg C per cell
+c_m <- 138 # pg C per cell
+```
+
+```{r}
+pgC_ml_sizefrac_bysample_tmp <- plot_euk_format %>% 
+  filter(TimePoint == "T0") %>%
+  filter(VARIABLE != "eukCONC") %>% # isolate micro vs. nano
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>% 
+  mutate(pg_C_cell = case_when(
+    VARIABLE == "microCONC" ~ c_m,
+    VARIABLE == "nanoCONC" ~ c_n
+  )) %>% 
+  mutate(pg_C_ml_TMP = avg_conc * pg_C_cell) %>% 
+  group_by(EXPERIMENT, SiteOrder, NameOrder, TimePoint, EXP_TYPE, SAMPLE_TYPE_BIN, Site_Order, VARIABLE) %>% 
+  summarise(pg_C_ml = mean(pg_C_ml_TMP))
+
+tmp2 <- pgC_ml_sizefrac_bysample_tmp %>% 
+  group_by(EXPERIMENT, SiteOrder, NameOrder, TimePoint, EXP_TYPE, SAMPLE_TYPE_BIN, Site_Order) %>% 
+  summarize(pg_C_ml = sum(pg_C_ml)) %>% 
+  add_column(VARIABLE = "totaleuk")
+
+pgC_ml_sizefrac_bysample <- rbind(tmp2, pgC_ml_sizefrac_bysample_tmp)
+# pgC_ml_sizefrac_bysample
+```
+
+```{r}
+pgC_ml_sizefrac_bysample %>% 
+  group_by(SAMPLE_TYPE_BIN, VARIABLE) %>% 
+  summarise(MEAN_pg_C_ml = mean(pg_C_ml),
+            MAX_pg_C_ml = max(pg_C_ml),
+            MIN_pg_C_ml = min(pg_C_ml))
+
+# head(pgC_ml_sizefrac_bysample)
+```
+
+
+```{r}
+by_sizefrac_plot <- pgC_ml_sizefrac_bysample %>% 
+  ggplot(aes(x = NameOrder, y = (pg_C_ml/1000))) +
+    geom_point(color = "black", aes(shape = VARIABLE)) + 
+    # geom_linerange(aes(ymin = (pgC_ml_min/1000), ymax = (pgC_ml_max/1000))) +
+  facet_grid(.~Site_Order, space = "free", scales = "free") +
+  # coord_flip() +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+           panel.background = element_blank(), 
+           axis.line = element_line(colour = "black"), 
+           axis.text.x = element_text(color="black", size = 12, 
+                                      angle = 45, hjust = 1, vjust = 1), 
+           axis.text.y = element_text(color="black", size = 12),
+           axis.title =element_text(color="black", size = 12),
+           axis.ticks = element_line(),
+           strip.text =element_blank(), legend.title = element_blank())+
+    guides(fill = guide_legend(override.aes = list(shape = c(21))),
+       shape = guide_legend(override.aes = list(fill = "black"))) +
+    labs(x = "", y = bquote("Estimated total biomass: pg C " ~L^-1),
+         title = "Carbon pool of protists - based on size fraction")
+```
+
+Combined supplementary plot showing two routes of determining total biomass.
+```{r, fig.height=8, fig.width=7}
+by_biovol_plot + by_sizefrac_plot + patchwork::plot_layout(ncol = 1) +
+  plot_annotation(tag_levels = "a")
+```
+
+
+## Compare total carbon biomass - euks
+Compilation table of carbon biomass values for microeukaryotes by sample type and vent field
+```{r}
+## carbon biomass derived from biovolume, by sample type
+pgC_ml_biov_bysample %>% 
+  group_by(SAMPLE_TYPE_BIN)%>% 
+  summarise(MEAN_pg_C_ml = mean(pgC_ml_mean),
+            MAX_pg_C_ml = max(pgC_ml_mean),
+            MIN_pg_C_ml = min(pgC_ml_mean)) %>% 
+  add_column(ORIGIN = "bybiovolume")
+
+## carbon biomass derived from biovolume, by vent field (vent only)
+pgC_ml_biov_bysample %>% 
+  filter(SAMPLE_TYPE_BIN == "Vent") %>%
+  group_by(Site_Order)%>% 
+  summarise(MEAN_pg_C_ml = mean(pgC_ml_mean),
+            MAX_pg_C_ml = max(pgC_ml_mean),
+            MIN_pg_C_ml = min(pgC_ml_mean)) %>% 
+  add_column(ORIGIN = "bybiovolume")
+
+## Carbon biomass estimates from sample type and size fraction
+pgC_ml_sizefrac_bysample %>% 
+  group_by(SAMPLE_TYPE_BIN, VARIABLE) %>% 
+  summarise(MEAN_pg_C_ml = mean(pg_C_ml),
+            MAX_pg_C_ml = max(pg_C_ml),
+            MIN_pg_C_ml = min(pg_C_ml)) %>% 
+  add_column(ORIGIN = "sizefrac")
+
+## Carbon biomass estimates from vent sites only, by vent field and size fraction
+pgC_ml_sizefrac_bysample %>% 
+  filter(SAMPLE_TYPE_BIN == "Vent") %>% 
+  group_by(Site_Order, VARIABLE) %>% 
+  summarise(MEAN_pg_C_ml = mean(pg_C_ml),
+            MAX_pg_C_ml = max(pg_C_ml),
+            MIN_pg_C_ml = min(pg_C_ml)) %>% 
+  add_column(ORIGIN = "sizefrac")
+```
+
+## Compare biovolumes from literature to measured in this study
+
+Compare with Menden-Deuer and Lessard 2000, Table 2 - using only the heterotrophic species measured. Based on Table 2, the min volume was 4745 and the maximum was 1.2 x10\^7 µm\^3. Carbon content was measured at pg per cell, this was 469.48-35,339 pg per cell.
+
+Import the heterotroph species volume and carbon content to compare to my measured values. Compare to md-lessard (Supplementary)
+
+```{r}
 c_prev <- read.delim("input-data/md-lessard-2000.txt") # Table 2, heterotrophs only
-
+# c_prev
+# biov
 # combine and plot
 carbon_compare <- c_prev %>% 
   add_column(source = "Menden-Deuer Lessard") %>% 
   select(source, Volume = vol, pgC_cell) %>% 
-  rbind(biov_calc %>% add_column(source = "MCR") %>% select(source, Volume, pgC_cell)) %>% 
+  rbind(biov_calc %>% add_column(source = "MCR") %>% select(source, Volume = BIOVOLUME, pgC_cell = pgC_cell_MD_nodiatom)) %>% 
     ggplot(aes(x = Volume, y = pgC_cell, fill = source)) +
       geom_point(aes(fill = source), shape = 23, color = "black", size = 3) +
       scale_y_log10() + scale_x_log10() +
       labs(title = "Compare literature to measured cell volume & C content",
-           x = bquote("Volume" ~µm^-3),
+           x = bquote("Volume" ~µm^3),
            y = bquote("pg C" ~cell^-1)) +
       theme_bw() + theme(legend.title = element_blank(),
                          axis.title = element_text(size = 14),
@@ -1074,101 +1403,114 @@ carbon_compare <- c_prev %>%
                          legend.text = element_text(size = 14))
 
 carbon_compare
-
-euk_carbon_lit_mean <- mean(c_prev$pgC_cell)
-euk_carbon_lit_min <- min(c_prev$pgC_cell)
-euk_carbon_lit_max <- max(c_prev$pgC_cell)
 ```
 
-Upon comparison, the measured carbon content was much lower from the grazing experiments. This makes sense, as I am looking at preserved specimen and a smaller total number of cells. AND the deep-sea protist cell sizes may be smaller overall. 
+Upon comparison, the measured carbon content was much lower from the grazing experiments. This makes sense, as I am looking at preserved specimen and a smaller total number of cells. AND the deep-sea protist cell sizes may be smaller overall.
 
-Find lowest estimates or protist carbon, benthic estimates, and others?
-How does it compare to my measurements?
 
-### Carbon biomass for prokaryotes
-Below adding in biomass estimates from prokaryotes and protists.
+# Carbon biomass for prokaryotes
+
+Now, report estimated carbon per cell for bacteria.
+
+Units: fg C per cell.
+
 ```{r Incorporate prokaryote carbon estimates}
-bac_carbon_ug <- (86)*(1.00E-9) # From Derived from Morono et al. 2011 
-# bac_carbon_ug
-bac_carbon_ug_2 <- (173)*(1.00E-9) # Derived from McNichol et al. 2018; LOFERER-KRO ̈ ßBACHER, J. KLIMA & R. PSENNER 1998
-# table_wcalcs
+bac_carbon_Mor_fg <- (86) 
+#From Derived from Morono et al. 2011 
+
+bac_carbon_Lof_fg <- (173) 
+# Derived from McNichol et al. 2018; LOFERER-KROBACHER, J. KLIMA & R. PSENNER 1998
+
+# fg C per cell
+bac_carbon_mean <- 15
+bac_carbon_min <- 10
+bac_carbon_max <- 20
 ```
 
-Amend all to table
-Incorporate calculations that include biomass of population and ug C consumed. For rate measurements, only incorporate the Morono et al. 2011 biomass for prokaryotes. This way it is on the lower end and is comparable to Gorda Ridge work.
+Import main table with all estimates of cells
+```{r}
+table_wcalcs <- read_delim(file = "output-data/table1-grazing-exp-list.txt", delim = "\t")
+# head(table_wcalcs)
+```
+
+RATE_min units = FLPs per grazer per minute
+Clearance rate _ml = ml per grazer per hour
+
 
 ```{r}
-bsw <- c("Plume", "Background")
+##
+est_prok_carbon <- table_wcalcs %>% 
+  select(FIELD, NAME, EXP, SAMPLE, starts_with("PROK_"), RATE_min, CLEARANCE_RATE_ml, GRAZING_EFFECT_hr) %>% 
+  # Add in calcs by fg C per cell.
+  ## Estimates of carbon pool of microbes per ml. 
+  mutate(MOR_fgC_ml = bac_carbon_Mor_fg * PROK_ml,
+         LOF_fgC_ml = bac_carbon_Lof_fg * PROK_ml,
+         MEAN_fgC_ml = bac_carbon_mean * PROK_ml,
+         MAX_fgC_ml = bac_carbon_max * PROK_ml,
+         MIN_fgC_ml = bac_carbon_min * PROK_ml) %>% 
+  pivot_longer(cols = ends_with("fgC_ml"), names_to = "fgC_ml")
 
-table_wcalcs_biomass <- table_wcalcs %>% 
-  add_column(euk_C_ug_Hu = (euk_carbon / (1.00E+06))) %>% # Convert to ug from pg
-  add_column(euk_C_ug_lit = (euk_carbon_lit_mean / (1.00E+06))) %>% # literature
-  add_column(bac_C_ug = bac_carbon_ug) %>% 
-  add_column(bac_C_ug_2 = bac_carbon_ug_2) %>%
-  # Grazing rate in ug C per bac per day
-  mutate(RATE_ugCbac_pergrazer_perday = (RATE_hr * 24 * bac_C_ug), # Grazing rate as ug C per grazer per day
-         # % of cell carbon per day
-         SPEC_INGESTION_RATE = (RATE_ugCbac_pergrazer_perday / euk_C_ug_Hu),
-         SPEC_INGESTION_RATE_lit = (RATE_ugCbac_pergrazer_perday / euk_C_ug_lit),
-         Prok_biomass = PROK_ml * bac_carbon_ug,
-         Euk_biomass_Hu = EUK_ml * euk_C_ug_Hu,
-         Euk_biomass_lit = EUK_ml * euk_C_ug_lit,
-         Prok_biomass_L = PROK_ml * bac_carbon_ug * 1000,
-         Euk_biomass_Hu_L = EUK_ml * euk_C_ug_Hu * 1000,
-         Euk_biomass_lit_L = EUK_ml * euk_C_ug_lit * 1000,
-         # Repeat with SEM values
-         Prok_biomass_sem = PROK_sem * bac_carbon_ug,
-         Euk_biomass_Hu_sem = EUK_sem * euk_C_ug_Hu,
-         Euk_biomass_lit_sem = EUK_sem * euk_C_ug_lit,
-         Prok_biomass_sem_L = PROK_sem * (bac_carbon_ug* 1000),
-         Euk_biomass_Hu_sem_L = EUK_sem * (euk_C_ug_Hu * 1000),
-         Euk_biomass_lit_sem_L = EUK_sem * (euk_C_ug_lit * 1000)) %>% 
-  type.convert(as.is = TRUE) %>%
-  mutate(detected = case_when(
-    RATE_min < 0 ~ "Not detected",
-    TRUE ~ "Detected")) %>% 
-  mutate(type = case_when(
-    NAME %in% bsw ~ NAME,
-    TRUE ~ paste("Vent", EXP, sep="-")
-  )) %>% 
-  mutate(GRAZE_RATE = case_when(
-    RATE_min < 0 ~ 0,
-    TRUE ~ RATE_min
-  )) %>% 
-  mutate(type_site = case_when(
-    NAME %in% bsw ~ NAME,
+head(est_prok_carbon)
+```
+
+Get summary of prokaryotic biomass
+```{r}
+est_prok_carbon %>% 
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NAME == "Background" ~ "Non-vent",
+    NAME == "Plume" ~ "Non-vent",
     TRUE ~ "Vent"
   )) %>%
-  data.frame
-# View(table_wcalcs_biomass)
+  group_by(SAMPLE_TYPE_BIN, fgC_ml) %>% 
+  summarise(mean_pgC_ml = mean((value)*(0.001)),
+            min_pgC_ml = min((value)*(0.001)),
+            max_pgC_ml = max((value)*(0.001))) 
+head(est_prok_carbon)
 ```
 
-> Volume is reported as um^3
 
-* Grazing rate column == FLP per minute consumed
-* Grazing effect hr == cells per ml per hr
-
-## Amend table with 'bounded' carbon estimates
-Also make a "bounded" table that demonstrates the ug C consumed in the context of McNichol et al.
+## Incorporate carbon biomass of prey and grazing rate 
 ```{r}
-# G = number of cells grazed during experiment duration
-table_wcalcs_biomass_bounded <- table_wcalcs_biomass %>% 
-  add_column(fgC_cell = 86) %>% # Add in Morono et al. 2011 value
-  mutate(
-    # cells_consumed_perday = (G / 1), # Rate of cells consumed * in situ prok, per day
-    fgC_ml_perday = (GRAZING_EFFECT_day * fgC_cell), # Convert cell amount to fg C
-    ugC_L_perday = (fgC_ml_perday * (1e-09) * 1000), # Convert to ug C per L
-    lower_mcnichol = 100*(ugC_L_perday / 17.3),
-    upper_mcnichol = 100*(ugC_L_perday / 321.4)
-  ) %>% 
-  data.frame
+## Carbon consumed based on clearance rate
+carbon_consumed <- est_prok_carbon %>% 
+  filter(fgC_ml == "MOR_fgC_ml") %>% #use only value from Morono et al.
+  add_column(ugC_cell = (bac_carbon_Mor_fg * 0.001)) %>% 
+  select(FIELD, NAME, EXP, PROK_ml, GRAZING_EFFECT_hr, CLEARANCE_RATE_ml, ugC_cell, ugC_ml = value) %>% 
+  mutate(ugC_pergrazer_CLEARANCE = ugC_ml * CLEARANCE_RATE_ml,
+         ugC_perml_perhr = ugC_cell * GRAZING_EFFECT_hr)
 ```
 
+Summary of carbon consumed:
+```{r}
+carbon_consumed %>% 
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NAME == "Background" ~ "Non-vent",
+    NAME == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  group_by(SAMPLE_TYPE_BIN) %>% 
+  summarise(MEAN_ugC_pergrazer_CLEARANCE = mean(ugC_pergrazer_CLEARANCE),
+            MEAN_ugC_perml_perhr = mean(ugC_perml_perhr),
+            MAX_ugC_pergrazer_CLEARANCE = max(ugC_pergrazer_CLEARANCE),
+            MAX_ugC_perml_perhr = max(ugC_perml_perhr),
+            MIN_ugC_pergrazer_CLEARANCE = min(ugC_pergrazer_CLEARANCE),
+            MIN_ugC_perml_perhr = min(ugC_perml_perhr))
 
-```{r Save carbon table}
-# head(table_wcalcs_biomass_bounded)
-# View(table_wcalcs_biomass_bounded)
-# write_delim(table_wcalcs_biomass_bounded, file = "output-data/table-wcalc.txt", delim = "\t")
+
+carbon_consumed %>% 
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NAME == "Background" ~ "Non-vent",
+    NAME == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  filter(SAMPLE_TYPE_BIN == "Vent") %>% 
+  group_by(FIELD) %>% 
+  summarise(MEAN_ugC_pergrazer_CLEARANCE = mean(ugC_pergrazer_CLEARANCE),
+            MEAN_ugC_perml_perhr = mean(ugC_perml_perhr),
+            MAX_ugC_pergrazer_CLEARANCE = max(ugC_pergrazer_CLEARANCE),
+            MAX_ugC_perml_perhr = max(ugC_perml_perhr),
+            MIN_ugC_pergrazer_CLEARANCE = min(ugC_pergrazer_CLEARANCE),
+            MIN_ugC_perml_perhr = min(ugC_perml_perhr))
 ```
 
 
@@ -1222,6 +1564,7 @@ This is further supported because the biovolumes of all cells were pretty low.
 head(counts_cellsml_axial)
 hist(counts_cellsml_axial$eukCONC)
 ```
+
 ```{r}
 # head(plot_euk_conc)
 # head(counts_cellsml_axial)
@@ -1254,11 +1597,10 @@ plot_euk_conc %>%
   
 ```
 
-
-
 # Environmental parameters - MCR
 
-Import from Hu et al. (_Molecular Ecology_).
+Import from Hu et al. (*Molecular Ecology*).
+
 ```{r}
 env_tmp <- read.delim("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/samplelist-metadata.txt")
 # head(env_tmp)
@@ -1275,6 +1617,7 @@ mcr_metadata <- env_tmp %>%
 ```
 
 Generate supplementary table.
+
 ```{r}
 supp_table_env_mcr <- mcr_metadata %>% 
   select(FIELD, VENT, SAMPLETYPE, DEPTH, TEMP = temp, PH = pH, PERCSEA = percseawater, MG = mg, H2 = h2, H2S = h2s, CH4 = ch4, MICROBIAL = ProkConc)
@@ -1283,82 +1626,99 @@ supp_table_env_mcr <- mcr_metadata %>%
 # write.csv(supp_table_env_mcr, file = "output-data/supp_table_MCR_metadata.csv")
 ```
 
-
 # Analysis of grazing rate results
 
 Re-import table from output table with all grazing values
+
 ```{r}
 table_wcalcs_biomass_bounded <- read.delim("output-data/table-wcalc.txt")
 ```
 
 Format and factor values to plot, and prioritize these values:
 
-* Grazing rate column == FLP per minute consumed
-* Grazing effect hr == cells per ml per hr
-* Specific ingestion rate == % of cell carbon per day, estimated with literature and measured carbon values
+-   Grazing rate column == FLP per minute consumed
+-   Grazing effect hr == cells per ml per hr
+-   Specific ingestion rate == % of cell carbon per day, estimated with literature and measured carbon values
+
 ```{r}
 head(table_wcalcs_biomass_bounded)
+# table_wcalcs_biomass_bounded$Euk
 ```
 
-
+Report grazing rates
 ```{r}
-biomass_rate_plot <- table_wcalcs_biomass_bounded %>% 
-  select(FIELD, NAME, EXP, SAMPLE, type, 
+table_wcalcs_biomass_bounded %>% 
+    mutate(SAMPLE_TYPE_BIN = case_when(
+    NAME == "Background" ~ "Non-vent",
+    NAME == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  # group_by(SAMPLE_TYPE_BIN) %>%
+  group_by(SAMPLE_TYPE_BIN, EXP) %>% 
+    summarise(MEAN_RATE = mean(GRAZING_EFFECT_hr),
+              MIN_RATE = min(GRAZING_EFFECT_hr),
+              MAX_RATE = max(GRAZING_EFFECT_hr))
+```
+```{r}
+biomass_rate_plot <- table_wcalcs_biomass_bounded %>%
+  select(FIELD, NAME, EXP, SAMPLE, type,
         PROK_ml, EUK_ml, PROK_sem, EUK_sem,
-        Prok_biomass_L, Euk_biomass_Hu_L, Euk_biomass_lit_L,
-        Prok_biomass_sem_L, Euk_biomass_Hu_sem_L, Euk_biomass_lit_sem_L,
+        Prok_biomass_L_MOR, 
+        # Euk_biomass_Hu_L, Euk_biomass_lit_L,
+        # Prok_biomass_sem_L, Euk_biomass_Hu_sem_L, Euk_biomass_lit_sem_L,
         GRAZING_EFFECT_hr, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max, BAC_TURNOVER_PERC, BAC_TURNOVER_PERC_min, BAC_TURNOVER_PERC_max,
-        GRAZE_RATE, RATE_ugCbac_pergrazer_perday,
-        SPEC_INGESTION_RATE, SPEC_INGESTION_RATE_lit) %>% 
+        GRAZE_RATE) %>%
   pivot_longer(cols = c(PROK_ml, EUK_ml,
-                        Prok_biomass_L, Euk_biomass_Hu_L, Euk_biomass_lit_L,
+                        Prok_biomass_L_MOR, 
+                        # Euk_biomass_Hu_L, Euk_biomass_lit_L,
                         GRAZING_EFFECT_hr, BAC_TURNOVER_PERC,
-                        GRAZE_RATE, RATE_ugCbac_pergrazer_perday,
-                        SPEC_INGESTION_RATE, SPEC_INGESTION_RATE_lit),
-               names_to = "Variable", values_to = "Value") %>% 
-  pivot_longer(cols = c(PROK_sem, EUK_sem, Prok_biomass_sem_L, Euk_biomass_Hu_sem_L, Euk_biomass_lit_sem_L,
+                        GRAZE_RATE),
+               names_to = "Variable", values_to = "Value") %>%
+  pivot_longer(cols = c(PROK_sem, EUK_sem, 
+                        # Prok_biomass_sem_L, Euk_biomass_Hu_sem_L, Euk_biomass_lit_sem_L,
                         BAC_TURNOVER_PERC_max, BAC_TURNOVER_PERC_min, GRAZING_EFFECT_hr_max, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max),
-               names_to = "SEM_variable", values_to = "SEM") %>% 
+               names_to = "SEM_variable", values_to = "SEM") %>%
   data.frame
 
 biomass_rate_plot$NAME_ORDER <- factor(biomass_rate_plot$NAME, levels = c("Background","Plume", "Quakeplume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "Hot Chimlet #1", "Shrimp Gulley", "South of Hot Chimlet", "South of LungSnack", "Arrow Loop", "Bartizan", "Ravelin #1"))
 
-biomass_rate_plot$VARIABLE_ORDER <- factor(biomass_rate_plot$Variable, 
+biomass_rate_plot$VARIABLE_ORDER <- factor(biomass_rate_plot$Variable,
                                            levels = c("PROK_ml", "EUK_ml",
-                                                      "Prok_biomass_L", "Euk_biomass_Hu_L", "Euk_biomass_lit_L",
+                                                      "Prok_biomass_L_MOR", 
+                                                      # "Euk_biomass_Hu_L", "Euk_biomass_lit_L",
                                                       "GRAZING_EFFECT_hr", "BAC_TURNOVER_PERC",
-                                                      "GRAZE_RATE", "RATE_ugCbac_pergrazer_perday",
-                                                      "SPEC_INGESTION_RATE", "SPEC_INGESTION_RATE_lit"),
+                                                      "GRAZE_RATE"),
                                            labels = c("Prokaryote~cells~mL^{-1}", "Eukaryote~cells~mL^{-1}",
-                                                      "Prokaryote~µg~C~L^{-1}", "Measured~eukaryote~µg~C~L^{-1}", "Literature-based~eukaryote~µg~C~L^{-1}",
+                                                      "Prokaryote~µg~C~L^{-1}", 
+                                                      # "Measured~eukaryote~µg~C~L^{-1}", "Literature-based~eukaryote~µg~C~L^{-1}",
                                                       "Cells~mL^{-1}~hr^{-1}", "Prokaryote~turnover~'%'~d^{-1}",
-                                                      "FLP~consumed~min^{-1}", "µg~C~grazer^{-1}~day^{-1}",
-                                                      "Cell~carbon~%~day^{-1}", "Cell~carbon~%~day^{-1}~(lit)"))
+                                                      "FLP~consumed~min^{-1}"))
 ```
 
 ## Function to plot grazing results
+
 ```{r}
 conc_rate_plot_mcr <- function(df, var, sem){
-  df %>% 
+  df %>%
     filter(Variable == var) %>%
-    filter(SEM_variable == sem) %>% 
+    filter(SEM_variable == sem) %>%
     ggplot(aes(y = Value, x = NAME_ORDER, shape = EXP, fill = FIELD)) +
-    geom_errorbar(aes(ymax = (Value + SEM), ymin = (Value - SEM)), 
+    geom_errorbar(aes(ymax = (Value + SEM), ymin = (Value - SEM)),
                   width = 0.2, position = position_dodge(width = 0.4)) +
     geom_point(stat = "identity", aes(shape = EXP, fill = FIELD),
                color = "black", size = 3, position = position_dodge(width = 0.4)) +
     scale_shape_manual(values = c(21, 23)) +
     scale_fill_manual(values = c("#de2d26", "#1c9099")) +
-    facet_wrap(VARIABLE_ORDER ~ ., scales = "free", 
+    facet_wrap(VARIABLE_ORDER ~ ., scales = "free",
                strip.position = c("left"), labeller = label_parsed) +
     scale_y_log10() +
     # scale_y_log10(labels = function(x) format(x, scientific = TRUE)) +
     theme_minimal() +
     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
-          axis.text.x = element_text(color="black", size = 11, 
-                                     angle = 45, hjust = 1, vjust = 1), 
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          axis.text.x = element_text(color="black", size = 11,
+                                     angle = 45, hjust = 1, vjust = 1),
           axis.text.y = element_text(color="black", size = 11),
           axis.title =element_text(color="black", size = 14),
           axis.ticks = element_line(),
@@ -1379,54 +1739,62 @@ conc_rate_plot_mcr <- function(df, var, sem){
 
 # conc_rate_plot_mcr(biomass_rate_plot, "Prok_biomass_L", "Prok_biomass_sem_L")
 
-conc_rate_plot_mcr(biomass_rate_plot, "Euk_biomass_Hu_L", "Euk_biomass_Hu_sem_L")
+# conc_rate_plot_mcr(biomass_rate_plot, "Euk_biomass_Hu_L", "Euk_biomass_Hu_sem_L")
 ```
 
-```{r, fig.height=8, fig.width=7}
+```{r, fig.height=4, fig.width=6}
 # scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+# head(biomass_rate_plot)
+# unique(biomass_rate_plot$FIELD)
 grazing_rate <- biomass_rate_plot %>% 
   type.convert(as.is = TRUE) %>%
     filter(Variable == "GRAZING_EFFECT_hr") %>%
     filter(SEM_variable == "GRAZING_EFFECT_hr_min" | SEM_variable == "GRAZING_EFFECT_hr_max") %>% 
     pivot_wider(names_from = SEM_variable, values_from = SEM) %>%
-    mutate(NAME_ORDER = factor(NAME, levels = c("Background","Plume", "Quakeplume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "Hot Chimlet #1", "Shrimp Gulley", "South of Hot Chimlet", "South of LungSnack", "Arrow Loop", "Bartizan", "Ravelin #1"))) %>% 
-    ggplot(aes(y = Value, x = NAME_ORDER, shape = EXP, fill = FIELD)) +
+    mutate(NAME_ORDER = factor(NAME, levels = vent_fullname)) %>% 
+    mutate(FIELD_ORDER = factor(FIELD, levels = site_fullname)) %>% 
+    ggplot(aes(y = Value, x = NAME_ORDER, shape = EXP, fill = FIELD_ORDER)) +
     geom_errorbar(aes(ymax = (GRAZING_EFFECT_hr_max), ymin = (GRAZING_EFFECT_hr_min)), 
                   width = 0.2, position = position_dodge(width = 0.4)) +
-    geom_point(stat = "identity", aes(shape = EXP, fill = FIELD),
+    geom_point(stat = "identity", aes(shape = EXP, fill = FIELD_ORDER),
                color = "black", size = 3, position = position_dodge(width = 0.4)) +
     scale_shape_manual(values = c(21, 24)) +
-    scale_fill_manual(values = c("#de2d26", "#1c9099")) +
-    facet_wrap(. ~ VARIABLE_ORDER, scales = "free", 
-               labeller = label_parsed) +
-    theme_minimal() + coord_flip() +
-    # theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
-    #       panel.background = element_blank(), 
-    #       axis.line = element_line(colour = "black"), 
-    #       axis.text.x = element_text(color="black", size = 11, 
-    #                                  angle = 0, hjust = 1, vjust = 1), 
-    #       axis.text.y = element_text(color="black", size = 11),
-    #       axis.title =element_text(color="black", size = 11),
-    #       axis.ticks = element_line(),
-    #       legend.title = element_blank(),
-    #       strip.placement = "outside",
-    #       strip.text.y = element_text(color="black", size = 11),
-    #       strip.text.x = element_blank())+
+    scale_fill_manual(values = site_color) +
+    facet_grid(.~FIELD_ORDER, space = "free", scales = "free") +
+    # facet_wrap(. ~ FIELD_ORDER, scales = "free", 
+    #            labeller = label_parsed) +
+    theme_minimal() + 
+    # coord_flip() +
+    theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          axis.text.x = element_text(color="black", size = 12, 
+                                     angle = 45, hjust = 1, vjust = 1), 
+          axis.text.y = element_text(color="black", size = 12),
+          axis.title =element_text(color="black", size = 12),
+          axis.ticks = element_line(),
+          legend.title = element_blank(),
+          strip.placement = "outside",
+          strip.text.y = element_text(color="black", size = 12),
+          strip.text.x = element_blank()) +
     guides(fill = guide_legend(override.aes = list(shape = c(21))),
            shape = guide_legend(override.aes = list(fill = "black"))) +
-    labs(x = "", y = "")
-# class(grazing_rate)
-# head(biomass_rate_plot)
-# svg("plot-grazing-withscale.svg", h = 7, w = 6)
-# grazing_rate
-# plot_grid(
-# grazing_rate + scale_y_continuous(limits = c(0,2000))
-  # ,
-          # grazing_rate,
-          # ncol = 1, rel_heights = c(0.6,1))
-# dev.off()
-grazing_rate + scale_y_log10()
+    labs(x = "", y = bquote("Cells consumed " ~ml^-1 ~hr^-1))
+##
+grazing_rate + scale_y_log10(limits = c(1,1e4))
 ```
+
+# Figure 1 compilation
+```{r, fig.height=9, fig.width=11}
+# euk_prok_flp_rate <- 
+  (euk_plot + theme(legend.position = "none")) / 
+  (prok_plot + theme(legend.position = "none")) + guide_area() +
+  patchwork::plot_layout(ncol = 1, guides = "collect") | 
+  (grazing_min_plot + theme(legend.position = "none") + scale_y_continuous(limits = c(0, 0.02))) /
+  (grazing_rate + scale_y_log10(limits = c(1,1e4))) +
+  patchwork::plot_layout(ncol = 1, guides = "collect") + guide_area() | patchwork::plot_annotation(tag_levels = "a")
+```
+
 
 ## Grazing rate vs. cells ml
 
@@ -1438,10 +1806,11 @@ plot_metadata <- env_params %>%
   filter(VENT != "Quakeplume") %>% 
   select(SITE, VENT, SAMPLETYPE, TEMP, DEPTH, starts_with("PROK_"), starts_with("EUK_"), starts_with("GRAZING_EFFECT_hr"), pH, Mg, H2., CH4, H2S)
   # pivot_wider(names_from = "name", values_from = "value", values_fill = NA)
-head(plot_metadata)
+# head(plot_metadata)
 ```
 
 Compare microbial biomass, concentration, grazing and temperature across all sites.
+
 ```{r}
 euk_temp <- plot_metadata %>% 
     mutate(TEMP = as.numeric(TEMP)) %>% 
@@ -1451,7 +1820,7 @@ euk_temp <- plot_metadata %>%
   geom_errorbar(aes(ymin = ((EUK_ml)-(EUK_sem)),ymax = ((EUK_ml)+(EUK_sem)))) +
       geom_errorbarh(aes(xmin = (GRAZING_EFFECT_hr_min),xmax = (GRAZING_EFFECT_hr_max))) +
   geom_point(aes(shape = SITE), color = "black", size = 4) +
-  scale_y_log10() + scale_x_log10() +
+  scale_y_log10() + scale_x_log10(limits = c()) +
   scale_shape_manual(values = c(21, 23)) +
   scale_fill_distiller(palette = "YlOrRd", direction=2, na.value = "grey50") +
   theme_bw() +
@@ -1461,6 +1830,8 @@ euk_temp <- plot_metadata %>%
   labs(y = "Euk cells per ml", x = "Grazing rate per hr")
 
 euk_temp
+
+
 ```
 
 ```{r}
@@ -1484,10 +1855,13 @@ prok_temp <- plot_metadata %>%
 prok_temp
 ```
 
+# Figure 2 compilation
 ```{r, fig.height=10, fig.width=7}
 (euk_temp + labs(x = "") + theme(legend.position = "none")) + prok_temp + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a")
 ```
+
 Plot other environmental parameters
+
 ```{r}
 
 # head(plot_metadata)
@@ -1523,11 +1897,10 @@ plot_supp("pH") +
   patchwork::plot_layout(ncol = 2) + patchwork::plot_annotation(tag_levels = "a") 
 ```
 
-
-
-
 # Comparison with Gorda Ridge
+
 Import data from Gorda Ridge
+
 ```{r}
 gr <- read.delim("../../GordaRidgeCruise_2019/protist-gordaridge-2021/Grazing-at-GordaRidge-SKH-2021/data-input/Grazing-calc-wCarbon-results.txt")
 
@@ -1537,15 +1910,16 @@ mcr_graze <- read.delim("output-data/table-wcalc.txt")
 ```
 
 ## Combine GR and MCR data
+
 ```{r}
 all_vents <- mcr_graze %>%
   type.convert(as.is = TRUE) %>%
-  select(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max, BAC_TURNOVER_PERC, ugC_L_perday) %>% 
+  select(FIELD, NAME, SAMPLE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, GRAZING_EFFECT_hr_min, GRAZING_EFFECT_hr_max, BAC_TURNOVER_PERC) %>% 
   rbind(gr %>%
           add_column(FIELD = "Gorda Ridge") %>% 
           add_column(EUK_ml = NA) %>% 
           separate(SAMPLE, c("SAMPLE", "NAME"), sep = "-") %>% 
-          select(FIELD, NAME, SAMPLE, EXP = Bottle, PROK_ml = prok_avg, EUK_ml, GRAZING_EFFECT_hr = GrazingRate_hr, GRAZING_EFFECT_hr_min = GrazingRate_hr_min, GRAZING_EFFECT_hr_max = GrazingRate_hr_max, BAC_TURNOVER_PERC = Prok_turnover, ugC_L_perday = ugC_L_perday_morono)) %>% 
+          select(FIELD, NAME, SAMPLE, EXP = Bottle, PROK_ml = prok_avg, EUK_ml, GRAZING_EFFECT_hr = GrazingRate_hr, GRAZING_EFFECT_hr_min = GrazingRate_hr_min, GRAZING_EFFECT_hr_max = GrazingRate_hr_max, BAC_TURNOVER_PERC = Prok_turnover)) %>% 
   left_join(temps) %>% 
   mutate(SAMPLE_TYPE = case_when(
     grepl("BSW", NAME) ~ "Background",
@@ -1592,13 +1966,17 @@ allrates <- all_vents %>%
 ```
 
 Add Gorda Ridge comparison to supplementary?
+
 ```{r}
 allrates
 allrates + scale_y_log10()
 # allrates + scale_y_continuous(limits = c(0,1000))
 ```
+
 ### Remove undetected grazing rate
+
 Repeat grazing rate plot, but removed undetectable
+
 ```{r}
 # unique(all_vents$GRAZING_EFFECT_hr)
 allrates_nonzero <- all_vents %>% 
@@ -1638,6 +2016,7 @@ allrates_nonzero + scale_y_log10()
 ```
 
 Panel plot, cells per ml and grazing rate
+
 ```{r Plot cell conc and rates, fig.width=6, fig.height=10}
 # svg("plot-gcellconc-grazing-log.svg", h = 10, w = 6)
 # grazing_rate + scale_y_log10(limits = c(1e-1,1e5), breaks=10^(0:7))
@@ -1646,26 +2025,99 @@ plot_grid(conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem"),
 allrates_nonzero + scale_y_log10(), ncol = 1)
 # dev.off()
 ```
+
 ```{r, fig.width=7, fig.height=7}
 # svg("cells-per-ml.svg", h = 7, w = 7)
 conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem") + conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem") + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a") 
 # dev.off()
 ```
 
-# Linear regression
+# Linear regression & tidy models
 
-Use tidymodels to perform linear regression. Include MCR and GR data.
+TO DO: find a tidy model tutorial to work with.
+
+Use tidymodels to perform linear regression. 
+
+## MCR and GR data as input
+
 ```{r}
 library(broom)
 # ?pivot_longer
 # e	IGT
-# head(all_vents)
+head(all_vents)
+regression_input <- all_vents %>%
+  # filter(!(SAMPLE == "Piccard-Shrimpocalypse" & EXP == "IGT")) %>%
+  filter(!is.na(Highest.Temp)) %>%
+    select(FIELD, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, TEMP = Highest.Temp) %>%
+  mutate(PROK_EUK_RATIO = (PROK_ml/EUK_ml)) %>%
+  pivot_longer(cols = c(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC), names_to = "RATE", values_to = "RATE_VALUE") %>%
+  pivot_longer(cols = c(PROK_ml, EUK_ml, PROK_EUK_RATIO, TEMP), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>%
+  data.frame
+
+regression_tmp <- regression_input %>%
+  # Set up the linear regression
+  group_by(RATE, PARAMS) %>%
+  nest(-RATE, -PARAMS) %>%
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
+    tidied = map(lm_fit, tidy)) %>%
+  unnest(tidied) %>%
+  select(RATE, PARAMS,
+    term, estimate) %>%
+  pivot_wider(names_from = term, values_from = estimate) %>%
+  select(everything(), SLOPE = PARAMS_VALUE) %>%
+  data.frame
+
+regression_results <- regression_input %>%
+  group_by(RATE, PARAMS) %>%
+  nest(-RATE, -PARAMS) %>%
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
+    glanced = map(lm_fit, glance)) %>%
+  unnest(glanced) %>%
+  select(RATE, PARAMS, r.squared, adj.r.squared) %>%
+  right_join(regression_tmp) %>%
+  right_join(regression_input) %>%
+  data.frame
+
+# View(regression_results)
+```
+
+Plot results from regression
+
+```{r, fig.height=10, fig.width=15}
+regression_results %>%
+  # filter(RATE == "GRAZING_EFFECT_hr") %>%
+  # filter(PARAMS == "TEMP") %>%
+  ggplot(aes(x = PARAMS_VALUE, y = RATE_VALUE, shape = SAMPLE_TYPE, fill = FIELD)) +
+    geom_abline(aes(slope = SLOPE, intercept = `X.Intercept.`), color = "black", linetype = "dashed", size = 0.5) +
+    geom_point(color = "black", aes(shape = SAMPLE_TYPE, fill = FIELD)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#476AA7","#7299CE", "#A2937A")) +
+    facet_wrap(PARAMS ~ RATE + round(r.squared, 3), scales = "free", ncol = 5,
+             strip.position = "bottom", labeller = label_parsed) +
+  theme_bw() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    strip.text = element_text(color = "black", size = 10),
+    axis.title = element_text(color = "black", size = 10),
+    legend.title = element_blank()) # +
+labs(y = bquote("Cells "~mL^-1 ~hr^-1), x = "Temperature (C)")
+```
+
+## MCR only
+repeat MCR only
+
+```{r}
+library(broom)
+# ?pivot_longer
+# unique(all_vents$FIELD)
 regression_input <- all_vents %>% 
-  filter(!(SAMPLE == "Piccard-Shrimpocalypse" & EXP == "IGT")) %>% 
+  filter(!(FIELD == "Gorda Ridge")) %>% 
+  # filter(!(SAMPLE == "Piccard-Shrimpocalypse" & EXP == "IGT")) %>% 
   filter(!is.na(Highest.Temp)) %>% 
-    select(FIELD, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday, TEMP = Highest.Temp) %>% 
+    select(FIELD, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, TEMP = Highest.Temp) %>% 
   mutate(PROK_EUK_RATIO = (PROK_ml/EUK_ml)) %>% 
-  pivot_longer(cols = c(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, ugC_L_perday), names_to = "RATE", values_to = "RATE_VALUE") %>% 
+  pivot_longer(cols = c(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC), names_to = "RATE", values_to = "RATE_VALUE") %>% 
   pivot_longer(cols = c(PROK_ml, EUK_ml, PROK_EUK_RATIO, TEMP), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>% 
   data.frame
 
@@ -1682,7 +2134,7 @@ regression_tmp <- regression_input %>%
   select(everything(), SLOPE = PARAMS_VALUE) %>%
   data.frame
 
-regression_results <- regression_input %>% 
+regression_results_mcr <- regression_input %>% 
   group_by(RATE, PARAMS) %>% 
   nest(-RATE, -PARAMS) %>% 
   mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
@@ -1693,12 +2145,13 @@ regression_results <- regression_input %>%
   right_join(regression_input) %>%
   data.frame
 
-# View(regression_results)
+# View(regression_results_mcr)
 ```
 
 Plot results from regression
+
 ```{r, fig.height=10, fig.width=15}
-regression_results %>% 
+regression_results_mcr %>% 
   # filter(RATE == "GRAZING_EFFECT_hr") %>%
   # filter(PARAMS == "TEMP") %>% 
   ggplot(aes(x = PARAMS_VALUE, y = RATE_VALUE, shape = SAMPLE_TYPE, fill = FIELD)) +
@@ -1718,17 +2171,83 @@ regression_results %>%
   # labs(y = bquote("Cells "~mL^-1 ~hr^-1), x = "Temperature (C)")
 ```
 
-_Regression thoughts_: Unremarkable r squared values (numbers at the bottom of each plot). Some trends, mainly associated with temperature.
 
-# Grazing & environmental parameters
+## MCR vent sites only
+Repeat with only vent sites & remove undetected grazing.
 
-* What parameters influence grazing rates of protists on bacteria?
+```{r}
+# head(all_vents)
+# range(all_vents$GRAZING_EFFECT_hr)
+```
 
-* Try triangle plots?
 
-* What about geom raster?
+```{r}
+library(broom)
+# ?pivot_longer
+# unique(all_vents$FIELD)
+regression_input <- all_vents %>% 
+  filter(!(FIELD == "Gorda Ridge")) %>% 
+  filter(!(NAME == "Background")) %>% filter(!(NAME == "Plume")) %>% 
+  filter(GRAZING_EFFECT_hr > 0) %>% 
+  # filter(!(SAMPLE == "Piccard-Shrimpocalypse" & EXP == "IGT")) %>% 
+  filter(!is.na(Highest.Temp)) %>% 
+    select(FIELD, NAME, SAMPLE, SAMPLE_TYPE, EXP, PROK_ml, EUK_ml, GRAZING_EFFECT_hr, BAC_TURNOVER_PERC, TEMP = Highest.Temp) %>% 
+  mutate(PROK_EUK_RATIO = (PROK_ml/EUK_ml)) %>% 
+  pivot_longer(cols = c(GRAZING_EFFECT_hr, BAC_TURNOVER_PERC), names_to = "RATE", values_to = "RATE_VALUE") %>% 
+  pivot_longer(cols = c(PROK_ml, EUK_ml, PROK_EUK_RATIO, TEMP), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>% 
+  data.frame
 
-Plot temperature by euk and prok per ml individually too.
+regression_tmp <- regression_input %>% 
+  # Set up the linear regression
+  group_by(RATE, PARAMS) %>% 
+  nest(-RATE, -PARAMS) %>% 
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)), 
+    tidied = map(lm_fit, tidy)) %>% 
+  unnest(tidied) %>% 
+  select(RATE, PARAMS, 
+    term, estimate) %>% 
+  pivot_wider(names_from = term, values_from = estimate) %>% 
+  select(everything(), SLOPE = PARAMS_VALUE) %>%
+  data.frame
+
+regression_results_vent <- regression_input %>% 
+  group_by(RATE, PARAMS) %>% 
+  nest(-RATE, -PARAMS) %>% 
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
+    glanced = map(lm_fit, glance)) %>% 
+  unnest(glanced) %>% 
+  select(RATE, PARAMS, r.squared, adj.r.squared) %>% 
+  right_join(regression_tmp) %>%
+  right_join(regression_input) %>%
+  data.frame
+
+# View(regression_results_vent)
+```
+
+Plot results from regression
+
+```{r, fig.height=10, fig.width=15}
+regression_results_vent %>% 
+  # filter(RATE == "GRAZING_EFFECT_hr") %>%
+  # filter(PARAMS == "TEMP") %>% 
+  ggplot(aes(x = PARAMS_VALUE, y = RATE_VALUE, shape = SAMPLE_TYPE, fill = FIELD)) +
+    geom_abline(aes(slope = SLOPE, intercept = `X.Intercept.`), color = "black", linetype = "dashed", size = 0.5) +
+    geom_point(color = "black", aes(shape = SAMPLE_TYPE, fill = FIELD)) +
+    scale_shape_manual(values = c(21, 24)) +
+    scale_fill_manual(values = c("#476AA7","#7299CE", "#A2937A")) +
+    facet_wrap(PARAMS ~ RATE + round(r.squared, 3), scales = "free", ncol = 5,
+             strip.position = "bottom", labeller = label_parsed) +
+  theme_bw() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    strip.text = element_text(color = "black", size = 10),
+    axis.title = element_text(color = "black", size = 10),
+    legend.title = element_blank()) # +
+  # labs(y = bquote("Cells "~mL^-1 ~hr^-1), x = "Temperature (C)")
+```
+
+*Regression thoughts*: Unremarkable r squared values (numbers at the bottom of each plot). Some trends, mainly associated with temperature.
 
 Bacterial abundance typically increases with temperature (White et al. 1991) - which could ultimately increase bacterial ingestion rate and total protist cells. But at this type of niche environment, I hypothesize that there is a trend but threshold of not detected grazing under certain conditions.
 
@@ -1738,9 +2257,11 @@ If euk per ml numbers are high, but we see lower grazing rates, could this be co
 head(all_vents)
 allvent_data <- all_vents %>% 
   mutate(PROK_EUK_RATIO = (PROK_ml/EUK_ml))
-head(allvent_data)
+# head(allvent_data)
 ```
+
 Function to plot results by two parameters.
+
 ```{r}
 two_params <- function(df, x_var, y_var, x_title, y_title){
   X_VAR <- enquo(x_var)
@@ -1763,14 +2284,12 @@ two_params <- function(df, x_var, y_var, x_title, y_title){
 two_params(allvent_data, `PROK_EUK_RATIO`, `Highest.Temp`, "Prok:Euk ratio", "Temperature (max)")
 ```
 
-
 ## Plot temperature by grazing rate
 
 ```{r}
 names(allvent_data)
 # two_params(allvent_data, ugC_L_perday, `Highest.Temp`, "ugC_L_perday", "Temperature (max)")
-
-two_params(allvent_data, ugC_L_perday, EUK_ml, "ugC_L_perday", "Euk cells per ml") + scale_y_log10()
+# two_params(allvent_data, ugC_L_perday, EUK_ml, "ugC_L_perday", "Euk cells per ml") + scale_y_log10()
 
 # two_params(allvent_data, EUK_ml, PROK_ml, "Euk", "Prok") + scale_y_log10() + scale_x_log10()
 ```
@@ -1778,112 +2297,80 @@ two_params(allvent_data, ugC_L_perday, EUK_ml, "ugC_L_perday", "Euk cells per ml
 # Carbon biomass investigation
 
 ```{r}
-head(all_vents)
+# head(all_vents)
 # GRAZING_EFFECT_hr = "Cells~mL^{-1}~hr^{-1}"
 ```
 
 If we assume that carbon content per prey cell is between 86 - 300 fgC per cell. What does the amount consumed look like?
+
 ```{r}
 # Create a new data frame
-carbon_density <- crossing(fgC_cell = seq(86, 300, by = 1), 
-                             GRAZING_EFFECT_hr = seq(min(all_vents$GRAZING_EFFECT_hr),
-                                                  max(all_vents$GRAZING_EFFECT_hr),
-                                                  length.out = 215))  %>%
-  mutate(fgC_ml_perday = ((GRAZING_EFFECT_hr*24) * fgC_cell),
-    ugC_L_perday = (fgC_ml_perday * (1e-09) * 1000)
-    ) %>%
-  data.frame
-
-# unique(all_vents$GRAZING_EFFECT_hr)
-
-samples_lines <- select(all_vents, GRAZING_EFFECT_hr, FIELD) %>% 
-  distinct() %>% 
-  crossing(fgC_cell = seq(86, 300, by = 20)) %>%
-  mutate(fgC_ml_perday = ((GRAZING_EFFECT_hr*24) * fgC_cell),
-    ugC_L_perday = (fgC_ml_perday * (1e-09) * 1000)
-    )
+# carbon_density <- crossing(fgC_cell = seq(86, 300, by = 1), 
+#                              GRAZING_EFFECT_hr = seq(min(all_vents$GRAZING_EFFECT_hr),
+#                                                   max(all_vents$GRAZING_EFFECT_hr),
+#                                                   length.out = 215))  %>%
+#   mutate(fgC_ml_perday = ((GRAZING_EFFECT_hr*24) * fgC_cell),
+#     ugC_L_perday = (fgC_ml_perday * (1e-09) * 1000)
+#     ) %>%
+#   data.frame
+# 
+# # unique(all_vents$GRAZING_EFFECT_hr)
+# 
+# samples_lines <- select(all_vents, GRAZING_EFFECT_hr, FIELD) %>% 
+#   distinct() %>% 
+#   crossing(fgC_cell = seq(86, 300, by = 20)) %>%
+#   mutate(fgC_ml_perday = ((GRAZING_EFFECT_hr*24) * fgC_cell),
+#     ugC_L_perday = (fgC_ml_perday * (1e-09) * 1000)
+#     )
 ```
 
 ```{r}
-ggplot(carbon_density, aes(x = fgC_cell, y = GRAZING_EFFECT_hr)) +
-  geom_raster(aes(fill = ugC_L_perday)) +
-  scale_fill_gradientn(colors = c("#fef0d9", "#b30000"), name = bquote("ug C"~L^-1 ~day^-1)) +
-  # scale_fill_discrete(name = "New Legend Title")
-  scale_y_continuous(expand = c(0,0)) +
-  scale_x_continuous(expand = c(0,0)) +
-  theme_bw() +
-  theme(axis.text = element_text(color = "black"),
-        rect = element_rect(fill = "transparent"),
-        panel.background = element_rect(fill = "transparent"),
-        plot.background = element_rect(fill = "transparent", color = NA)) +
-  labs(y = bquote("Cells "~mL^-1 ~consumed ~hr^-1), x = bquote("fg C"~cell^-1)) +
-  geom_point(data = samples_lines,
-            aes(x = 87,
-            y = GRAZING_EFFECT_hr, shape = FIELD), size = 1)
+# ggplot(carbon_density, aes(x = fgC_cell, y = GRAZING_EFFECT_hr)) +
+#   geom_raster(aes(fill = ugC_L_perday)) +
+#   scale_fill_gradientn(colors = c("#fef0d9", "#b30000"), name = bquote("ug C"~L^-1 ~day^-1)) +
+#   # scale_fill_discrete(name = "New Legend Title")
+#   scale_y_continuous(expand = c(0,0)) +
+#   scale_x_continuous(expand = c(0,0)) +
+#   theme_bw() +
+#   theme(axis.text = element_text(color = "black"),
+#         rect = element_rect(fill = "transparent"),
+#         panel.background = element_rect(fill = "transparent"),
+#         plot.background = element_rect(fill = "transparent", color = NA)) +
+#   labs(y = bquote("Cells "~mL^-1 ~consumed ~hr^-1), x = bquote("fg C"~cell^-1)) +
+#   geom_point(data = samples_lines,
+#             aes(x = 87,
+#             y = GRAZING_EFFECT_hr, shape = FIELD), size = 1)
 ```
+
 Eukaryote biomass comparison with measured vs. literature
+
 ```{r}
 # Repeated in ASV code right now!
-plot_metadata <- env_params %>% 
-  filter(SAMPLETYPE != "Incubation") %>%
-  filter(VENT != "Quakeplume") %>% 
-  select(SITE, VENT, SAMPLETYPE, TEMP, DEPTH, starts_with("PROK_"), starts_with("EUK_"), starts_with("GRAZING_EFFECT_hr"))
+# plot_metadata <- env_params %>% 
+#   filter(SAMPLETYPE != "Incubation") %>%
+#   filter(VENT != "Quakeplume") %>% 
+#   select(SITE, VENT, SAMPLETYPE, TEMP, DEPTH, starts_with("PROK_"), starts_with("EUK_"), starts_with("GRAZING_EFFECT_hr"))
 ```
 
 ```{r, fig.height=6, fig.width=5}
 # head(plot_metadata)
-plot_metadata %>% 
-  filter(!is.na(Euk_biomass_Hu)) %>% 
-  mutate(Euk_biomass_Hu_fg = Euk_biomass_Hu * 1000000000,
-         Euk_biomass_lit_fg = Euk_biomass_lit * 1000000000) %>% 
-  ggplot(aes(y = VENT)) +
-  geom_point(aes(x = Euk_biomass_Hu_fg), color = "black", fill = "darkgreen", shape = 21, size = 4) +
-  geom_point(aes(x = Euk_biomass_lit), color = "black", fill = "lightgreen", shape = 21, size = 4) +
-  scale_x_log10(labels = function(x) format(x, scientific = TRUE)) +
-  theme_minimal() +
-  theme(axis.text = element_text(color = "black")) +
-  facet_grid(SAMPLETYPE ~ ., space = "free", scales = "free") +
-  labs(x = "fg C of eukaryote population", y = "")
+# plot_metadata %>% 
+#   filter(!is.na(Euk_biomass_Hu)) %>% 
+#   mutate(Euk_biomass_Hu_fg = Euk_biomass_Hu * 1000000000,
+#          Euk_biomass_lit_fg = Euk_biomass_lit * 1000000000) %>% 
+#   ggplot(aes(y = VENT)) +
+#   geom_point(aes(x = Euk_biomass_Hu_fg), color = "black", fill = "darkgreen", shape = 21, size = 4) +
+#   geom_point(aes(x = Euk_biomass_lit), color = "black", fill = "lightgreen", shape = 21, size = 4) +
+#   scale_x_log10(labels = function(x) format(x, scientific = TRUE)) +
+#   theme_minimal() +
+#   theme(axis.text = element_text(color = "black")) +
+#   facet_grid(SAMPLETYPE ~ ., space = "free", scales = "free") +
+#   labs(x = "fg C of eukaryote population", y = "")
 ```
-
-
-# Three parameter figures
-
-```{r}
-density_params <- function(df, x_var, y_var, area, x_title, y_title){
-  X_VAR <- enquo(x_var)
-  Y_VAR <- enquo(y_var)
-  AREA <- enquo(area)
-  df %>% 
-  select(FIELD, NAME, SAMPLE, EXP, X = !!X_VAR, Y = !!Y_VAR, raster = !!AREA) %>% 
-  distinct() %>% 
-  ggplot(aes(x = X, y = Y)) +
-    geom_raster(aes(fill = raster), interpolate = TRUE) +
-    # geom_point(size = 3, shape = 21, color = "black", aes(fill = FIELD)) +
-    # geom_abline(slope = 1, intercept = 0) +
-    theme_minimal() +
-    labs(x = x_title, y = y_title)
-}
-```
-
-```{r}
-density_params(allvent_data, `PROK_ml`, `Highest.Temp`, `GRAZING_EFFECT_hr`, "Prok:Euk ratio", "Temperature (max)")
-```
-
-```{r}
-names(allvent_data)
-ggplot(allvent_data, aes(x = log10(EUK_ml), y = log10(PROK_ml))) +
-    geom_raster(aes(fill = ugC_L_perday), interpolate = TRUE)
-```
-
-
-## Plot euk per ml with temperature and grazing rate
-
-
 
 # Prediction of MCR data with parameters
 
-Best model to estimate community grazing rate in Vaque et al. considered FLP uptake and similar experiments (in contrast to disappearance experiments). 
+Best model to estimate community grazing rate in Vaque et al. considered FLP uptake and similar experiments (in contrast to disappearance experiments).
 
 From Vaque et al. 1994 paper equation (1):
 
@@ -1891,21 +2378,14 @@ See Figure 6
 
 > log(GT) = -3.21 + 0.99 log (HNF) + 0.028 (T) + 0.55 log(BAC)
 
-*GT* = grazing rate (cells ml-1 hr-1)
-*HNF* = heterotrophic nanoflagellates (cells ml-1) T = temperature (C)
-*BAC* = prokaryote abundance (cells ml-1)
+*GT* = grazing rate (cells ml-1 hr-1) *HNF* = heterotrophic nanoflagellates (cells ml-1) T = temperature (C) *BAC* = prokaryote abundance (cells ml-1)
 
-
-Start with non-zero grazing rate values, etc. 
-Where... 
-*GT* == Grazing effect hr
-*HNF* == Euk_ml
-*BAC* == PROK_ml
-*T* == highest temp
+Start with non-zero grazing rate values, etc. Where... *GT* == Grazing effect hr *HNF* == Euk_ml *BAC* == PROK_ml *T* == highest temp
 
 We only have these for MCR data.. can include GR for the "predicting euk_ml"
 
-Function to use above formula and estimate 
+Function to use above formula and estimate
+
 ```{r}
 est_predicted <- function(df, TITLE){
   df_out <- df %>% 
@@ -1950,11 +2430,10 @@ est_predicted <- function(df, TITLE){
 # range(all_vents$Highest.Temp)
 ```
 
-
-
 ```{r, fig.width=, fig.height=8, fig.width=15}
 est_predicted(all_vents, "all values")
 ```
+
 ```{r, fig.height=8, fig.width=15}
 mcr <- c("Von Damm", "Piccard")
 bsw <- c("Backgound", "BSW", "Plume", "Near vent BW")
@@ -1969,12 +2448,14 @@ est_predicted(all_vents %>% filter(FIELD %in% mcr) %>% filter(GRAZING_EFFECT_hr 
 ```{r, fig.height=8, fig.width=15}
 est_predicted(all_vents %>%  filter(GRAZING_EFFECT_hr > 0), "All samples where grazing was detected")
 ```
+
 ```{r, fig.height=8, fig.width=15}
 # View(all_vents)
 # est_predicted(all_vents %>% filter(!(NAME %in% bsw)), "Vent samples only")
 
 est_predicted(all_vents %>% filter(!(NAME %in% bsw)) %>% filter(GRAZING_EFFECT_hr > 0), "Vent samples only where grazing was detected")
 ```
+
 ```{r, fig.height=8, fig.width=15}
 # View(all_vents)
 est_predicted(all_vents %>% 
@@ -2021,7 +2502,38 @@ est_predicted(all_vents %>%
 ```
 
 # Session
+
+```{r}
+# vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
+# vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+# site_ids <- c("VD", "Piccard")
+# site_fullname <- c("Von Damm", "Piccard")
+# site_color <- c("#264653", "#E76F51")
+# names(site_color) <- site_fullname
+# 
+# whole_pal <- c("#264653", "#2A9D8F", "#E9C46A","#F4A261", "#E76F51")
+# 
+# extra <- c("#eae2b7", "#5f0f40", "#90be6d", "#941b0c", "#577590")
+```
+
+ggplot theme
+```{r}
+# theme_minimal() +
+#     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
+#            panel.background = element_blank(), 
+#            axis.line = element_line(colour = "black"), 
+#            axis.text.x = element_text(color="black", size = 12, 
+#                                       angle = 45, hjust = 1, vjust = 1), 
+#            axis.text.y = element_text(color="black", size = 12),
+#            axis.title =element_text(color="black", size = 12),
+#            axis.ticks = element_line(),
+#            strip.text =element_blank(), legend.title = element_blank()) +
+#   labs(x = "", y = bquote("Eukaryote cells "~mL^-1),
+#        title = "")
+```
+
+
+
 ```{r}
 sessionInfo()
 ```
-
