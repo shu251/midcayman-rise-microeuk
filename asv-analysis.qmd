@@ -2,7 +2,7 @@
 title: "18S rRNA gene amplicon survey"
 format:
   html:
-    code-fold: true
+    code-fold: show
     code-tools: true
     code-copy: true
     toc: true
@@ -24,7 +24,7 @@ Set up R environment
 ```{r}
 #| message: false
 library(tidyverse); library(phyloseq); library(ape)
-library(ggupset)
+library(ggupset); library(cowplot)
 ```
 
 Import previously sequenced and analyzed tag-sequence data. See https://shu251.github.io/microeuk-amplicon-survey/ for additional information.
@@ -40,8 +40,6 @@ load("input-data/MCR-amplicon-data.RData", verbose = T)
 ## Factor - legend/color key
 
 ```{r}
-vent_ids <- c("BSW", "Plume")
-
 vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "OldManTree", "Rav2", "MustardStand", "ShrimpHole", "WhiteCastle", "ArrowLoop")
 vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "White Castle", "Arrow Loop")
 site_ids <- c("VD", "Piccard")
@@ -112,6 +110,7 @@ mcr_pca_pts <- data.frame(pca_logratio$x, SAMPLE = rownames(pca_logratio$x)) %>%
   rownames_to_column(var = "SAMPLENAME") %>% 
   separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
         remove = FALSE) 
+head(mcr_pca_pts)
 ```
 
 PCoA with all samples
@@ -125,13 +124,14 @@ mcr_pca_pts %>%
     TRUE ~ "in situ"
   )) %>% 
   ggplot(aes(x = PC1, y = PC2)) +
-  geom_point(color = "black", stroke = 1.3, size = 5, aes(shape = TYPE, fill = VENT_ORDER, alpha = SITE)) +
-  scale_shape_manual(values = c(21, 24)) +
-  scale_alpha_manual(values = c(0.6, 1)) +
-  scale_fill_manual(values = vent_colors) +
+  geom_point(stroke = 2, size = 5, aes(shape = SITE, fill = TYPE, color = VENT_ORDER)) +
+  scale_shape_manual(values = c(22, 23)) +
+  scale_fill_manual(values = c("white","darkgrey")) +
+  scale_color_manual(values = vent_colors) +
   theme_linedraw() +
   guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
-  geom_hline(yintercept = 0) + geom_vline(xintercept = 0)
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
+  theme(legend.title = element_blank())
 
 ```
 
@@ -319,6 +319,166 @@ asv_wtax_qc %>%
 ```
 In bar plot above, in situ and Tf incubation samples are paired for each site.
 
+
+## Richness
+```{r}
+# | message: false
+# remotes::install_github("adw96/breakaway")
+# remotes::install_github("adw96/DivNet")
+
+library(breakaway); library(DivNet); library(phyloseq); library(tidyverse)
+```
+
+```{r}
+load("input-data/MCR-amplicon-data.RData", verbose = TRUE)
+```
+
+```{r}
+sample_data(physeq_mcr)
+```
+
+
+Rscript run on HPC:
+```{r, eval=FALSE}
+# | eval: false
+gen_divnet <- divnet(tax_glom(physeq_mcr, taxrank = "Genus"), base = 3)
+
+# Incubation vs in situ
+gen_divnet_SAMPLETYPE <- divnet(tax_glom(physeq_mcr, taxrank = "Genus"), X = "SAMPLETYPE", base = 3)
+
+# Vent vs. non-vent
+gen_divnet_SAMPLETYPE_BIN <- divnet(tax_glom(physeq_mcr, taxrank = "Genus"), X = "SAMPLETYPE_BIN", base = 3)
+# location and vent vs plume vs background
+
+# Piccard vs. Von Damm
+gen_divnet_SITE <- divnet(tax_glom(physeq_mcr, taxrank = "Genus"), X = "SITE", base = 3)
+
+save(gen_divnet, gen_divnet_SAMPLETYPE, gen_divnet_SAMPLETYPE_BIN, gen_divnet_SITE, file = "GENUS.Rdata")
+
+###
+## Analyzed at the ASV level:
+spp_divnet <- divnet(tax_glom(physeq_mcr, taxrank = "Species"), base = 3)
+
+# Incubation vs. in situ
+spp_divnet_SAMPLETYPE <- divnet(tax_glom(physeq_mcr, taxrank = "Species"), X = "SAMPLETYPE", base = 3)
+
+# Vent vs. non-vent
+spp_divnet_SAMPLETYPE_BIN <- divnet(tax_glom(physeq_mcr, taxrank = "Species"), X = "SAMPLETYPE_BIN", base = 3)
+
+# Piccard vs. VD
+spp_divnet_SITE <- divnet(tax_glom(physeq_mcr, taxrank = "Species"), X = "SITE", base = 3)
+
+# save(spp_divnet, spp_divnet_SAMPLETYPE, spp_divnet_SAMPLETYPE_BIN, spp_divnet_SITE, file = "SPECIES.Rdata")
+```
+Above is run on HPC. Bring outputs locally to visualize output below.
+
+```{r}
+load("input-data/SPECIES.Rdata", verbose = TRUE)
+load("input-data/GENUS.Rdata", verbose = TRUE)
+```
+
+```{r}
+# head(metadata_mcr)
+fxn_extract_divet <- function(df){
+  df$shannon %>% summary %>% 
+  pivot_longer(cols = starts_with("estimate"), names_to = "ESTIMATE-shannon", values_to = "Shannon") %>%
+  pivot_longer(cols = starts_with("error"), names_to = "ERROR-shannon", values_to = "Shannon-error") %>%
+  pivot_longer(cols = starts_with("lower"), names_to = "LOWER-shannon", values_to = "Shannon-lower") %>%
+  pivot_longer(cols = starts_with("upper"), names_to = "UPPER-shannon", values_to = "Shannon-upper") %>%
+  left_join(df$simpson %>% summary %>%
+      pivot_longer(cols = starts_with("estimate"), names_to = "ESTIMATE-simpson", values_to = "Simpson") %>%
+      pivot_longer(cols = starts_with("error"), names_to = "ERROR-simpson", values_to = "Simpson-error") %>%
+      pivot_longer(cols = starts_with("lower"), names_to = "LOWER-simpson", values_to = "Simpson-lower") %>%
+      pivot_longer(cols = starts_with("upper"), names_to = "UPPER-simpson", values_to = "Simpson-upper"),
+    by = c("sample_names" = "sample_names")) %>%
+  left_join(metadata_mcr %>% rownames_to_column(var = "sample_names")) %>%
+  select(-sample_names, -ends_with("-simpson"), -ends_with("-shannon"), -starts_with("model."), -starts_with("name.")) %>%
+    mutate(TYPE_BIN = case_when(
+      SAMPLETYPE != "Incubation" ~ "in situ",
+      TRUE ~ "Incubation"
+    )) %>% 
+  distinct()
+}
+```
+
+ gen_divnet
+  gen_divnet_SAMPLETYPE
+  gen_divnet_SAMPLETYPE_BIN
+  gen_divnet_SITE
+ spp_divnet
+  spp_divnet_SAMPLETYPE
+  spp_divnet_SAMPLETYPE_BIN
+  spp_divnet_SITE
+
+```{r}
+### Set colors and symbols for dataset
+sampletype_order <- c("Background", "Plume", "Vent", "Incubation")
+site_symbol<- c(21, 23, 24, 22)
+site_fullname <- c("Von Damm", "Piccard")
+site_color <- c("#264653", "#E76F51")
+site_alpha <- c(1, 0.4)
+site_order <- c("VonDamm", "Piccard")
+names(site_color) <- site_fullname
+bin_type_order <- c("in situ", "Incubation")
+names(site_alpha) <- bin_type_order
+###
+
+plot_sampletype <- function(df){
+  df$SITE_ORDER <- factor(df$SITE, levels = site_order, labels = site_fullname)
+  df$SAMPLETYPE_ORDER <- factor(df$SAMPLETYPE, levels = sampletype_order)
+  df$TYPE_BIN_ORDER <- factor(df$TYPE_BIN, levels = bin_type_order)
+  names(site_symbol) <- site_order
+  plot_grid(df %>%
+  ggplot(aes(x = VENT, y = Shannon)) +
+    geom_jitter(color = "black", shape = 21, size = 3, aes(fill = SITE_ORDER, alpha = TYPE_BIN_ORDER)) +
+    scale_alpha_manual(values = site_alpha) +
+    scale_fill_manual(values = site_color) +
+  theme_linedraw() +
+  theme(axis.text.y = element_text(size = 14),
+        axis.text.x = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(color = "black"),
+        legend.position = "right",
+        axis.ticks.x = element_blank()) +
+  labs(x = "", y = "Shannon") +
+    coord_flip(),
+  df %>%
+    ggplot(aes(x = VENT, y = Simpson)) +
+    geom_jitter(color = "black", shape = 21, size = 3, aes(fill = SITE_ORDER, alpha = TYPE_BIN_ORDER)) +
+    scale_alpha_manual(values = site_alpha) +
+    scale_fill_manual(values = site_color) +
+  theme_linedraw() +
+  theme(axis.text.x = element_text(vjust = 1, hjust = 0.5, size = 14),
+        axis.text = element_text(size = 14),
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "right") +
+  labs(x = "", y = "Simpson") +
+    coord_flip(),
+  ncol = 1, axis = c("lrt"), align = c("vh"))
+}
+```
+
+ gen_divnet
+  gen_divnet_SAMPLETYPE
+  gen_divnet_SAMPLETYPE_BIN
+  gen_divnet_SITE
+ spp_divnet
+  spp_divnet_SAMPLETYPE
+  spp_divnet_SAMPLETYPE_BIN
+  spp_divnet_SITE
+
+```{r, fig.height=8, fig.width=5}
+spp_alpha_18s <- fxn_extract_divet(spp_divnet)
+spp_alpha_label <- fxn_extract_divet(spp_divnet_SAMPLETYPE)
+spp_alpha_TYPE <- fxn_extract_divet(spp_divnet_SAMPLETYPE_BIN)
+spp_alpha_TYPE_SITE <- fxn_extract_divet(spp_divnet_SITE)
+# 
+head(spp_alpha_18s)
+
+plot_sampletype(spp_alpha_18s)
+```
 
 # ASV overlap comparison
 
@@ -518,6 +678,7 @@ shared_exp <- asv_wtax_qc %>%
 ```
 
 
+
 ### Table to present shared ASVs and taxa
 
 Number of ASVs that are shared or unique at Piccard and Von Damm
@@ -581,6 +742,17 @@ left_join(shared_across, shared_exp) %>%
         axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1))
 ```
 
+Create table as output
+```{r}
+tax_table_shared <- left_join(shared_across, shared_exp) %>% 
+  left_join(shared_type) %>% 
+  right_join(asv_wtax_qc %>% filter(value > 0)) %>% 
+  filter(EXP_PA == "Shared") %>% 
+  select(FeatureID, ends_with("_PA"), Taxon) %>% 
+  distinct()
+
+# write_delim(tax_table_shared, file = "output-data/list-of-shared-taxa.txt", delim = "\t")
+```
 
 
 # In situ vs. Tf relative changes
@@ -887,18 +1059,20 @@ Plan to pairing with tree below
 
 ```{r}
 analysis_fam <- corncob_mcr(mcr_fam)
+# head(tax_table(mcr_fam))
 ```
 
 ```{r}
 analysis_fam %>%
-  unite(Family, c(Class, Order, Family), sep = " ", remove = FALSE) %>%
+  # unite(Family, c(Class, Order, Family), sep = " ", remove = FALSE) %>%
+  unite(Family, c(Order, Family), sep = " ", remove = FALSE) %>%
   filter(VARIABLE != "mu.(Intercept)") %>%
   ggplot(aes(y = Family, x = Estimate)) +
     geom_vline(xintercept = 0, alpha = 0.2) +
     geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
     geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
   facet_grid(Supergroup + Phylum ~ VARIABLE, space = "free", scales = "free") +
-  theme(legend.position = element_blank(),
+  theme(legend.position = "none",
         axis.text.y = element_text(color = "black")) +
   theme_minimal() +
   labs(x = "Coefficient", y = "", title = "Family level test for differential abundance")
@@ -952,6 +1126,24 @@ analysis_spp %>%
 
 Which ASVs were enriched within vent site, and also found in grazing experiments?
 
+```{r}
+enriched_at_family <- as.character(analysis_fam$FEATURE)
+```
+
+Import table of shared ASVs
+```{r}
+tax_table_shared <- read_delim(file = "output-data/list-of-shared-taxa.txt")
+```
+
+
+```{r}
+enriched_and_shared<- tax_table_shared %>% 
+  filter(FeatureID %in% enriched_at_family)
+# View(enriched_and_shared)
+# write_delim(enriched_and_shared, file = "output-data/enriched-and-shared.txt", delim = "\t")
+```
+
+There was a total of 29 ASVs that were both a part of the enriched at vents (compared to background) and were present in both in situ and incubation (Tf) samples. These 29 ASVs represent a subset that we hypothesize are more likely to be involved in grazing. Another observation is that the majority of them are cosmopolitan. This indicates that based on the grazing experiments, the taxa that are enriched at vents and are subsequently members of the grazing population in the experiments are also able to inhabit plume and background.
 
 
 # Info
