@@ -12,10 +12,9 @@ format:
 editor: visual
 ---
 
-Goals for this analysis are to investigate specific protistan taxonomic groups in the context of elevated grazing activity, cell biomass, and hydrothermal vent sample type. 
+Goals for this analysis are to investigate specific protistan taxonomic groups in the context of elevated grazing activity, cell biomass, and hydrothermal vent sample type.
 
 Data originate from in situ MCR samples from a tag-sequence survey and the Tf time point from the grazing experiments. Additionally, in situ and grazing experiments were conducted within vent sites, at the plume, and in the background.
-
 
 # Import sequence and metadata
 
@@ -44,6 +43,21 @@ vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Old
 vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "White Castle", "Arrow Loop")
 site_ids <- c("VD", "Piccard")
 
+# edit(samples)
+samplenames_order <- c("Piccard Background", "Piccard Plume",
+                       "Piccard Lots 'O Shrimp", "Piccard Shrimpocalypse", 
+                       "Von Damm Background", "Von Damm Plume",
+                       "Von Damm Ravelin #2", "Von Damm X-18", "Von Damm Old Man Tree", "Von Damm Mustard Stand", 
+                       "Von Damm Arrow Loop", "Von Damm Shrimp Hole", "Von Damm White Castle")
+
+samplenames_color <- c("#2b8cbe", "#084081",
+                       "#a8ddb5", "#4eb3d3",
+                       "#bd0026", "#800026", 
+                       "#fc4e2a", "#feb24c", "#fed976", "#fd8d3c",
+                       "#fdd49e", "#ef6548", "#ffeda0")
+
+names(samplenames_color) <- samplenames_order
+
 site_fullname <- c("Von Damm", "Piccard")
 site_color <- c("#264653", "#E76F51")
 names(site_color) <- site_fullname
@@ -61,7 +75,6 @@ vent_colors <- c("#253494","#1d91c0", "#E9C46A", "#E76F51", "#264653", "#2A9D8F"
 names(vent_colors) <- vent_fullname
 # all_taxa_color = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#deebf7", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525", "#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525")
 ```
-
 
 # Preliminary look at all samples
 
@@ -115,24 +128,31 @@ head(mcr_pca_pts)
 
 PCoA with all samples
 
-```{r, fig.height=5, fig.width=6}
-mcr_pca_pts %>% 
+
+```{r, fig.height=8, fig.width=7}
+# samples <- as.character(unique(tmp$SAMPLENAME))
+# samples
+pca_plot <- mcr_pca_pts %>% 
   mutate(VENT_ORDER = factor(VENT, levels = vent_ids, labels = vent_fullname),
          SITE_ORDER = factor(SITE, levels = c("VonDamm", "Piccard"), labels = site_fullname)) %>% 
+  unite(SAMPLENAME, SITE_ORDER, VENT_ORDER, sep= " ", remove = FALSE) %>% 
+  mutate(SAMPLENAME_ORDER = factor(SAMPLENAME, levels = samplenames_order)) %>% 
   mutate(TYPE = case_when(
     SAMPLETYPE == "Incubation" ~ "Incubation",
     TRUE ~ "in situ"
   )) %>% 
   ggplot(aes(x = PC1, y = PC2)) +
-  geom_point(stroke = 2, size = 5, aes(shape = SITE, fill = TYPE, color = VENT_ORDER)) +
-  scale_shape_manual(values = c(22, 23)) +
-  scale_fill_manual(values = c("white","darkgrey")) +
-  scale_color_manual(values = vent_colors) +
-  theme_linedraw() +
+  geom_point(stroke = 2, size = 5, aes(shape = TYPE, fill = SAMPLENAME_ORDER, color = SAMPLENAME_ORDER)) +
+  scale_shape_manual(values = c(2,17)) +
+  scale_fill_manual(values = samplenames_color) +
+  scale_color_manual(values = samplenames_color) +
+  theme_linedraw() + coord_fixed(ratio = 1) +
   guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank(),
+        axis.text = element_text(color = "black", size = 13))
 
+pca_plot
 ```
 
 #### Dendrogram analysis
@@ -268,6 +288,7 @@ bubble <- asv_wtax_qc %>%
 
 bubble
 ```
+
 ### Dendrogram with bubble plot
 
 ```{r, fig.width=20, fig.height=11}
@@ -317,16 +338,17 @@ asv_wtax_qc %>%
   theme(legend.position = "right",
         axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1))
 ```
+
 In bar plot above, in situ and Tf incubation samples are paired for each site.
 
-
 ## Richness
+
 ```{r}
 # | message: false
 # remotes::install_github("adw96/breakaway")
 # remotes::install_github("adw96/DivNet")
 
-library(breakaway); library(DivNet); library(phyloseq); library(tidyverse)
+# library(breakaway); library(DivNet); library(phyloseq); library(tidyverse)
 ```
 
 ```{r}
@@ -337,8 +359,8 @@ load("input-data/MCR-amplicon-data.RData", verbose = TRUE)
 sample_data(physeq_mcr)
 ```
 
-
 Rscript run on HPC:
+
 ```{r, eval=FALSE}
 # | eval: false
 gen_divnet <- divnet(tax_glom(physeq_mcr, taxrank = "Genus"), base = 3)
@@ -370,6 +392,7 @@ spp_divnet_SITE <- divnet(tax_glom(physeq_mcr, taxrank = "Species"), X = "SITE",
 
 # save(spp_divnet, spp_divnet_SAMPLETYPE, spp_divnet_SAMPLETYPE_BIN, spp_divnet_SITE, file = "SPECIES.Rdata")
 ```
+
 Above is run on HPC. Bring outputs locally to visualize output below.
 
 ```{r}
@@ -401,14 +424,7 @@ fxn_extract_divet <- function(df){
 }
 ```
 
- gen_divnet
-  gen_divnet_SAMPLETYPE
-  gen_divnet_SAMPLETYPE_BIN
-  gen_divnet_SITE
- spp_divnet
-  spp_divnet_SAMPLETYPE
-  spp_divnet_SAMPLETYPE_BIN
-  spp_divnet_SITE
+gen_divnet gen_divnet_SAMPLETYPE gen_divnet_SAMPLETYPE_BIN gen_divnet_SITE spp_divnet spp_divnet_SAMPLETYPE spp_divnet_SAMPLETYPE_BIN spp_divnet_SITE
 
 ```{r}
 ### Set colors and symbols for dataset
@@ -460,14 +476,7 @@ plot_sampletype <- function(df){
 }
 ```
 
- gen_divnet
-  gen_divnet_SAMPLETYPE
-  gen_divnet_SAMPLETYPE_BIN
-  gen_divnet_SITE
- spp_divnet
-  spp_divnet_SAMPLETYPE
-  spp_divnet_SAMPLETYPE_BIN
-  spp_divnet_SITE
+gen_divnet gen_divnet_SAMPLETYPE gen_divnet_SAMPLETYPE_BIN gen_divnet_SITE spp_divnet spp_divnet_SAMPLETYPE spp_divnet_SAMPLETYPE_BIN spp_divnet_SITE
 
 ```{r, fig.height=8, fig.width=5}
 spp_alpha_18s <- fxn_extract_divet(spp_divnet)
@@ -653,7 +662,6 @@ shared_type <- asv_wtax_qc %>%
 str(shared_type)
 ```
 
-
 ## ASVs shared in situ & Tf for each experiment
 
 ```{r}
@@ -677,25 +685,29 @@ shared_exp <- asv_wtax_qc %>%
   select(FeatureID, EXP_PA)
 ```
 
-
-
 ### Table to present shared ASVs and taxa
 
 Number of ASVs that are shared or unique at Piccard and Von Damm
+
 ```{r}
 table(left_join(shared_across, shared_exp) %>% 
   left_join(shared_type) %>% select(FIELD_PA))
 ```
+
 Number of ASVs that are shared between in situ and incubation experiments
+
 ```{r}
 table(left_join(shared_across, shared_exp) %>% 
   left_join(shared_type) %>% select(EXP_PA))
 ```
+
 ```{r}
 table(left_join(shared_across, shared_exp) %>% 
   left_join(shared_type) %>% select(TYPE_PA))
 ```
+
 For ASVs shared between in situ and experiment (Tf)
+
 ```{r}
 table(left_join(shared_across, shared_exp) %>% 
   left_join(shared_type) %>% 
@@ -705,6 +717,7 @@ table(left_join(shared_across, shared_exp) %>%
 ```
 
 What is the taxonomic composition of those that are shared between the grazing experiments and in situ?
+
 ```{r, fig.height=10, fig.width=7}
 left_join(shared_across, shared_exp) %>% 
   left_join(shared_type) %>% 
@@ -743,6 +756,7 @@ left_join(shared_across, shared_exp) %>%
 ```
 
 Create table as output
+
 ```{r}
 tax_table_shared <- left_join(shared_across, shared_exp) %>% 
   left_join(shared_type) %>% 
@@ -753,7 +767,6 @@ tax_table_shared <- left_join(shared_across, shared_exp) %>%
 
 # write_delim(tax_table_shared, file = "output-data/list-of-shared-taxa.txt", delim = "\t")
 ```
-
 
 # In situ vs. Tf relative changes
 
@@ -1062,20 +1075,28 @@ analysis_fam <- corncob_mcr(mcr_fam)
 # head(tax_table(mcr_fam))
 ```
 
-```{r}
-analysis_fam %>%
+```{r, fig.height=9, fig.width=9}
+fam_corncob <- analysis_fam %>%
   # unite(Family, c(Class, Order, Family), sep = " ", remove = FALSE) %>%
-  unite(Family, c(Order, Family), sep = " ", remove = FALSE) %>%
+  unite(Family, c(Family), sep = " ", remove = FALSE) %>%
+  unite(SUPPHY, c(Supergroup, Phylum), sep = ";", remove = FALSE) %>% 
   filter(VARIABLE != "mu.(Intercept)") %>%
   ggplot(aes(y = Family, x = Estimate)) +
     geom_vline(xintercept = 0, alpha = 0.2) +
     geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
-    geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
-  facet_grid(Supergroup + Phylum ~ VARIABLE, space = "free", scales = "free") +
-  theme(legend.position = "none",
-        axis.text.y = element_text(color = "black")) +
+    geom_point(aes(fill = SUPPHY), shape = 21, color = "black", size = 3) +
+  scale_fill_brewer(palette = "Dark2") +
+  facet_grid(SUPPHY ~ VARIABLE, space = "free", scales = "free") +
   theme_minimal() +
-  labs(x = "Coefficient", y = "", title = "Family level test for differential abundance")
+  theme(legend.position = "none",
+        axis.text.y = element_text(color = "black", size = 13),
+        axis.text.x = element_text(color = "black", size = 13),
+        strip.text.x = element_blank(),
+        strip.text.y = element_text(color = "black", angle = 0, 
+                                    hjust = 0, vjust = 0.5,
+                                    size = 12)) +
+  labs(x = "Coefficient", y = "", title = "")
+fam_corncob
 ```
 
 ### Genus corncob
@@ -1131,10 +1152,10 @@ enriched_at_family <- as.character(analysis_fam$FEATURE)
 ```
 
 Import table of shared ASVs
+
 ```{r}
 tax_table_shared <- read_delim(file = "output-data/list-of-shared-taxa.txt")
 ```
-
 
 ```{r}
 enriched_and_shared<- tax_table_shared %>% 
@@ -1145,10 +1166,16 @@ enriched_and_shared<- tax_table_shared %>%
 
 There was a total of 29 ASVs that were both a part of the enriched at vents (compared to background) and were present in both in situ and incubation (Tf) samples. These 29 ASVs represent a subset that we hypothesize are more likely to be involved in grazing. Another observation is that the majority of them are cosmopolitan. This indicates that based on the grazing experiments, the taxa that are enriched at vents and are subsequently members of the grazing population in the experiments are also able to inhabit plume and background.
 
+# Figure 4
 
-# Info
-```{r}
-sessionInfo()
+```{r, fig.width=18, fig.height=9}
+pca_plot + fam_corncob +
+  patchwork::plot_layout(ncol = 2, widths = c(1, 1)) + patchwork::plot_annotation(tag_levels = "a")
 ```
 
 
+# Info
+
+```{r}
+sessionInfo()
+```
