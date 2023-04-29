@@ -1,0 +1,624 @@
+---
+title: "Summary of results"
+format:
+  html:
+    code-fold: show
+    code-tools: true
+    code-copy: true
+    toc: true
+    toc-location: left
+    number-sections: true
+    number-depth: 2
+editor: visual
+---
+
+# Working R environment
+
+```{r}
+library(tidyverse) 
+```
+
+# Needed data tables
+
+```{r}
+# last updated April 29, 2023
+# save(euk_prok_counts, table_grazerate_wflp_wprok_weuk,
+#      table_wcalcs, biov_calc, c_factor_biov,
+#      pgC_ml_biov_bysample, pgC_ml_sizefrac_bysample,
+#      carbon_consumed, file = "input-data/all-dfs-for-Tables.RData")
+
+load("input-data/all-dfs-for-Tables.RData", verbose = TRUE)
+```
+
+# Table 1: counts and rates
+
+**Table 1.** Grazing experiments conducted at the Mid-Cayman rise included 9 from Von Damm and 4 from Piccard. Out of 14 total grazing assays, 5 were conducted in Isobaric Gas Tight chambers at in situ pressure. Temperature reflects the highest recorded temperature at time of fluid collection. Prokaryotic cell concentrations were derived from descrete fixed samples from the same fluid, while eukaryotic cell concentrations reported below are dervied from the T0 grazing experiment time points. Absent grazing rates include those that had a negative slope and percentage prokaryote turnover shows the relative top-down (higher percentage) to bottom-up pressures on the microbial communities, based on grazing rate and cell concentrations.
+
+```{r}
+write_delim(table_wcalcs %>%
+              select(SiteOrder, NameOrder, FLUID_ORIGIN, CRUISE_SAMPLE, EUK_ml, EUK_MinMax, PROK_ml, PROK_MinMax, GRAZING_EFFECT_hr, RATE_minute, CLEARANCE_RATE_ml, BAC_TURNOVER_PERC),
+            file = "output-data/table1-grazing-exp-list.txt", delim = "\t")
+```
+
+## Average euk & prok summary
+
+In results section, report the overall average euk cells per ml and prok cells per ml by sample type, location, experiment type, and vent field.
+
+```{r, message=FALSE}
+tmp <- euk_prok_counts %>% 
+  mutate(TYPE = case_when(
+    grepl("BSW", Name) ~ "non-vent",
+    grepl("Plume", Name) ~ "non-vent",
+    TRUE ~ "vent"
+  ),
+  EXP_TYPE = case_when(
+    grepl("IGT", SITE_TYPE) ~ "IGT",
+    TRUE ~ "Shipboard"
+    ))
+
+tmp %>% 
+  select(TYPE, PROK_ml, EUK_ml) %>% 
+  distinct() %>%
+  group_by(TYPE) %>% 
+  filter(!is.na(PROK_ml)) %>%
+  filter(!is.na(EUK_ml)) %>%
+  summarise(mean_prok = mean(PROK_ml),
+            mean_euk = mean(EUK_ml))
+
+tmp %>% 
+  select(TYPE, PROK_ml, EUK_ml, Site) %>% 
+  distinct() %>%
+  group_by(TYPE, Site) %>% 
+  filter(!is.na(PROK_ml)) %>%
+  filter(!is.na(EUK_ml)) %>%
+  summarise(mean_prok = mean(PROK_ml),
+            mean_euk = mean(EUK_ml))
+
+tmp %>% 
+  select(TYPE, PROK_ml, EUK_ml, EXP_TYPE) %>% 
+  distinct() %>%
+  group_by(TYPE, EXP_TYPE) %>% 
+  filter(!is.na(PROK_ml)) %>%
+  filter(!is.na(EUK_ml)) %>%
+  summarise(mean_prok = mean(PROK_ml),
+            mean_euk = mean(EUK_ml))
+```
+
+## Complete grazing rate results
+
+```{r}
+table_wcalcs
+```
+
+Explanation of units for table with calculated values.
+
+-   RATE_min & RATE_hr = Grazing rate as 'FLPs per grazer per minute' and per hour
+
+-   CLEARANCE_RATE = ml or nL per grazer per hour
+
+-   SPEC_GRAZE_RATE (Specific grazing rate) = Prokaryotes per grazer per hour
+
+-   GRAZING EFFECT = bacteria per ml per hour
+
+-   Bacterial turnover rate = % per day
+
+## Average grazing rates
+
+Report grazing rates from shipboard and IGT experiments. Differentiate vent and non-vent samples. Averages reported here do not include the undetected grazing rates.
+
+```{r}
+table_wcalcs %>% 
+  # Technical replicates are already removed
+  filter(!is.na(FLUID_ORIGIN)) %>% # Remove IGT 7 that didn't work
+  filter(RATE_minute > 0) %>% # Remove undetected grazing rates
+    mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  # group_by(SAMPLE_TYPE_BIN) %>%
+  separate(Experiment_rep, into = c("name", "exptype_rep"), remove = FALSE) %>% 
+  mutate(exptype = case_when(exptype_rep == "Shipboard" ~ "Shipboard",
+                             TRUE ~ "IGT")) %>% 
+  group_by(SAMPLE_TYPE_BIN, exptype) %>%
+  # group_by(SAMPLE_TYPE_BIN) %>% 
+    summarise(MEAN_RATE = mean(GRAZING_EFFECT_hr),
+              MIN_RATE = min(GRAZING_EFFECT_hr),
+              MAX_RATE = max(GRAZING_EFFECT_hr))
+
+table_wcalcs %>% 
+  # Technical replicates are already removed
+  filter(!is.na(FLUID_ORIGIN)) %>% # Remove IGT 7 that didn't work
+  filter(RATE_minute > 0) %>% # Remove undetected grazing rates
+    mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  # group_by(SAMPLE_TYPE_BIN) %>%
+  separate(Experiment_rep, into = c("name", "exptype_rep"), remove = FALSE) %>% 
+  mutate(exptype = case_when(exptype_rep == "Shipboard" ~ "Shipboard",
+                             TRUE ~ "IGT")) %>% 
+  group_by(SAMPLE_TYPE_BIN, FIELD) %>% 
+    summarise(MEAN_RATE = mean(GRAZING_EFFECT_hr),
+              MIN_RATE = min(GRAZING_EFFECT_hr),
+              MAX_RATE = max(GRAZING_EFFECT_hr))
+
+# igt_vent_rate_avg <- 11400.71904
+# ship_vent_rate_avg <- 2430.01651
+# ship_nonvent_rate_avg <- 65.11676
+```
+
+Units above are in cells consumed per ml per hour.
+
+
+Compare IGT and shipboard outputs with other studies below. Units: pg C per ml per hour
+
+# Table 2: biomass
+
+## Mean biovolume from microscopy images
+
+Units are µm\^3 for biovolume.
+
+```{r}
+# Biovolume by sample type
+# biov_calc
+biov_calc %>% 
+  group_by(VENT_BSW) %>% 
+  summarise(mean_biov = mean(BIOVOLUME))
+
+# Biovolume by IGT and sample type
+biov_calc %>% 
+  # filter(VENT_BSW != "BSW") %>% 
+  group_by(EXP, VENT_BSW) %>% 
+  summarise(mean_biov = mean(BIOVOLUME))
+
+# write.csv(biov_calc, file = "output-data/biovolume-calculation.csv")
+```
+
+In discussion compare deep sea biovolumes to Pernice et al.
+```{r}
+biov_calc %>% 
+  filter(VENT_BSW != "vent")
+```
+
+
+## Determine C conversion rate
+
+Determined from biovolume, using pg of C per cell.
+
+```{r}
+pgC_cell_BSW <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$mean_BSW
+
+pgC_cell_vent <- subset(c_factor_biov, VARIABLES == "pgC_cell_MD_nodiatom")$mean_vent
+
+# pg C per cell (pgC_cell)
+pgC_cell_BSW # nonvent
+pgC_cell_vent # vent
+```
+
+## Report carbon biomass as a mean
+
+To estimate pg C per ml, multiply pg C per cell by euk cell concentration.
+
+\*\*(cells/ml)\*(pg C/cell) = pg C/ml\*\*
+
+Take the mean of estimate euk cells biomass across all samples (T0-Tfs). Remove the technical replicates first and convert pg C per ml to per L.
+
+## Part 1 of Table 2
+
+```{r}
+## Vent vs. non vent
+partONE <- pgC_ml_biov_bysample %>% 
+  ##remove technical replicates:
+  filter(IGT_REP != "IGT4b" & IGT_REP != "IGT5b") %>% 
+  ##
+  group_by(SAMPLE_TYPE_BIN)%>% 
+  summarise(MEAN_pg_C_ml = round(mean(pgC_ml_mean), digits = 1),
+            MAX_pg_C_ml = round(max(pgC_ml_mean), digits =1),
+            MIN_pg_C_ml = round(min(pgC_ml_mean), digits = 1)) %>% 
+  add_column(ORIGIN = "bybiovolume") %>% 
+  select(CATEGORY = SAMPLE_TYPE_BIN, everything()) %>% 
+  ## Von Damm vs Piccard
+  rbind(
+    pgC_ml_biov_bysample %>% 
+  filter(IGT_REP != "IGT4b" & IGT_REP != "IGT5b") %>% 
+  filter(SAMPLE_TYPE_BIN == "Vent") %>%
+  group_by(Site)%>% 
+  summarise(MEAN_pg_C_ml = round(mean(pgC_ml_mean), digits = 1),
+            MAX_pg_C_ml = round(max(pgC_ml_mean), digits =1),
+            MIN_pg_C_ml = round(min(pgC_ml_mean), digits = 1)) %>% 
+  add_column(ORIGIN = "bybiovolume") %>% 
+    select(CATEGORY = Site, everything())
+  ) %>% 
+  rbind(
+    ## Vent only, IGT vs shipboard
+    pgC_ml_biov_bysample %>% 
+  filter(SAMPLE_TYPE_BIN == "Vent") %>%
+  group_by(VARIABLE, EXP_TYPE, SAMPLE_TYPE_BIN) %>% 
+  summarise(MEAN_pg_C_ml = round(mean(pgC_ml_mean), digits = 1),
+            MAX_pg_C_ml = round(max(pgC_ml_mean), digits =1),
+            MIN_pg_C_ml = round(min(pgC_ml_mean), digits = 1)) %>% 
+    unite(CATEGORY, EXP_TYPE, VARIABLE, SAMPLE_TYPE_BIN, sep = " ") %>% 
+  add_column(ORIGIN = "bybiovolume")) %>% 
+  unite("MinMax_pg_C_ml", MIN_pg_C_ml, MAX_pg_C_ml, sep = " / ", remove = FALSE)
+```
+
+## Part 2 of Table 2
+
+```{r}
+## Vent vs. non vent
+partTWO <- pgC_ml_sizefrac_bysample %>% 
+  ##remove technical replicates:
+  filter(IGT_REP != "IGT4b" & IGT_REP != "IGT5b") %>% 
+  filter(VARIABLE == "totaleuk") %>% 
+  ##
+  group_by(SAMPLE_TYPE_BIN)%>% 
+  summarise(MEAN_pg_C_ml = round(mean(pg_C_ml), digits = 1),
+            MAX_pg_C_ml = round(max(pg_C_ml), digits =1),
+            MIN_pg_C_ml = round(min(pg_C_ml), digits = 1)) %>% 
+  add_column(ORIGIN = "sizefrac") %>% 
+  select(CATEGORY = SAMPLE_TYPE_BIN, everything()) %>% 
+  ## Von Damm vs Piccard
+  rbind(
+    pgC_ml_sizefrac_bysample %>% 
+  filter(IGT_REP != "IGT4b" & IGT_REP != "IGT5b") %>% 
+  filter(SAMPLE_TYPE_BIN == "Vent") %>%
+    filter(VARIABLE == "totaleuk") %>% 
+  group_by(Site)%>% 
+  summarise(MEAN_pg_C_ml = round(mean(pg_C_ml), digits = 1),
+            MAX_pg_C_ml = round(max(pg_C_ml), digits =1),
+            MIN_pg_C_ml = round(min(pg_C_ml), digits = 1)) %>% 
+  add_column(ORIGIN = "sizefrac") %>% 
+    select(CATEGORY = Site, everything())
+  ) %>% 
+  rbind(
+    ## Vent only, IGT vs shipboard
+    pgC_ml_sizefrac_bysample %>% 
+  filter(SAMPLE_TYPE_BIN == "Vent") %>%
+    filter(VARIABLE == "totaleuk") %>% 
+  group_by(VARIABLE, EXP_TYPE, SAMPLE_TYPE_BIN) %>% 
+  summarise(MEAN_pg_C_ml = round(mean(pg_C_ml), digits = 1),
+            MAX_pg_C_ml = round(max(pg_C_ml), digits =1),
+            MIN_pg_C_ml = round(min(pg_C_ml), digits = 1)) %>% 
+    unite(CATEGORY, EXP_TYPE, VARIABLE, SAMPLE_TYPE_BIN, sep = " ") %>% 
+  add_column(ORIGIN = "sizefrac")) %>% 
+  unite("MinMax_pg_C_ml", MIN_pg_C_ml, MAX_pg_C_ml, sep = " / ", remove = FALSE)
+```
+
+### Table 2
+
+```{r}
+table2 <- partONE %>% 
+  rbind(partTWO) %>% 
+  select(-starts_with("MinMax")) %>% 
+  pivot_longer(cols = ends_with("C_ml"), values_to = "pg_C_ml") %>% 
+  mutate(µg_C_L = (pg_C_ml*(0.000001)*1000)) %>% 
+  mutate(STAT = str_remove(name, "_pg_C_ml")) %>% 
+  select(-name) %>% 
+  mutate(CLASSIFICATION = case_when(
+    CATEGORY == "VD" ~ "Von Damm (vent only)",
+    CATEGORY == "Piccard" ~ "Piccard (vent only)",
+    grepl("Bag", CATEGORY) ~ "Shipboard (vent only)",
+    grepl("IGT", CATEGORY) ~ "IGT (vent only)",
+    TRUE ~ CATEGORY))
+
+table2_ugC_L <- table2 %>% 
+  select(CLASSIFICATION, µg_C_L, STAT, ORIGIN) %>% 
+  pivot_wider(names_from = STAT, values_from = µg_C_L)
+
+# write.csv(table2_ugC_L,
+# file = "output-data/table2-BIOMASS_ugC_L.csv")
+```
+
+
+## Carbon consumed
+
+Summary of carbon consumed:
+
+```{r}
+head(carbon_consumed)
+```
+
+```{r}
+table3 <- carbon_consumed %>% 
+  drop_na() %>% # Remove extra IGT7
+  filter(GRAZING_EFFECT_hr > 0) %>% # Remove slope 0 experiments
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  group_by(SAMPLE_TYPE_BIN) %>% 
+  summarise(MEAN_pgC_pergrazer_CLEARANCE = round(mean(pgC_pergrazer_CLEARANCE), digits = 1),
+            MEAN_pgC_perml_perhr = round(mean(pgC_perml_perhr), digits = 1),
+            MAX_pgC_pergrazer_CLEARANCE = round(max(pgC_pergrazer_CLEARANCE), digits = 1),
+            MAX_pgC_perml_perhr = round(max(pgC_perml_perhr), digits = 1),
+            MIN_pgC_pergrazer_CLEARANCE = round(min(pgC_pergrazer_CLEARANCE), digits = 1),
+            MIN_pgC_perml_perhr = round(min(pgC_perml_perhr), digits = 1)) %>% 
+  select(CATEGORY = SAMPLE_TYPE_BIN, everything()) %>% 
+  rbind(carbon_consumed %>% 
+  drop_na() %>% # Remove extra IGT7
+    filter(GRAZING_EFFECT_hr > 0) %>% # Remove slope 0 experiments
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+  filter(SAMPLE_TYPE_BIN == "Vent") %>% 
+  group_by(SiteOrder) %>% 
+    summarise(MEAN_pgC_pergrazer_CLEARANCE = round(mean(pgC_pergrazer_CLEARANCE), digits = 1),
+            MEAN_pgC_perml_perhr = round(mean(pgC_perml_perhr), digits = 1),
+            MAX_pgC_pergrazer_CLEARANCE = round(max(pgC_pergrazer_CLEARANCE), digits = 1),
+            MAX_pgC_perml_perhr = round(max(pgC_perml_perhr), digits = 1),
+            MIN_pgC_pergrazer_CLEARANCE = round(min(pgC_pergrazer_CLEARANCE), digits = 1),
+            MIN_pgC_perml_perhr = round(min(pgC_perml_perhr), digits = 1)) %>% 
+  select(CATEGORY = SiteOrder, everything())) %>% 
+  rbind(carbon_consumed %>% 
+  drop_na() %>% # Remove extra IGT7
+    filter(GRAZING_EFFECT_hr > 0) %>% # Remove slope 0 experiments
+  mutate(SAMPLE_TYPE_BIN = case_when(
+    NameOrder == "Background" ~ "Non-vent",
+    NameOrder == "Plume" ~ "Non-vent",
+    TRUE ~ "Vent"
+  )) %>%
+    mutate(EXP_TYPE = case_when(
+    grepl("IGT", CRUISE_SAMPLE) ~ "IGT",
+    TRUE ~ "Shipboard"
+  )) %>%
+  filter(SAMPLE_TYPE_BIN == "Vent") %>% 
+  group_by(EXP_TYPE) %>% 
+    summarise(MEAN_pgC_pergrazer_CLEARANCE = round(mean(pgC_pergrazer_CLEARANCE), digits = 2),
+            MEAN_pgC_perml_perhr = round(mean(pgC_perml_perhr), digits = 1),
+            MAX_pgC_pergrazer_CLEARANCE = round(max(pgC_pergrazer_CLEARANCE), digits = 2),
+            MAX_pgC_perml_perhr = round(max(pgC_perml_perhr), digits = 1),
+            MIN_pgC_pergrazer_CLEARANCE = round(min(pgC_pergrazer_CLEARANCE), digits = 2),
+            MIN_pgC_perml_perhr = round(min(pgC_perml_perhr), digits = 1)) %>% 
+  select(CATEGORY = EXP_TYPE, everything())) %>% 
+  ## Modify table
+  unite("MinMax_pgC_pergrazer_CLEARANCE", MIN_pgC_pergrazer_CLEARANCE, MAX_pgC_pergrazer_CLEARANCE, sep = " / ", remove = TRUE) %>% 
+  unite("MinMax_pgC_perml_perhr", MIN_pgC_perml_perhr, MAX_pgC_perml_perhr, sep = " / ", remove = TRUE) %>% 
+  mutate(CLASSIFICATION = case_when(
+    CATEGORY == "Von Damm" ~ "Von Damm (vent only)",
+    CATEGORY == "Piccard" ~ "Piccard (vent only)",
+    grepl("Bag", CATEGORY) ~ "Shipboard (vent only)",
+    grepl("IGT", CATEGORY) ~ "IGT (vent only)",
+    TRUE ~ CATEGORY)) %>% 
+  select(-CATEGORY)
+```
+
+### Table 3
+
+```{r}
+write.csv(table3, file = "output-data/table3-C-consumption.csv")
+```
+
+
+## Carbon consumed total and by cell?
+
+Assuming 86 fg C per cell for prokaryotic cells. 1 fg == 0.001 pg
+
+```{r}
+## From above:
+igt_vent_rate_avg <- 11400.71904
+ship_vent_rate_avg <- 2430.01651
+ship_nonvent_rate_avg <- 65.11676
+
+
+mor_prok_c <- 86 # in fg C per cell
+
+# Non vent cells consumed per ml per
+(mor_prok_c)*(0.001) * (65.11676) # pg
+
+# IGT
+igt <- (mor_prok_c)*(0.001) * (11400.71904);igt
+
+# Shipboard
+ship <- (mor_prok_c)*(0.001) * (2430.01651);ship
+
+# (igt+ship)/2
+```
+
+
+# Table S1
+
+Import from Hu et al. (*Molecular Ecology*).
+
+```{r}
+env_tmp <- read.delim("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/samplelist-metadata.txt")
+# head(env_tmp)
+
+mcr_metadata <- env_tmp %>% 
+  filter(SITE == "VonDamm" | SITE  == "Piccard") %>% 
+  mutate(FIELD =  case_when(
+    SITE == "VonDamm"  ~ "Von Damm",
+    SITE == "Piccard" ~ "Piccard")) %>% 
+  filter(SAMPLETYPE != "Incubation") %>% 
+  separate(SAMPLE, into = c("num", "loc", "loc2", "fluid_origin", "name", "FLUID_ORIGIN", "else"), remove = FALSE) %>% 
+  select(-Sample_or_Control, -SAMPLEID, -ref_num, -SITE, SEQ_SAMPLE = SAMPLE,FLUID_ORIGIN, everything(), -num, -loc, -loc2, -fluid_origin, -name, -`else`)
+
+
+```
+
+Generate supplementary table.
+
+```{r}
+supp_table_env_mcr <- mcr_metadata %>% 
+  select(FIELD, VENT, SAMPLETYPE, DEPTH, TEMP = temp, PH = pH, PERCSEA = percseawater, MG = mg, H2 = h2, H2S = h2s, CH4 = ch4, MICROBIAL = ProkConc, everything())
+
+# Save supplementary metadata table:
+# write.csv(supp_table_env_mcr, file = "output-data/supp_table_MCR_metadata.csv")
+```
+
+# Table S2
+
+```{r}
+# # ## Table S2
+# write_delim(table_wcalcs %>%
+#               select(SiteOrder, NameOrder, FLUID_ORIGIN, CRUISE_SAMPLE,
+#                      TimePoints, starts_with("EXP"), starts_with("CTRL"), EUK_ml, EUK_MinMax, EUK_sem, PROK_ml, PROK_MinMax, PROK_sem, FLP_ml, GRAZE_RATE_DAY, Slope = RATE, RATE_minute, GRAZING_EFFECT_hr, CLEARANCE_RATE_ml, BAC_TURNOVER_PERC),
+#             file = "output-data/tableS2-grazing-exp-list.txt", delim = "\t")
+```
+
+# Table S3
+
+Calculations not generated in R.
+
+# Table S4
+
+```{r}
+biov_calc
+```
+
+
+
+# Table S5
+Report carbon biomass values, but include size fractions.
+
+```{r}
+table5_cbiomass_total <- pgC_ml_biov_bysample %>% 
+  group_by(VARIABLE, Site, EXP_TYPE, SAMPLE_TYPE_BIN) %>% 
+  summarise(MEAN_pg_C_L = mean(pgC_ml_mean/1000),
+            MAX_pg_C_L = max(pgC_ml_mean/1000),
+            MIN_pg_C_L = min(pgC_ml_mean/1000)) %>% 
+  add_column(ORIGIN = "bybiovolume") %>% 
+  rbind(pgC_ml_sizefrac_bysample %>% 
+  group_by(VARIABLE, Site, SAMPLE_TYPE_BIN, EXP_TYPE) %>% 
+  summarise(MEAN_pg_C_L = mean(pg_C_ml/1000),
+            MAX_pg_C_L = max(pg_C_ml/1000),
+            MIN_pg_C_L = min(pg_C_ml/1000)) %>% 
+  add_column(ORIGIN = "sizefrac")
+  )
+```
+
+
+# Figure 3
+
+Estimates to create figure 3, a day at a food web at a deep sea vent site.
+Use units µg C per L per day.
+
+From these tables:
+  euk_prok_counts
+  table_grazerate_wflp_wprok_weuk
+  table_wcalcs
+  biov_calc
+  c_factor_biov
+  pgC_ml_biov_bysample
+  pgC_ml_sizefrac_bysample
+  carbon_consumed
+  
+
+Isolate vent-only information and remove the zero values.
+
+### Chemosynthetic bacteria & archaea
+Prokaryote pool first
+```{r}
+head(euk_prok_counts)
+prok_fgC_cell <- 86 # fg C per cell
+
+proks_only <- euk_prok_counts %>% 
+  select(PROK_ml, Name, SITE_TYPE, Experiment) %>% 
+  distinct() %>% 
+  drop_na() %>% 
+  filter(Name != "Plume" & Name != "BSW")
+proks_only
+
+mean_prok <- mean(proks_only$PROK_ml)
+max_prok <- max(proks_only$PROK_ml)
+min_prok <- min(proks_only$PROK_ml)
+
+# Cells per ml
+# fgC/cell * cell/ml * (1e-9 ug/1fg) * (1000 ml/1 L)
+prok_fgC_cell * mean_prok * (1e-9) * 1000
+
+prok_fgC_cell * max_prok * (1e-9) * 1000
+
+prok_fgC_cell * min_prok * (1e-9) * 1000
+```
+
+ug C per L
+
+### Carbon consumed by heterotrophic protists
+
+Use input from Table 3. Focus on grazing rate, instead of clearance rate.
+
+Grazing rate is in pg C per ml per hr.
+```{r}
+table3
+```
+
+```{r}
+tmp <- table3 %>% 
+  filter(CLASSIFICATION == "Vent") %>% 
+  select(ends_with("_perhr")) %>% 
+  separate(MinMax_pgC_perml_perhr, into = c("min", "max"), sep = " / ")
+
+
+# Units are in pg C per ml per hour
+## pgC/ml hr * (1000ml/1L) * (24 hr/1 day) * (1e-6 ug / 1pg)
+(tmp$MEAN_pgC_perml_perhr) * (1000 * 24 * (1e-6))
+
+as.numeric(tmp$min) * (1000 * 24 * (1e-6))
+
+as.numeric(tmp$max) * (1000 * 24 * (1e-6))
+```
+
+### Microeuk carbon pool
+
+```{r}
+table2 %>% 
+  filter(CLASSIFICATION == "Vent") %>% 
+  select(STAT, µg_C_L, CLASSIFICATION, ORIGIN)
+
+
+```
+
+
+
+# Supplemental calulcations for within range
+
+## Compare to Connell
+
+From Conne/l et al., table 4. Heterotrophic bacteria, Daily carbon grazed - based on standing stock and mortality rate in Southern California.
+
+min: 1.74 max: 28.8
+
+units: µg C per L per day
+
+To compare with units:ug C per ml per hour (this study)
+
+```{r}
+min <- 1.74
+max <- 28.8
+
+# ug to pg: 1ug = 1E6 pg
+((min)/1000)/24
+
+((max)/1000)/24
+
+```
+
+
+## Compare to Pernice et al.
+
+Convert to ug C per L.
+
+1 pg = 1e-6 ug
+```{r}
+shallow_pgC_ml <- 280
+deep_pgC_ml <- 50
+
+# pgC/ml * (1e-6 ug / 1 pg) * (1000 ml / 1)
+
+shallow_pgC_ml * (1e-6) * 1000
+deep_pgC_ml * (1e-6) * 1000
+```
+
+
+## Compare to Medina et al.
+
+Review, so this includes several studies. Grazing effect in Table 3 is reported in bacteria per ml per day.
+
+Min and max are both from Pachiadaki et al. deep water and at an interface. min: 18.7 max: 13600
+
+Min and max in this study is 24 and 17285 cells consumed per ml per hour

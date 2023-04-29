@@ -479,14 +479,14 @@ plot_sampletype <- function(df){
 gen_divnet gen_divnet_SAMPLETYPE gen_divnet_SAMPLETYPE_BIN gen_divnet_SITE spp_divnet spp_divnet_SAMPLETYPE spp_divnet_SAMPLETYPE_BIN spp_divnet_SITE
 
 ```{r, fig.height=8, fig.width=5}
-spp_alpha_18s <- fxn_extract_divet(spp_divnet)
-spp_alpha_label <- fxn_extract_divet(spp_divnet_SAMPLETYPE)
-spp_alpha_TYPE <- fxn_extract_divet(spp_divnet_SAMPLETYPE_BIN)
-spp_alpha_TYPE_SITE <- fxn_extract_divet(spp_divnet_SITE)
+# spp_alpha_18s <- fxn_extract_divet(spp_divnet)
+# spp_alpha_label <- fxn_extract_divet(spp_divnet_SAMPLETYPE)
+# spp_alpha_TYPE <- fxn_extract_divet(spp_divnet_SAMPLETYPE_BIN)
+# spp_alpha_TYPE_SITE <- fxn_extract_divet(spp_divnet_SITE)
+# # 
+# head(spp_alpha_18s)
 # 
-head(spp_alpha_18s)
-
-plot_sampletype(spp_alpha_18s)
+# plot_sampletype(spp_alpha_18s)
 ```
 
 # ASV overlap comparison
@@ -1169,8 +1169,8 @@ There was a total of 29 ASVs that were both a part of the enriched at vents (com
 # Figure 4
 
 ```{r, fig.width=18, fig.height=9}
-pca_plot + fam_corncob +
-  patchwork::plot_layout(ncol = 2, widths = c(1, 1)) + patchwork::plot_annotation(tag_levels = "a")
+# pca_plot + fam_corncob +
+#   patchwork::plot_layout(ncol = 2, widths = c(1, 1)) + patchwork::plot_annotation(tag_levels = "a")
 ```
 
 

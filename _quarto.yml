@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Mid-Cayman Rise analysis"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: results.qmd
+        text: Summary of results
+      - href: grazing.qmd
+        text: Grazing analysis
+      - href: asv-analysis.qmd
+        text: Sequence analysis
+      - href: sequence-qc.qmd
+        text: Sequence QC & import
+      #- href: manuscript.qmd
+      #  text: Manuscript
+
+format:
+  html:
+    theme: minty
+    css: styles.css
+    code-fold: true
+    toc: true
+    toc-location: left
+    number-sections: true
+    number-depth: 2
+
+
+
