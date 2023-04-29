@@ -5,4 +5,6 @@ title: "Microbial eukaryotic ecology and food web contributions at two Mid-Cayma
 
 Website for _in prep_ manuscript on microbial eukaryotic ecology at deep-sea hydrothermal vents. Hu et al. (in prep)
 
-For access to in prep data, please contact sarah.hu[at]whoi.edu
+For access to in prep data, please contact skhu[at]tamu.edu
+
+* Raw sequence data are available through NCBI under SRA BioProject accession number PRJNA802868
