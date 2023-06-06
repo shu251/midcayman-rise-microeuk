@@ -492,20 +492,28 @@ table5_cbiomass_total <- pgC_ml_biov_bysample %>%
 ```
 
 
-# Figure 3
+# Figure 4
 
-Estimates to create figure 3, a day at a food web at a deep sea vent site.
+Estimates to create figure 4, a day at a food web at a deep sea vent site.
 Use units µg C per L per day.
 
 From these tables:
-  euk_prok_counts
-  table_grazerate_wflp_wprok_weuk
-  table_wcalcs
-  biov_calc
-  c_factor_biov
-  pgC_ml_biov_bysample
-  pgC_ml_sizefrac_bysample
-  carbon_consumed
+
+  * euk_prok_counts
+  
+  * table_grazerate_wflp_wprok_weuk
+  
+  * table_wcalcs
+  
+  * biov_calc
+  
+  * c_factor_biov
+  
+  * pgC_ml_biov_bysample
+  
+  * pgC_ml_sizefrac_bysample
+  
+  * carbon_consumed
   
 
 Isolate vent-only information and remove the zero values.

@@ -1,6 +1,6 @@
 # Mid-Cayman Rise microbial eukaryote study
 
-Sarah Hu _In preparation_ 
+Sarah Hu _In preparation_
 
 https://shu251.github.io/midcayman-rise-microeuk/
 
