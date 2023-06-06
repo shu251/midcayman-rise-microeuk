@@ -200,7 +200,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#table-s3" id="toc-table-s3" class="nav-link" data-scroll-target="#table-s3"><span class="toc-section-number">7</span>  Table S3</a></li>
   <li><a href="#table-s4" id="toc-table-s4" class="nav-link" data-scroll-target="#table-s4"><span class="toc-section-number">8</span>  Table S4</a></li>
   <li><a href="#table-s5" id="toc-table-s5" class="nav-link" data-scroll-target="#table-s5"><span class="toc-section-number">9</span>  Table S5</a></li>
-  <li><a href="#figure-3" id="toc-figure-3" class="nav-link" data-scroll-target="#figure-3"><span class="toc-section-number">10</span>  Figure 3</a>
+  <li><a href="#figure-4" id="toc-figure-4" class="nav-link" data-scroll-target="#figure-4"><span class="toc-section-number">10</span>  Figure 4</a>
   <ul class="collapse">
   <li><a href="#chemosynthetic-bacteria-archaea" id="toc-chemosynthetic-bacteria-archaea" class="nav-link" data-scroll-target="#chemosynthetic-bacteria-archaea">Chemosynthetic bacteria &amp; archaea</a></li>
   <li><a href="#carbon-consumed-by-heterotrophic-protists" id="toc-carbon-consumed-by-heterotrophic-protists" class="nav-link" data-scroll-target="#carbon-consumed-by-heterotrophic-protists">Carbon consumed by heterotrophic protists</a></li>
@@ -245,14 +245,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stderr">
-<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-✔ ggplot2 3.4.1     ✔ purrr   1.0.1
-✔ tibble  3.1.8     ✔ dplyr   1.1.0
-✔ tidyr   1.3.0     ✔ stringr 1.5.0
-✔ readr   2.1.2     ✔ forcats 0.5.2
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.2     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+✔ purrr     1.0.1     
 ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()</code></pre>
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
 </div>
 </div>
 </section>
@@ -818,17 +820,16 @@ using the `.groups` argument.</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 11
-  SiteO…¹ NameO…² FLUID…³ CRUIS…⁴ PROK_ml GRAZI…⁵ CLEAR…⁶ bac_c…⁷ fgC_ml pgC_p…⁸
-  &lt;fct&gt;   &lt;fct&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
-1 Piccard Lots '… J2-1241 LV24      53878     0   0         0.086 4.63e6  0     
-2 Piccard Plume   CTD004  Niskin…   51429    44.3 1.09e-5   0.086 4.42e6  0.0480
-3 Piccard Shrimp… J2-1240 LV13     238590  6007.  5.54e-5   0.086 2.05e7  1.14  
-4 Von Da… Backgr… CTD002  Niskin…   37890   127.  3.65e-5   0.086 3.26e6  0.119 
-5 Von Da… Mustar… J2-1243 LV17      56677     0   0         0.086 4.87e6  0     
-6 Von Da… Plume   CTD001  Niskin…   16478    24.0 9.24e-6   0.086 1.42e6  0.0131
-# … with 1 more variable: pgC_perml_perhr &lt;dbl&gt;, and abbreviated variable names
-#   ¹​SiteOrder, ²​NameOrder, ³​FLUID_ORIGIN, ⁴​CRUISE_SAMPLE, ⁵​GRAZING_EFFECT_hr,
-#   ⁶​CLEARANCE_RATE_ml, ⁷​bac_carbon_Mor_pg, ⁸​pgC_pergrazer_CLEARANCE</code></pre>
+  SiteOrder NameOrder      FLUID_ORIGIN CRUISE_SAMPLE PROK_ml GRAZING_EFFECT_hr
+  &lt;fct&gt;     &lt;fct&gt;          &lt;chr&gt;        &lt;chr&gt;           &lt;dbl&gt;             &lt;dbl&gt;
+1 Piccard   Lots 'O Shrimp J2-1241      LV24            53878               0  
+2 Piccard   Plume          CTD004       Niskin 10       51429              44.3
+3 Piccard   Shrimpocalypse J2-1240      LV13           238590            6007. 
+4 Von Damm  Background     CTD002       Niskins 8-10    37890             127. 
+5 Von Damm  Mustard Stand  J2-1243      LV17            56677               0  
+6 Von Damm  Plume          CTD001       Niskin 2        16478              24.0
+# ℹ 5 more variables: CLEARANCE_RATE_ml &lt;dbl&gt;, bac_carbon_Mor_pg &lt;dbl&gt;,
+#   fgC_ml &lt;dbl&gt;, pgC_pergrazer_CLEARANCE &lt;dbl&gt;, pgC_perml_perhr &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -1063,10 +1064,20 @@ can override using the `.groups` argument.</code></pre>
 </div>
 </div>
 </section>
-<section id="figure-3" class="level1" data-number="10">
-<h1 data-number="10"><span class="header-section-number">10</span> Figure 3</h1>
-<p>Estimates to create figure 3, a day at a food web at a deep sea vent site. Use units µg C per L per day.</p>
-<p>From these tables: euk_prok_counts table_grazerate_wflp_wprok_weuk table_wcalcs biov_calc c_factor_biov pgC_ml_biov_bysample pgC_ml_sizefrac_bysample carbon_consumed</p>
+<section id="figure-4" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Figure 4</h1>
+<p>Estimates to create figure 4, a day at a food web at a deep sea vent site. Use units µg C per L per day.</p>
+<p>From these tables:</p>
+<ul>
+<li><p>euk_prok_counts</p></li>
+<li><p>table_grazerate_wflp_wprok_weuk</p></li>
+<li><p>table_wcalcs</p></li>
+<li><p>biov_calc</p></li>
+<li><p>c_factor_biov</p></li>
+<li><p>pgC_ml_biov_bysample</p></li>
+<li><p>pgC_ml_sizefrac_bysample</p></li>
+<li><p>carbon_consumed</p></li>
+</ul>
 <p>Isolate vent-only information and remove the zero values.</p>
 <section id="chemosynthetic-bacteria-archaea" class="level3">
 <h3 class="anchored" data-anchor-id="chemosynthetic-bacteria-archaea">Chemosynthetic bacteria &amp; archaea</h3>
@@ -1160,16 +1171,16 @@ can override using the `.groups` argument.</code></pre>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 5
-  MEAN_pgC_pergrazer_CLEARANCE MEAN_pgC_perml_perhr MinMax_pgC…¹ MinMa…² CLASS…³
-                         &lt;dbl&gt;                &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;   &lt;chr&gt;  
-1                         0.1                   5.6 0 / 0.1      2.1 / … Non-ve…
-2                         1.2                 595.  0 / 3.9      10 / 1… Vent   
-3                         0.5                 391.  0 / 1.4      10 / 1… Von Da…
-4                         2.5                1002.  1.1 / 3.9    516.6 … Piccar…
-5                         1.86                980.  0.26 / 3.86  90.3 /… IGT (v…
-6                         0.49                209   0.02 / 1.14  10 / 5… Shipbo…
-# … with abbreviated variable names ¹​MinMax_pgC_pergrazer_CLEARANCE,
-#   ²​MinMax_pgC_perml_perhr, ³​CLASSIFICATION</code></pre>
+  MEAN_pgC_pergrazer_CLEARANCE MEAN_pgC_perml_perhr MinMax_pgC_pergrazer_CLEAR…¹
+                         &lt;dbl&gt;                &lt;dbl&gt; &lt;chr&gt;                       
+1                         0.1                   5.6 0 / 0.1                     
+2                         1.2                 595.  0 / 3.9                     
+3                         0.5                 391.  0 / 1.4                     
+4                         2.5                1002.  1.1 / 3.9                   
+5                         1.86                980.  0.26 / 3.86                 
+6                         0.49                209   0.02 / 1.14                 
+# ℹ abbreviated name: ¹​MinMax_pgC_pergrazer_CLEARANCE
+# ℹ 2 more variables: MinMax_pgC_perml_perhr &lt;chr&gt;, CLASSIFICATION &lt;chr&gt;</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -1938,136 +1949,144 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb86-532"><a href="#cb86-532" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb86-533"><a href="#cb86-533" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb86-534"><a href="#cb86-534" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-535"><a href="#cb86-535" aria-hidden="true" tabindex="-1"></a><span class="fu"># Figure 3</span></span>
+<span id="cb86-535"><a href="#cb86-535" aria-hidden="true" tabindex="-1"></a><span class="fu"># Figure 4</span></span>
 <span id="cb86-536"><a href="#cb86-536" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-537"><a href="#cb86-537" aria-hidden="true" tabindex="-1"></a>Estimates to create figure 3, a day at a food web at a deep sea vent site.</span>
+<span id="cb86-537"><a href="#cb86-537" aria-hidden="true" tabindex="-1"></a>Estimates to create figure 4, a day at a food web at a deep sea vent site.</span>
 <span id="cb86-538"><a href="#cb86-538" aria-hidden="true" tabindex="-1"></a>Use units µg C per L per day.</span>
 <span id="cb86-539"><a href="#cb86-539" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb86-540"><a href="#cb86-540" aria-hidden="true" tabindex="-1"></a>From these tables:</span>
-<span id="cb86-541"><a href="#cb86-541" aria-hidden="true" tabindex="-1"></a>  euk_prok_counts</span>
-<span id="cb86-542"><a href="#cb86-542" aria-hidden="true" tabindex="-1"></a>  table_grazerate_wflp_wprok_weuk</span>
-<span id="cb86-543"><a href="#cb86-543" aria-hidden="true" tabindex="-1"></a>  table_wcalcs</span>
-<span id="cb86-544"><a href="#cb86-544" aria-hidden="true" tabindex="-1"></a>  biov_calc</span>
-<span id="cb86-545"><a href="#cb86-545" aria-hidden="true" tabindex="-1"></a>  c_factor_biov</span>
-<span id="cb86-546"><a href="#cb86-546" aria-hidden="true" tabindex="-1"></a>  pgC_ml_biov_bysample</span>
-<span id="cb86-547"><a href="#cb86-547" aria-hidden="true" tabindex="-1"></a>  pgC_ml_sizefrac_bysample</span>
-<span id="cb86-548"><a href="#cb86-548" aria-hidden="true" tabindex="-1"></a>  carbon_consumed</span>
+<span id="cb86-541"><a href="#cb86-541" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-542"><a href="#cb86-542" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>euk_prok_counts</span>
+<span id="cb86-543"><a href="#cb86-543" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-544"><a href="#cb86-544" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>table_grazerate_wflp_wprok_weuk</span>
+<span id="cb86-545"><a href="#cb86-545" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-546"><a href="#cb86-546" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>table_wcalcs</span>
+<span id="cb86-547"><a href="#cb86-547" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-548"><a href="#cb86-548" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>biov_calc</span>
 <span id="cb86-549"><a href="#cb86-549" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb86-550"><a href="#cb86-550" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-551"><a href="#cb86-551" aria-hidden="true" tabindex="-1"></a>Isolate vent-only information and remove the zero values.</span>
-<span id="cb86-552"><a href="#cb86-552" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-553"><a href="#cb86-553" aria-hidden="true" tabindex="-1"></a><span class="fu">### Chemosynthetic bacteria &amp; archaea</span></span>
-<span id="cb86-554"><a href="#cb86-554" aria-hidden="true" tabindex="-1"></a>Prokaryote pool first</span>
-<span id="cb86-557"><a href="#cb86-557" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb86-558"><a href="#cb86-558" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(euk_prok_counts)</span>
-<span id="cb86-559"><a href="#cb86-559" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="ot">&lt;-</span> <span class="dv">86</span> <span class="co"># fg C per cell</span></span>
+<span id="cb86-550"><a href="#cb86-550" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>c_factor_biov</span>
+<span id="cb86-551"><a href="#cb86-551" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-552"><a href="#cb86-552" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>pgC_ml_biov_bysample</span>
+<span id="cb86-553"><a href="#cb86-553" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-554"><a href="#cb86-554" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>pgC_ml_sizefrac_bysample</span>
+<span id="cb86-555"><a href="#cb86-555" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-556"><a href="#cb86-556" aria-hidden="true" tabindex="-1"></a><span class="ss">  * </span>carbon_consumed</span>
+<span id="cb86-557"><a href="#cb86-557" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb86-558"><a href="#cb86-558" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-559"><a href="#cb86-559" aria-hidden="true" tabindex="-1"></a>Isolate vent-only information and remove the zero values.</span>
 <span id="cb86-560"><a href="#cb86-560" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-561"><a href="#cb86-561" aria-hidden="true" tabindex="-1"></a>proks_only <span class="ot">&lt;-</span> euk_prok_counts <span class="sc">%&gt;%</span> </span>
-<span id="cb86-562"><a href="#cb86-562" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(PROK_ml, Name, SITE_TYPE, Experiment) <span class="sc">%&gt;%</span> </span>
-<span id="cb86-563"><a href="#cb86-563" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb86-564"><a href="#cb86-564" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb86-565"><a href="#cb86-565" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Name <span class="sc">!=</span> <span class="st">"Plume"</span> <span class="sc">&amp;</span> Name <span class="sc">!=</span> <span class="st">"BSW"</span>)</span>
-<span id="cb86-566"><a href="#cb86-566" aria-hidden="true" tabindex="-1"></a>proks_only</span>
-<span id="cb86-567"><a href="#cb86-567" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-568"><a href="#cb86-568" aria-hidden="true" tabindex="-1"></a>mean_prok <span class="ot">&lt;-</span> <span class="fu">mean</span>(proks_only<span class="sc">$</span>PROK_ml)</span>
-<span id="cb86-569"><a href="#cb86-569" aria-hidden="true" tabindex="-1"></a>max_prok <span class="ot">&lt;-</span> <span class="fu">max</span>(proks_only<span class="sc">$</span>PROK_ml)</span>
-<span id="cb86-570"><a href="#cb86-570" aria-hidden="true" tabindex="-1"></a>min_prok <span class="ot">&lt;-</span> <span class="fu">min</span>(proks_only<span class="sc">$</span>PROK_ml)</span>
-<span id="cb86-571"><a href="#cb86-571" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-572"><a href="#cb86-572" aria-hidden="true" tabindex="-1"></a><span class="co"># Cells per ml</span></span>
-<span id="cb86-573"><a href="#cb86-573" aria-hidden="true" tabindex="-1"></a><span class="co"># fgC/cell * cell/ml * (1e-9 ug/1fg) * (1000 ml/1 L)</span></span>
-<span id="cb86-574"><a href="#cb86-574" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="sc">*</span> mean_prok <span class="sc">*</span> (<span class="fl">1e-9</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb86-561"><a href="#cb86-561" aria-hidden="true" tabindex="-1"></a><span class="fu">### Chemosynthetic bacteria &amp; archaea</span></span>
+<span id="cb86-562"><a href="#cb86-562" aria-hidden="true" tabindex="-1"></a>Prokaryote pool first</span>
+<span id="cb86-565"><a href="#cb86-565" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb86-566"><a href="#cb86-566" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(euk_prok_counts)</span>
+<span id="cb86-567"><a href="#cb86-567" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="ot">&lt;-</span> <span class="dv">86</span> <span class="co"># fg C per cell</span></span>
+<span id="cb86-568"><a href="#cb86-568" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-569"><a href="#cb86-569" aria-hidden="true" tabindex="-1"></a>proks_only <span class="ot">&lt;-</span> euk_prok_counts <span class="sc">%&gt;%</span> </span>
+<span id="cb86-570"><a href="#cb86-570" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(PROK_ml, Name, SITE_TYPE, Experiment) <span class="sc">%&gt;%</span> </span>
+<span id="cb86-571"><a href="#cb86-571" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb86-572"><a href="#cb86-572" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb86-573"><a href="#cb86-573" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Name <span class="sc">!=</span> <span class="st">"Plume"</span> <span class="sc">&amp;</span> Name <span class="sc">!=</span> <span class="st">"BSW"</span>)</span>
+<span id="cb86-574"><a href="#cb86-574" aria-hidden="true" tabindex="-1"></a>proks_only</span>
 <span id="cb86-575"><a href="#cb86-575" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-576"><a href="#cb86-576" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="sc">*</span> max_prok <span class="sc">*</span> (<span class="fl">1e-9</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
-<span id="cb86-577"><a href="#cb86-577" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-578"><a href="#cb86-578" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="sc">*</span> min_prok <span class="sc">*</span> (<span class="fl">1e-9</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
-<span id="cb86-579"><a href="#cb86-579" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb86-580"><a href="#cb86-580" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-581"><a href="#cb86-581" aria-hidden="true" tabindex="-1"></a>ug C per L</span>
-<span id="cb86-582"><a href="#cb86-582" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-583"><a href="#cb86-583" aria-hidden="true" tabindex="-1"></a><span class="fu">### Carbon consumed by heterotrophic protists</span></span>
-<span id="cb86-584"><a href="#cb86-584" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-585"><a href="#cb86-585" aria-hidden="true" tabindex="-1"></a>Use input from Table 3. Focus on grazing rate, instead of clearance rate.</span>
-<span id="cb86-586"><a href="#cb86-586" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-587"><a href="#cb86-587" aria-hidden="true" tabindex="-1"></a>Grazing rate is in pg C per ml per hr.</span>
-<span id="cb86-590"><a href="#cb86-590" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb86-591"><a href="#cb86-591" aria-hidden="true" tabindex="-1"></a>table3</span>
-<span id="cb86-592"><a href="#cb86-592" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb86-593"><a href="#cb86-593" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-596"><a href="#cb86-596" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb86-597"><a href="#cb86-597" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> table3 <span class="sc">%&gt;%</span> </span>
-<span id="cb86-598"><a href="#cb86-598" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CLASSIFICATION <span class="sc">==</span> <span class="st">"Vent"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb86-599"><a href="#cb86-599" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">ends_with</span>(<span class="st">"_perhr"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb86-600"><a href="#cb86-600" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(MinMax_pgC_perml_perhr, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"min"</span>, <span class="st">"max"</span>), <span class="at">sep =</span> <span class="st">" / "</span>)</span>
+<span id="cb86-576"><a href="#cb86-576" aria-hidden="true" tabindex="-1"></a>mean_prok <span class="ot">&lt;-</span> <span class="fu">mean</span>(proks_only<span class="sc">$</span>PROK_ml)</span>
+<span id="cb86-577"><a href="#cb86-577" aria-hidden="true" tabindex="-1"></a>max_prok <span class="ot">&lt;-</span> <span class="fu">max</span>(proks_only<span class="sc">$</span>PROK_ml)</span>
+<span id="cb86-578"><a href="#cb86-578" aria-hidden="true" tabindex="-1"></a>min_prok <span class="ot">&lt;-</span> <span class="fu">min</span>(proks_only<span class="sc">$</span>PROK_ml)</span>
+<span id="cb86-579"><a href="#cb86-579" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-580"><a href="#cb86-580" aria-hidden="true" tabindex="-1"></a><span class="co"># Cells per ml</span></span>
+<span id="cb86-581"><a href="#cb86-581" aria-hidden="true" tabindex="-1"></a><span class="co"># fgC/cell * cell/ml * (1e-9 ug/1fg) * (1000 ml/1 L)</span></span>
+<span id="cb86-582"><a href="#cb86-582" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="sc">*</span> mean_prok <span class="sc">*</span> (<span class="fl">1e-9</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb86-583"><a href="#cb86-583" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-584"><a href="#cb86-584" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="sc">*</span> max_prok <span class="sc">*</span> (<span class="fl">1e-9</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb86-585"><a href="#cb86-585" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-586"><a href="#cb86-586" aria-hidden="true" tabindex="-1"></a>prok_fgC_cell <span class="sc">*</span> min_prok <span class="sc">*</span> (<span class="fl">1e-9</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb86-587"><a href="#cb86-587" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb86-588"><a href="#cb86-588" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-589"><a href="#cb86-589" aria-hidden="true" tabindex="-1"></a>ug C per L</span>
+<span id="cb86-590"><a href="#cb86-590" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-591"><a href="#cb86-591" aria-hidden="true" tabindex="-1"></a><span class="fu">### Carbon consumed by heterotrophic protists</span></span>
+<span id="cb86-592"><a href="#cb86-592" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-593"><a href="#cb86-593" aria-hidden="true" tabindex="-1"></a>Use input from Table 3. Focus on grazing rate, instead of clearance rate.</span>
+<span id="cb86-594"><a href="#cb86-594" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-595"><a href="#cb86-595" aria-hidden="true" tabindex="-1"></a>Grazing rate is in pg C per ml per hr.</span>
+<span id="cb86-598"><a href="#cb86-598" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb86-599"><a href="#cb86-599" aria-hidden="true" tabindex="-1"></a>table3</span>
+<span id="cb86-600"><a href="#cb86-600" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb86-601"><a href="#cb86-601" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-602"><a href="#cb86-602" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-603"><a href="#cb86-603" aria-hidden="true" tabindex="-1"></a><span class="co"># Units are in pg C per ml per hour</span></span>
-<span id="cb86-604"><a href="#cb86-604" aria-hidden="true" tabindex="-1"></a><span class="do">## pgC/ml hr * (1000ml/1L) * (24 hr/1 day) * (1e-6 ug / 1pg)</span></span>
-<span id="cb86-605"><a href="#cb86-605" aria-hidden="true" tabindex="-1"></a>(tmp<span class="sc">$</span>MEAN_pgC_perml_perhr) <span class="sc">*</span> (<span class="dv">1000</span> <span class="sc">*</span> <span class="dv">24</span> <span class="sc">*</span> (<span class="fl">1e-6</span>))</span>
-<span id="cb86-606"><a href="#cb86-606" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-607"><a href="#cb86-607" aria-hidden="true" tabindex="-1"></a><span class="fu">as.numeric</span>(tmp<span class="sc">$</span>min) <span class="sc">*</span> (<span class="dv">1000</span> <span class="sc">*</span> <span class="dv">24</span> <span class="sc">*</span> (<span class="fl">1e-6</span>))</span>
-<span id="cb86-608"><a href="#cb86-608" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-609"><a href="#cb86-609" aria-hidden="true" tabindex="-1"></a><span class="fu">as.numeric</span>(tmp<span class="sc">$</span>max) <span class="sc">*</span> (<span class="dv">1000</span> <span class="sc">*</span> <span class="dv">24</span> <span class="sc">*</span> (<span class="fl">1e-6</span>))</span>
-<span id="cb86-610"><a href="#cb86-610" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb86-611"><a href="#cb86-611" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-612"><a href="#cb86-612" aria-hidden="true" tabindex="-1"></a><span class="fu">### Microeuk carbon pool</span></span>
-<span id="cb86-613"><a href="#cb86-613" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-616"><a href="#cb86-616" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb86-617"><a href="#cb86-617" aria-hidden="true" tabindex="-1"></a>table2 <span class="sc">%&gt;%</span> </span>
-<span id="cb86-618"><a href="#cb86-618" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CLASSIFICATION <span class="sc">==</span> <span class="st">"Vent"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb86-619"><a href="#cb86-619" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(STAT, µg_C_L, CLASSIFICATION, ORIGIN)</span>
-<span id="cb86-620"><a href="#cb86-620" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-604"><a href="#cb86-604" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb86-605"><a href="#cb86-605" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> table3 <span class="sc">%&gt;%</span> </span>
+<span id="cb86-606"><a href="#cb86-606" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CLASSIFICATION <span class="sc">==</span> <span class="st">"Vent"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb86-607"><a href="#cb86-607" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">ends_with</span>(<span class="st">"_perhr"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb86-608"><a href="#cb86-608" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(MinMax_pgC_perml_perhr, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"min"</span>, <span class="st">"max"</span>), <span class="at">sep =</span> <span class="st">" / "</span>)</span>
+<span id="cb86-609"><a href="#cb86-609" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-610"><a href="#cb86-610" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-611"><a href="#cb86-611" aria-hidden="true" tabindex="-1"></a><span class="co"># Units are in pg C per ml per hour</span></span>
+<span id="cb86-612"><a href="#cb86-612" aria-hidden="true" tabindex="-1"></a><span class="do">## pgC/ml hr * (1000ml/1L) * (24 hr/1 day) * (1e-6 ug / 1pg)</span></span>
+<span id="cb86-613"><a href="#cb86-613" aria-hidden="true" tabindex="-1"></a>(tmp<span class="sc">$</span>MEAN_pgC_perml_perhr) <span class="sc">*</span> (<span class="dv">1000</span> <span class="sc">*</span> <span class="dv">24</span> <span class="sc">*</span> (<span class="fl">1e-6</span>))</span>
+<span id="cb86-614"><a href="#cb86-614" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-615"><a href="#cb86-615" aria-hidden="true" tabindex="-1"></a><span class="fu">as.numeric</span>(tmp<span class="sc">$</span>min) <span class="sc">*</span> (<span class="dv">1000</span> <span class="sc">*</span> <span class="dv">24</span> <span class="sc">*</span> (<span class="fl">1e-6</span>))</span>
+<span id="cb86-616"><a href="#cb86-616" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-617"><a href="#cb86-617" aria-hidden="true" tabindex="-1"></a><span class="fu">as.numeric</span>(tmp<span class="sc">$</span>max) <span class="sc">*</span> (<span class="dv">1000</span> <span class="sc">*</span> <span class="dv">24</span> <span class="sc">*</span> (<span class="fl">1e-6</span>))</span>
+<span id="cb86-618"><a href="#cb86-618" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb86-619"><a href="#cb86-619" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-620"><a href="#cb86-620" aria-hidden="true" tabindex="-1"></a><span class="fu">### Microeuk carbon pool</span></span>
 <span id="cb86-621"><a href="#cb86-621" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-622"><a href="#cb86-622" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb86-623"><a href="#cb86-623" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-624"><a href="#cb86-624" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-625"><a href="#cb86-625" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-626"><a href="#cb86-626" aria-hidden="true" tabindex="-1"></a><span class="fu"># Supplemental calulcations for within range</span></span>
-<span id="cb86-627"><a href="#cb86-627" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-628"><a href="#cb86-628" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compare to Connell</span></span>
+<span id="cb86-624"><a href="#cb86-624" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb86-625"><a href="#cb86-625" aria-hidden="true" tabindex="-1"></a>table2 <span class="sc">%&gt;%</span> </span>
+<span id="cb86-626"><a href="#cb86-626" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CLASSIFICATION <span class="sc">==</span> <span class="st">"Vent"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb86-627"><a href="#cb86-627" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(STAT, µg_C_L, CLASSIFICATION, ORIGIN)</span>
+<span id="cb86-628"><a href="#cb86-628" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb86-629"><a href="#cb86-629" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-630"><a href="#cb86-630" aria-hidden="true" tabindex="-1"></a>From Conne/l et al., table 4. Heterotrophic bacteria, Daily carbon grazed - based on standing stock and mortality rate in Southern California.</span>
+<span id="cb86-630"><a href="#cb86-630" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb86-631"><a href="#cb86-631" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-632"><a href="#cb86-632" aria-hidden="true" tabindex="-1"></a>min: 1.74 max: 28.8</span>
+<span id="cb86-632"><a href="#cb86-632" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb86-633"><a href="#cb86-633" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-634"><a href="#cb86-634" aria-hidden="true" tabindex="-1"></a>units: µg C per L per day</span>
+<span id="cb86-634"><a href="#cb86-634" aria-hidden="true" tabindex="-1"></a><span class="fu"># Supplemental calulcations for within range</span></span>
 <span id="cb86-635"><a href="#cb86-635" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-636"><a href="#cb86-636" aria-hidden="true" tabindex="-1"></a>To compare with units:ug C per ml per hour (this study)</span>
+<span id="cb86-636"><a href="#cb86-636" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compare to Connell</span></span>
 <span id="cb86-637"><a href="#cb86-637" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-640"><a href="#cb86-640" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb86-641"><a href="#cb86-641" aria-hidden="true" tabindex="-1"></a>min <span class="ot">&lt;-</span> <span class="fl">1.74</span></span>
-<span id="cb86-642"><a href="#cb86-642" aria-hidden="true" tabindex="-1"></a>max <span class="ot">&lt;-</span> <span class="fl">28.8</span></span>
+<span id="cb86-638"><a href="#cb86-638" aria-hidden="true" tabindex="-1"></a>From Conne/l et al., table 4. Heterotrophic bacteria, Daily carbon grazed - based on standing stock and mortality rate in Southern California.</span>
+<span id="cb86-639"><a href="#cb86-639" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-640"><a href="#cb86-640" aria-hidden="true" tabindex="-1"></a>min: 1.74 max: 28.8</span>
+<span id="cb86-641"><a href="#cb86-641" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-642"><a href="#cb86-642" aria-hidden="true" tabindex="-1"></a>units: µg C per L per day</span>
 <span id="cb86-643"><a href="#cb86-643" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-644"><a href="#cb86-644" aria-hidden="true" tabindex="-1"></a><span class="co"># ug to pg: 1ug = 1E6 pg</span></span>
-<span id="cb86-645"><a href="#cb86-645" aria-hidden="true" tabindex="-1"></a>((min)<span class="sc">/</span><span class="dv">1000</span>)<span class="sc">/</span><span class="dv">24</span></span>
-<span id="cb86-646"><a href="#cb86-646" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-647"><a href="#cb86-647" aria-hidden="true" tabindex="-1"></a>((max)<span class="sc">/</span><span class="dv">1000</span>)<span class="sc">/</span><span class="dv">24</span></span>
-<span id="cb86-648"><a href="#cb86-648" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-649"><a href="#cb86-649" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb86-650"><a href="#cb86-650" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-644"><a href="#cb86-644" aria-hidden="true" tabindex="-1"></a>To compare with units:ug C per ml per hour (this study)</span>
+<span id="cb86-645"><a href="#cb86-645" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-648"><a href="#cb86-648" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb86-649"><a href="#cb86-649" aria-hidden="true" tabindex="-1"></a>min <span class="ot">&lt;-</span> <span class="fl">1.74</span></span>
+<span id="cb86-650"><a href="#cb86-650" aria-hidden="true" tabindex="-1"></a>max <span class="ot">&lt;-</span> <span class="fl">28.8</span></span>
 <span id="cb86-651"><a href="#cb86-651" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-652"><a href="#cb86-652" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compare to Pernice et al.</span></span>
-<span id="cb86-653"><a href="#cb86-653" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-654"><a href="#cb86-654" aria-hidden="true" tabindex="-1"></a>Convert to ug C per L.</span>
-<span id="cb86-655"><a href="#cb86-655" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-656"><a href="#cb86-656" aria-hidden="true" tabindex="-1"></a>1 pg = 1e-6 ug</span>
-<span id="cb86-659"><a href="#cb86-659" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb86-660"><a href="#cb86-660" aria-hidden="true" tabindex="-1"></a>shallow_pgC_ml <span class="ot">&lt;-</span> <span class="dv">280</span></span>
-<span id="cb86-661"><a href="#cb86-661" aria-hidden="true" tabindex="-1"></a>deep_pgC_ml <span class="ot">&lt;-</span> <span class="dv">50</span></span>
-<span id="cb86-662"><a href="#cb86-662" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-663"><a href="#cb86-663" aria-hidden="true" tabindex="-1"></a><span class="co"># pgC/ml * (1e-6 ug / 1 pg) * (1000 ml / 1)</span></span>
-<span id="cb86-664"><a href="#cb86-664" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-665"><a href="#cb86-665" aria-hidden="true" tabindex="-1"></a>shallow_pgC_ml <span class="sc">*</span> (<span class="fl">1e-6</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
-<span id="cb86-666"><a href="#cb86-666" aria-hidden="true" tabindex="-1"></a>deep_pgC_ml <span class="sc">*</span> (<span class="fl">1e-6</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
-<span id="cb86-667"><a href="#cb86-667" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb86-668"><a href="#cb86-668" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-669"><a href="#cb86-669" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-670"><a href="#cb86-670" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compare to Medina et al.</span></span>
-<span id="cb86-671"><a href="#cb86-671" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-672"><a href="#cb86-672" aria-hidden="true" tabindex="-1"></a>Review, so this includes several studies. Grazing effect in Table 3 is reported in bacteria per ml per day.</span>
-<span id="cb86-673"><a href="#cb86-673" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-674"><a href="#cb86-674" aria-hidden="true" tabindex="-1"></a>Min and max are both from Pachiadaki et al. deep water and at an interface. min: 18.7 max: 13600</span>
-<span id="cb86-675"><a href="#cb86-675" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb86-676"><a href="#cb86-676" aria-hidden="true" tabindex="-1"></a>Min and max in this study is 24 and 17285 cells consumed per ml per hour</span>
+<span id="cb86-652"><a href="#cb86-652" aria-hidden="true" tabindex="-1"></a><span class="co"># ug to pg: 1ug = 1E6 pg</span></span>
+<span id="cb86-653"><a href="#cb86-653" aria-hidden="true" tabindex="-1"></a>((min)<span class="sc">/</span><span class="dv">1000</span>)<span class="sc">/</span><span class="dv">24</span></span>
+<span id="cb86-654"><a href="#cb86-654" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-655"><a href="#cb86-655" aria-hidden="true" tabindex="-1"></a>((max)<span class="sc">/</span><span class="dv">1000</span>)<span class="sc">/</span><span class="dv">24</span></span>
+<span id="cb86-656"><a href="#cb86-656" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-657"><a href="#cb86-657" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb86-658"><a href="#cb86-658" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-659"><a href="#cb86-659" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-660"><a href="#cb86-660" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compare to Pernice et al.</span></span>
+<span id="cb86-661"><a href="#cb86-661" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-662"><a href="#cb86-662" aria-hidden="true" tabindex="-1"></a>Convert to ug C per L.</span>
+<span id="cb86-663"><a href="#cb86-663" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-664"><a href="#cb86-664" aria-hidden="true" tabindex="-1"></a>1 pg = 1e-6 ug</span>
+<span id="cb86-667"><a href="#cb86-667" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb86-668"><a href="#cb86-668" aria-hidden="true" tabindex="-1"></a>shallow_pgC_ml <span class="ot">&lt;-</span> <span class="dv">280</span></span>
+<span id="cb86-669"><a href="#cb86-669" aria-hidden="true" tabindex="-1"></a>deep_pgC_ml <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb86-670"><a href="#cb86-670" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-671"><a href="#cb86-671" aria-hidden="true" tabindex="-1"></a><span class="co"># pgC/ml * (1e-6 ug / 1 pg) * (1000 ml / 1)</span></span>
+<span id="cb86-672"><a href="#cb86-672" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-673"><a href="#cb86-673" aria-hidden="true" tabindex="-1"></a>shallow_pgC_ml <span class="sc">*</span> (<span class="fl">1e-6</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb86-674"><a href="#cb86-674" aria-hidden="true" tabindex="-1"></a>deep_pgC_ml <span class="sc">*</span> (<span class="fl">1e-6</span>) <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb86-675"><a href="#cb86-675" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb86-676"><a href="#cb86-676" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-677"><a href="#cb86-677" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-678"><a href="#cb86-678" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compare to Medina et al.</span></span>
+<span id="cb86-679"><a href="#cb86-679" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-680"><a href="#cb86-680" aria-hidden="true" tabindex="-1"></a>Review, so this includes several studies. Grazing effect in Table 3 is reported in bacteria per ml per day.</span>
+<span id="cb86-681"><a href="#cb86-681" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-682"><a href="#cb86-682" aria-hidden="true" tabindex="-1"></a>Min and max are both from Pachiadaki et al. deep water and at an interface. min: 18.7 max: 13600</span>
+<span id="cb86-683"><a href="#cb86-683" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-684"><a href="#cb86-684" aria-hidden="true" tabindex="-1"></a>Min and max in this study is 24 and 17285 cells consumed per ml per hour</span>
 </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
