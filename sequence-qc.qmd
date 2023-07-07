@@ -1,5 +1,14 @@
 ---
 title: "Sequence QC"
+format:
+  html:
+    code-fold: true
+    code-tools: true
+    code-copy: true
+    toc: true
+    toc-location: left
+    number-sections: true
+    number-depth: 2
 editor: visual
 ---
 
@@ -26,7 +35,7 @@ merged_asv <- read_delim("../../microeuks_deepbiosphere_datamine/microeuk-amplic
 
 ```{r}
 #| warning: false
-metadata <- read.csv("../../microeuks_deepbiosphere_datamine/microeuk-amplicon-survey/data-input/samplelist-metadata.csv")
+metadata <- read.csv("input-data/samplelist-metadata.csv")
 
 # head(metadata)
 # unique(metadata$Sample_actual)

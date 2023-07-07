@@ -1,10 +1,25 @@
 ---
-title: "Microbial eukaryotic ecology and food web contributions at two Mid-Cayman Rise deep-sea vent fields"
+title: "Microbial eukaryotic predation pressure and biomass at Mid-Cayman Rise: Implications for deep-sea carbon cycling"
 ---
 
+Website for *in prep* manuscript on microbial eukaryotic ecology at deep-sea hydrothermal vents. Hu et al. (in prep)
 
-Website for _in prep_ manuscript on microbial eukaryotic ecology at deep-sea hydrothermal vents. Hu et al. (in prep)
+**Summary**: Deep-sea hydrothermal vent geochemistry shapes the foundation of the microbial food web by fueling chemolithoautotrophic microbial activity. Microbial eukaryotes play a critical role in hydrothermal vent food webs as consumers, hosts of symbiotic bacteria, and as a nutritional source to higher trophic levels. This study aims to measure the cell concentration and grazing pressures of vent-associated microbial eukaryotes in low temperature diffuse hydrothermal fluids using grazing assays conducted at both ambient (shipboard) and in situ pressures. Fluids from the Von Damm and Piccard vent fields at the Mid-Cayman Rise in the Caribbean Sea were targeted, as each field represents a distinct geologic setting with correspondingly distinct fluid compositions. Results from in situ pressure experiments generally showed higher grazing rates and cell concentrations relative to the shipboard experiments, likely due to the impact of depressurization. This new quantification of protistan biomass in deep-sea hydrothermal vent ecosystems contributes to a more comprehensive understanding of the microbial food web in these environments. Hydrothermally-fuelled microbial food webs play a significant role in the broader deep-sea carbon budget by contributing to local carbon export and supply of nutrient resources to the deep ocean.
 
-For access to in prep data, please contact skhu[at]tamu.edu
+![ROV Jason (Credit: Rika Anderson)](images/20200124_143901-RA.jpg){width="350" fig-align="center"}
 
-* Raw sequence data are available through NCBI under SRA BioProject accession number PRJNA802868
+![Mustard Stand (Credit: WHOI)](images/Mustard_Stand.jpg){width="600" fig-align="center"}
+
+![Sampling IGTs on the RV Atlantis (Credit: Rika Anderson)](images/20200124_203220-RA.jpg){width="250" fig-align="center"}
+
+![Ravelin #2 (Credit: WHOI)](images/J2-621 Ravelin 2.jpg){width="600" fig-align="center"}
+
+![Filter collected via ROV Jason (Credit: Rika Anderson)](images/20200120_125433.jpg){width="250" fig-align="center"}
+
+![Bartizan (Credit: WHOI)](images/Bartizan.jpg){width="600" fig-align="center"}
+
+![Sampling the HOG](images/20200120_142043.jpg){width="400" fig-align="center"}
+
+Contact info: skhu\[at\]tamu.edu
+
+Raw sequence data are available through NCBI under SRA BioProject accession number PRJNA802868.

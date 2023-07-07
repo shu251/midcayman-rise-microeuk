@@ -1,6 +1,12 @@
 project:
   type: website
   output-dir: docs
+  render:
+    - index.qmd
+    - results.qmd
+    - grazing.qmd
+    - asv-analysis.qmd
+    - sequence-qc.qmd
 
 website:
   title: "Mid-Cayman Rise analysis"
@@ -16,8 +22,6 @@ website:
         text: Sequence analysis
       - href: sequence-qc.qmd
         text: Sequence QC & import
-      #- href: manuscript.qmd
-      #  text: Manuscript
 
 format:
   html:

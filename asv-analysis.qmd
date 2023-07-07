@@ -123,7 +123,10 @@ mcr_pca_pts <- data.frame(pca_logratio$x, SAMPLE = rownames(pca_logratio$x)) %>%
   rownames_to_column(var = "SAMPLENAME") %>% 
   separate(SAMPLENAME, c("SITE", "SAMPLETYPE", "YEAR", "VENT"), " ", 
         remove = FALSE) 
-head(mcr_pca_pts)
+# head(mcr_pca_pts)
+
+pc1 <- round(variance_logratio[1] * 100, 2)
+pc2 <- round(variance_logratio[2] * 100, 2)
 ```
 
 PCoA with all samples
@@ -132,6 +135,7 @@ PCoA with all samples
 ```{r, fig.height=8, fig.width=7}
 # samples <- as.character(unique(tmp$SAMPLENAME))
 # samples
+# mcr_pca_pts
 pca_plot <- mcr_pca_pts %>% 
   mutate(VENT_ORDER = factor(VENT, levels = vent_ids, labels = vent_fullname),
          SITE_ORDER = factor(SITE, levels = c("VonDamm", "Piccard"), labels = site_fullname)) %>% 
@@ -150,7 +154,8 @@ pca_plot <- mcr_pca_pts %>%
   guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
   theme(legend.title = element_blank(),
-        axis.text = element_text(color = "black", size = 13))
+        axis.text = element_text(color = "black", face = "bold", size = 13)) +
+  labs(x =  paste(pc1, "%"), y = paste(pc2, "%"))
 
 pca_plot
 ```
@@ -942,39 +947,8 @@ plot_corn <- function(cob_out, LEVEL, TITLE){
 What main supergroups are enriched at MCR?
 
 ```{r}
-# # vd
-# analysis_super_vd <- corncob_mcr(mcr_super %>% 
-#                                 phyloseq::subset_samples(SITE %in% vd))
-# 
-# analysis_super_picc <- corncob_mcr(mcr_super %>% 
-#                                 phyloseq::subset_samples(SITE %in% picc))
-
 analysis_super_all <- corncob_mcr(mcr_super %>% 
                                 phyloseq::subset_samples(SITE %in% mcr))
-
-# analysis_super_vd %>%
-#   filter(VARIABLE != "mu.(Intercept)") %>% 
-#   ggplot(aes(y = Supergroup, x = Estimate)) +
-#     geom_vline(xintercept = 0, alpha = 0.2) +
-#     geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
-#     geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
-#   facet_grid(. ~ VARIABLE, space = "free", scales = "free") +
-#   theme(legend.position = element_blank(),
-#         axis.text.y = element_text(color = "black")) +
-#   theme_minimal() +
-#   labs(x = "Coefficient", y = "", title = "VD supergroup")
-
-# analysis_super_picc %>%
-#   filter(VARIABLE != "mu.(Intercept)") %>% 
-#   ggplot(aes(y = Supergroup, x = Estimate)) +
-#     geom_vline(xintercept = 0, alpha = 0.2) +
-#     geom_errorbar(aes(xmin = (Estimate-Std..Error), xmax = (Estimate+Std..Error)), width = 0.2) +
-#     geom_point(aes(fill = Supergroup), shape = 21, color = "black") +
-#   facet_grid(. ~ VARIABLE, space = "free", scales = "free") +
-#   theme(legend.position = element_blank(),
-#         axis.text.y = element_text(color = "black")) +
-#   theme_minimal() +
-#   labs(x = "Coefficient", y = "", title = "piccard supergroup")
 ```
 
 Plot supergroup enrichment
@@ -1040,15 +1014,14 @@ analysis_class %>%
 
 > Class level looks pretty good. Keep this one. Looks at major taxonomic groups that were more enriched at vents? Work on the language here. Repeat vent vs. plume at ASV level. ID some of the core ASVs that can help elaborate on what we see above (table in supplementary)
 
-> *Interpretation* :
 
 ### Order corncob
 
-```{r}
+```{r, eval = FALSE}
 analysis_order <- corncob_mcr(mcr_order)
 ```
 
-```{r, fig.height=10, fig.width=10}
+```{r, eval = FALSE, fig.height=10, fig.width=10}
 # head(analysis_class)
 # unique(analysis_class$VARIABLE)
 analysis_order %>%
@@ -1103,11 +1076,11 @@ fam_corncob
 
 Plan to pairing with tree below
 
-```{r}
+```{r, eval = FALSE}
 analysis_genus <- corncob_mcr(mcr_genera)
 ```
 
-```{r}
+```{r, eval = FALSE}
 analysis_genus %>%
   unite(Genus, c(Phylum, Genus), sep = " ", remove = FALSE) %>%
   filter(VARIABLE != "mu.(Intercept)") %>%
@@ -1124,11 +1097,11 @@ analysis_genus %>%
 
 ### Species corncob
 
-```{r}
+```{r, eval = FALSE}
 analysis_spp <- corncob_mcr(mcr_spp)
 ```
 
-```{r, fig.height=10, fig.width=10}
+```{r, eval = FALSE, fig.height=10, fig.width=10}
 analysis_spp %>%
   unite(Species, c(Genus, Species), sep = " ", remove = FALSE) %>%
   filter(VARIABLE != "mu.(Intercept)") %>%
@@ -1166,11 +1139,12 @@ enriched_and_shared<- tax_table_shared %>%
 
 There was a total of 29 ASVs that were both a part of the enriched at vents (compared to background) and were present in both in situ and incubation (Tf) samples. These 29 ASVs represent a subset that we hypothesize are more likely to be involved in grazing. Another observation is that the majority of them are cosmopolitan. This indicates that based on the grazing experiments, the taxa that are enriched at vents and are subsequently members of the grazing population in the experiments are also able to inhabit plume and background.
 
-# Figure 4
+# Figure 3
 
-```{r, fig.width=18, fig.height=9}
-# pca_plot + fam_corncob +
-#   patchwork::plot_layout(ncol = 2, widths = c(1, 1)) + patchwork::plot_annotation(tag_levels = "a")
+```{r, warning=FALSE, fig.width=18, fig.height=9}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig3.svg", w = 18, h = 9)
+# pca_plot + fam_corncob + patchwork::plot_layout(ncol = 2, widths = c(1, 1)) + patchwork::plot_annotation(tag_levels = "a")
+# dev.off()
 ```
 
 

@@ -27,8 +27,14 @@ library(patchwork)
 Set color schematic
 
 ```{r}
-vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
-vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+# vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
+# vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+# Order by temperature
+vent_ids <- c("BSW","Plume", "LotsOShrimp", "Shrimpocalypse", 
+              "ShrimpHole", "X18", "Rav2", "MustardStand", "OMT")
+vent_fullname <- c("Background","Plume", "Lots 'O Shrimp", "Shrimpocalypse",  
+                   "Shrimp Hole", "X-18", "Ravelin #2", "Mustard Stand", "Old Man Tree")
+
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
 site_color <- c("#264653", "#E76F51")
@@ -156,17 +162,22 @@ The average euk cells per ml value was taken when TRUE replicates were conducted
 
 Plot all euk cell counts for supplement
 ```{r}
-vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
-vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+# Order by temperature
+vent_ids <- c("BSW","Plume", "LotsOShrimp", "Shrimpocalypse", 
+              "ShrimpHole", "X18", "Rav2", "MustardStand", "OMT")
+vent_fullname <- c("Background","Plume", "Lots 'O Shrimp", "Shrimpocalypse",  
+                   "Shrimp Hole", "X-18", "Ravelin #2", "Mustard Stand", "Old Man Tree")
+
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
 # head(counts_cellsml_avg)
 ```
 
-### Figure S3
+### Figure S1
 ```{r}
 #| fig-width: 8
-#| fig-height: 13
+#| fig-height: 10
+# svg(filename = "../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS1.svg")
 counts_cellsml_avg %>% 
   mutate(EXP_CATEGORY = case_when(
     EXP_TYPE == "Bag" ~ "Shipboard",
@@ -186,16 +197,6 @@ counts_cellsml_avg %>%
   scale_shape_manual(values = c(1, 21)) +
     scale_fill_manual(values = c("#e7298a", "#fcbba1", "#c6dbef")) +
     scale_color_manual(values = c("#e7298a", "#fcbba1", "#c6dbef")) +
-  ## Plot with circle and diamond:
-  # ggplot(aes(x = NameOrder, y = MEAN, group = NameOrder,
-  #                                         fill = VARIABLE,
-  #                                         shape = EXP_CATEGORY)) +
-  # geom_jitter(size = 3, stroke = 1, color = "black", aes(fill = VARIABLE, 
-  #                                       shape = EXP_CATEGORY)) +
-  # geom_boxplot(alpha = 0.1) +
-  # scale_shape_manual(values = c(23, 21)) +
-  #   scale_fill_manual(values = c("#e7298a", "#fcbba1", "#c6dbef")) +
-    ### TO here
     coord_flip() +
     scale_y_log10() +
     facet_grid(SiteOrder ~ EXP_CATEGORY, space = "free", scale = "free") +
@@ -206,6 +207,7 @@ counts_cellsml_avg %>%
         legend.title = element_blank()) +
     labs(x = "", y = bquote("Eukaryote cells "~mL^-1),
          title = "Distribution of all eukaryotic cell counts")
+# dev.off()
 ```
 
 Eukaryote cell concentration (cells/ml) are lower in the background and plume samples compared to vent sites. \~300 cells/ml in background and plume compared to \~1000 cells per ml at the vent sites. These values are also consistent between each vent site (Von Damm and Piccard) and between Bag and IGT samples.
@@ -218,9 +220,12 @@ Eukaryote cell concentration (cells/ml) are lower in the background and plume sa
 ## Plot eukaryote cell concentration over time.
 
 Include plot over time.
-
+#### Figure S4
 ```{r}
+#| fig-width: 7
+#| fig-height: 6
 # Plot trend line of euk cell count for all experiments
+# svg(filename = "../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS4.svg")
 counts_cellsml_avg %>%
   mutate(EXP_CATEGORY = case_when(
     EXP_TYPE == "Bag" ~ "Shipboard",
@@ -253,6 +258,7 @@ counts_cellsml_avg %>%
                             title = element_text(size = 7, face = "bold"),
                             axis.title = element_text(size = 9)) +
     labs(title = "Total euk cell counts for each experiment", y = bquote("Average eukaryote cells "~mL^-1), x = "Time point")
+# dev.off()
 ```
 
 > note there is an overall drop in euk cells/ml in the final time point. Especially with the IGT samples. Take this into consideration
@@ -357,7 +363,19 @@ insitu_proks %>% filter(Name != "Quakeplume") %>%
 Factor site names, etc.
 
 ```{r}
-insitu_proks$Name_order <- factor(insitu_proks$Name, levels = c("BSW", "Plume", "Quakeplume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole", "HotChimlet1", "ShrimpGulley", "SouthofHotChimlet", "SouthofLungSnack", "ArrowLoop", "Bartizan", "Rav1"), labels = c("Background","Plume", "Quakeplume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole", "Hot Chimlet #1", "Shrimp Gulley", "South of Hot Chimlet", "South of LungSnack", "Arrow Loop", "Bartizan", "Ravelin #1"))
+# Ordered by temperature
+insitu_proks$Name_order <- factor(insitu_proks$Name, levels = c("BSW", "Plume",
+                                                                "ShrimpHole", "X18", "MustardStand", 
+                                                                "Rav2", "OMT","Bartizan","ArrowLoop", "Rav1",
+                                                                "Quakeplume", "LotsOShrimp", "SouthofHotChimlet",
+                                                                "SouthofLungSnack", "Shrimpocalypse", "ShrimpGulley", 
+                                                                "HotChimlet1"), 
+                                  labels = c("Background","Plume", 
+                                             "Shrimp Hole", "X-18","Mustard Stand",
+                                             "Ravelin #2", "Old Man Tree", "Bartizan", "Arrow Loop", "Ravelin #1",
+                                          
+                                             "Quakeplume", "Lots 'O Shrimp", "South of Hot Chimlet", 
+                                             "South of LungSnack", "Shrimpocalypse", "Shrimp Gulley", "Hot Chimlet #1"))
 
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
@@ -744,7 +762,7 @@ calcs_wslope_regression <- calculate_lm(counts_flp_calcs_all)
 ### Plot linear regression trend
 
 Plot all shipboard experiments with estimated slope.
-#### Figure S1
+
 ```{r, fig.height=5.5, fig.width=6}
 # | fig-width: 7
 # | fig-height: 8
@@ -838,10 +856,12 @@ igtregression
 
 > Results are more consistent across experiments when we remove Tf from the IGT experiments
 
-#### Figure S1 compilation
+#### Figure S3
 ```{r, fig.height=12, fig.width=7}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS3.svg", h = 12, w = 7)
 shipboardregression + igtregression +
   patchwork::plot_layout(ncol = 1, heights = c(1, 0.7)) + patchwork::plot_annotation(tag_levels = "a")
+# dev.off()
 ```
 
 ### Repeat, but include technical replicates
@@ -868,7 +888,9 @@ igt_regression_noTf_wb <- calculate_lm(IGT_lm_woTf_wb) # Recalculate
 
 Plot IGT grazing experiments with newly calculated grazing effect.
 
+#### Figure S8
 ```{r}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS8.svg")
 igt_regression_noTf_wb %>% 
   # filter(SizeFrac == "total_euks") %>% 
   # filter(TYPE != "IGT") %>% 
@@ -892,6 +914,7 @@ igt_regression_noTf_wb %>%
         strip.text = element_text(color = "black", size = 7),
                      legend.title = element_blank(),
                      legend.position = "right")
+dev.off()
 ```
 
 ## Compile and save grazing experiment results
@@ -903,8 +926,10 @@ calcs_wslope_regression_update <- calcs_wslope_regression %>%
   data.frame
 
 # Factor
-vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
-vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+vent_ids <- c("BSW","Plume", "LotsOShrimp", "Shrimpocalypse", 
+              "ShrimpHole", "X18", "Rav2", "MustardStand", "OMT")
+vent_fullname <- c("Background","Plume", "Lots 'O Shrimp", "Shrimpocalypse",  
+                   "Shrimp Hole", "X-18", "Ravelin #2", "Mustard Stand", "Old Man Tree")
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
 # Factor for shipboard
@@ -941,7 +966,7 @@ dtaf_avg <- dtaf %>%
 ## Bag grazing experiment controls
 
 ```{r, fig.height=7, fig.width=7}
-dtaf_avg %>% 
+bag_ctrls <- dtaf_avg %>% 
   filter(Site != "IGT") %>% 
   ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
   geom_rect(data = filter(dtaf_avg, TimePoint == "T0", Site != "IGT"), aes(
@@ -958,14 +983,15 @@ dtaf_avg %>%
                           title = element_text(size = 10, face = "bold"),
                           axis.title = element_text(size = 9)) +
   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
+bag_ctrls
 ```
 
 ## IGT experiment controls
 
 Repeat for IGT experiments.
 
-```{r}
-dtaf_avg %>% 
+```{r, fig.width=4, fig.height=3}
+igt_ctrl_plot <- dtaf_avg %>% 
   filter(Site == "IGT") %>% 
   ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
   geom_rect(data = filter(dtaf_avg, TimePoint == "T0", Site == "IGT"), aes(
@@ -982,7 +1008,20 @@ dtaf_avg %>%
                           title = element_text(size = 10, face = "bold"),
                           axis.title = element_text(size = 9)) +
   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
+igt_ctrl_plot
 ```
+
+##### Figure S5
+```{r}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS5_1.svg", w = 7, h = 7)
+bag_ctrls + theme(legend.position = "none")
+# dev.off()
+
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS5_2.svg", w = 4, h = 3)
+(igt_ctrl_plot + theme(legend.position = "none"))
+# dev.off()
+```
+
 
 # Generate complete table with grazing rates and values
 
@@ -1059,8 +1098,10 @@ Introduce factors in table for visualizations
 ```{r}
 type_order <- c("Vent-Bag", "Vent-IGT", "Plume", "Background")
 table_grazerate_wflp$TYPE <- factor(table_grazerate_wflp$type, levels = type_order)
-vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
-vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+vent_ids <- c("BSW","Plume", "LotsOShrimp", "Shrimpocalypse", 
+              "ShrimpHole", "X18", "Rav2", "MustardStand", "OMT")
+vent_fullname <- c("Background","Plume", "Lots 'O Shrimp", "Shrimpocalypse",  
+                   "Shrimp Hole", "X-18", "Ravelin #2", "Mustard Stand", "Old Man Tree")
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
 site_color <- c("#E76F51", "#264653")
@@ -1395,8 +1436,10 @@ Table reports the total pg of carbon per ml when we consider the whole eukaryote
 Report in pg of C per ml. 
 
 ```{r}
-vent_ids <- c("BSW","Plume", "Shrimpocalypse", "LotsOShrimp", "X18", "OMT", "Rav2", "MustardStand", "ShrimpHole")
-vent_fullname <- c("Background","Plume", "Shrimpocalypse", "Lots 'O Shrimp", "X-18", "Old Man Tree", "Ravelin #2", "Mustard Stand", "Shrimp Hole")
+vent_ids <- c("BSW","Plume", "LotsOShrimp", "Shrimpocalypse", 
+              "ShrimpHole", "X18", "Rav2", "MustardStand", "OMT")
+vent_fullname <- c("Background","Plume", "Lots 'O Shrimp", "Shrimpocalypse",  
+                   "Shrimp Hole", "X-18", "Ravelin #2", "Mustard Stand", "Old Man Tree")
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
 
@@ -1512,8 +1555,10 @@ Combined supplementary plot showing two routes of determining total biomass.
 
 ## Figure S2
 ```{r, fig.height=8, fig.width=7}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS2.svg", h = 8, w = 7)
 by_biovol_plot + by_sizefrac_plot + patchwork::plot_layout(ncol = 1) +
   plot_annotation(tag_levels = "a")
+# dev.off()
 ```
 
 ## Compare total carbon biomass - euks
@@ -1758,13 +1803,13 @@ grazing_rate + scale_y_log10(limits = c(1,1e5))
 # Figure 1 compilation
 
 ```{r, fig.height=8, fig.width=10}
-# euk_prok_flp_rate <- 
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig1.svg", w = 10, h = 8)
   (euk_plot + theme(legend.position = "none")) +
   (prok_plot + theme(legend.position = "none")) +
   (grazing_min_plot + theme(legend.position = "none") + scale_y_continuous(limits = c(0, 0.02))) +
   (grazing_rate + scale_y_log10(limits = c(1,1e5)) + theme(legend.position = "none")) + patchwork::plot_layout(ncol = 2) +
   patchwork::plot_annotation(tag_levels = "a")
-  
+# dev.off()
 ```
 
 ## Grazing rate vs. cells ml
@@ -1884,7 +1929,9 @@ prok_temp
 # Figure 2 compilation
 
 ```{r, fig.height=10, fig.width=7}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig2.svg", h = 10, w = 7)
 (euk_temp + labs(x = "") + theme(legend.position = "none")) + prok_temp + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a")
+# dev.off()
 ```
 
 
@@ -1966,9 +2013,12 @@ allrates <- all_vents %>%
 
 Add Gorda Ridge comparison to supplementary?
 
-```{r}
-allrates
+#### Figure S7
+```{r, fig.height=4, fig.width=6}
+# allrates
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS7.svg", h = 4, w = 6)
 allrates + scale_y_log10()
+# dev.off()
 # allrates + scale_y_continuous(limits = c(0,1000))
 ```
 
@@ -2014,22 +2064,60 @@ allrates_nonzero + scale_y_log10()
 # dev.off()
 ```
 
-Panel plot, cells per ml and grazing rate
 
-```{r Plot cell conc and rates, fig.width=6, fig.height=10}
-# svg("plot-gcellconc-grazing-log.svg", h = 10, w = 6)
-# grazing_rate + scale_y_log10(limits = c(1e-1,1e5), breaks=10^(0:7))
-# plot_grid(conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem"),
-#           conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem"),
-# allrates_nonzero + scale_y_log10(), ncol = 1)
+## Plot variables as a factor of grazing rate.
+
+```{r}
+head(grazing_wenv)
+
+
+```
+##### Figure S6
+```{r, fig.height=8, fig.width=10}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS6.svg", h = 8, w = 10)
+grazing_wenv %>% 
+    mutate(TEMP = as.numeric(temp)) %>% 
+    mutate(EXP_TYPE = case_when(
+      grepl("IGT", Experiment_rep) ~ "IGT",
+      TRUE ~ "Shipboard"
+    )) %>% 
+  unite(SITE_TYPE, SiteOrder, EXP_TYPE, sep = "-", remove = FALSE) %>% 
+  filter(!(SITE_TYPE == "NA-IGT")) %>% 
+  mutate(EUK_ml = as.character(EUK_ml)) %>% 
+  mutate(PROK_ml = as.character(PROK_ml)) %>%
+  mutate(temp = as.character(temp),
+         pH = as.character(pH),
+         mg = as.character(mg),
+         h2 = as.character(h2),
+         ch4 = as.character(ch4),
+         percseawater = as.character(percseawater)) %>% 
+  select(SITE_TYPE, SiteOrder, EXP_TYPE, Experiment_rep, GRAZING_EFFECT_hr, EUK_ml, PROK_ml, temp, DEPTH, pH, percseawater, mg, h2, ch4) %>% 
+  pivot_longer(cols = EUK_ml:ch4, values_to = "VALUES", values_ptypes = list(VALUES = character())) %>% 
+  mutate(VALUES = as.numeric(VALUES)) %>% 
+  drop_na() %>% 
+  ggplot(aes(x = GRAZING_EFFECT_hr, y = VALUES, 
+             color = SITE_TYPE, fill = SITE_TYPE, shape = SITE_TYPE)) +
+  geom_point(aes(shape = SITE_TYPE), size = 4, stroke = 2) +
+  facet_wrap(~ name, scales = "free") +
+  scale_y_continuous() +
+  scale_x_log10() +
+  scale_shape_manual(values = c(21, 21, 21, 21)) +
+  scale_fill_manual(values = c("white", "#264653", "white", "#E76F51")) +
+  scale_color_manual(values = c("#264653", "#264653", "#E76F51", "#E76F51")) +
+  theme_minimal() +
+    theme(panel.grid.minor = element_blank(),
+           axis.line = element_line(colour = "black"), 
+           axis.text.x = element_text(color="black", size = 13), 
+           axis.text.y = element_text(color="black", size = 13),
+           axis.title = element_text(color="black", size = 13),
+           axis.ticks = element_line(),
+           strip.text = element_text(color="black", size = 13), legend.title = element_blank()) +
+  labs(x = bquote("Cells consumed "~mL^-1 ~hr^-1), y = bquote("Eukaryote cells "~mL^-1),
+       title = "")
 # dev.off()
 ```
 
-```{r, fig.width=7, fig.height=7}
-# svg("cells-per-ml.svg", h = 7, w = 7)
-# conc_rate_plot_mcr(biomass_rate_plot, "EUK_ml", "EUK_sem") + conc_rate_plot_mcr(biomass_rate_plot, "PROK_ml", "PROK_sem") + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a") 
-# dev.off()
-```
+
 
 # Linear regression & tidy models
 
