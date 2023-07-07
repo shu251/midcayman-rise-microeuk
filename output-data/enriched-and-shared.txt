@@ -1,0 +1,30 @@
+FeatureID	FIELD_PA	EXP_PA	TYPE_PA	Taxon
+006f5664d25385baa7bc38462247b4eb	Shared across	Shared	Cosmo	Eukaryota;Stramenopiles;Ochrophyta;Chrysophyceae;Chrysophyceae_X;Chrysophyceae_Clade-G;Chrysophyceae_Clade-G_X;Chrysophyceae_Clade-G_X_sp.;
+2050c405da8b91a37e6d935f96430631	Shared across	Shared	Cosmo	Eukaryota;Rhizaria;Radiolaria;RAD-B;RAD-B_X;RAD-B_X_Group-IVb;RAD-B_X_Group-IVb_X;RAD-B_X_Group-IVb_X_sp.;
+21db22ebc7cfea13a50904a42402c104	VonDamm only	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Oligohymenophorea;Peritrichia_2;Sessilida
+44538c3c4e3c271474418662f6d24a51	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Dinoflagellata;Dinophyceae;Peridiniales;Thoracosphaeraceae;Pentapharsodinium;Pentapharsodinium_sp.;
+48a8b66d1697382c890ee998ccab7e4c	Shared across	Shared	Cosmo	Eukaryota;Rhizaria;Radiolaria;Acantharea;Acantharea_1;Acantharea_1_X;Acantharea_1_XX;Acantharea_1_XX_sp.;
+49b3382207b01b058dcee0641ea6e757	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;CONThreeP;CONThreeP_X;CONThreeP_XX
+4f74a3f42faa2b0b57547fbee5bf684f	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Nassophorea;Nassophorea_X;Discotrichidae;NASSO_1;NASSO_1_sp.;
+5f50df235eebb78747c5e399074a9c01	Shared across	Shared	Cosmo	Eukaryota;Stramenopiles;Opalozoa;MAST-3;MAST-3I;MAST-3I_X;MAST-3I_XX;MAST-3I_XX_sp.;
+63bba2c6d70ced01529a592a9c9bf82a	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Dinoflagellata;Syndiniales;Dino-Group-II;Dino-Group-II-Clade-22;Dino-Group-II-Clade-22_X;Dino-Group-II-Clade-22_X_sp.;
+67db249b5b33c70625b3660e9b2984be	VonDamm only	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Oligohymenophorea;Scuticociliatia_2;Scuticociliatia_2_X;Cyclidium_3;Cyclidium_glaucoma;
+6e360d8060fb6ca31a2d19cf53842f66	Shared across	Shared	Cosmo	Eukaryota;Hacrobia;Haptophyta;Prymnesiophyceae;Phaeocystales;Phaeocystaceae;Phaeocystis;Phaeocystis_sp.;
+704a44e660832f9581db751f2509c4d5	VonDamm only	Shared	Cosmo	Eukaryota;Opisthokonta;Metazoa;Craniata;Craniata_X;Teleostei
+74c8498d80a1a1dae35d9b77c6bdcb01	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Dinoflagellata;Dinophyceae;Gymnodiniales;Gymnodiniaceae;Gymnodinium;Gymnodinium_sp.;
+9251e8578062ae5ff73218117a6def92	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Spirotrichea;Strombidiida;Tontoniidae_B;Pseudotontonia;Pseudotontonia_sp.;
+99ba81c88f63f83daf290add3918d38b	Shared across	Shared	Cosmo	Eukaryota;Stramenopiles;Ochrophyta;Pelagophyceae;Pelagomonadales;Pelagomonadaceae;Pelagomonas;Pelagomonas_calceolata;
+a31fb4fb0b995cf99efb10082ceb7548	Shared across	Shared	Vent only	Eukaryota;Alveolata;Dinoflagellata;Syndiniales;Dino-Group-I;Dino-Group-I-Clade-3;Dino-Group-I-Clade-3_X;Dino-Group-I-Clade-3_X_sp.;
+ad7b06607ae99959b111c4dcf48048d1	Shared across	Shared	Cosmo	Eukaryota;Stramenopiles;Ochrophyta;Chrysophyceae;Chrysophyceae_X;Chrysophyceae_Clade-F;Paraphysomonas
+b7e9469f15199708294c1255351e10b3	VonDamm only	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Phyllopharyngea;Cyrtophoria_7;Hartmannulidae;Hartmannulidae_X;Hartmannulidae_X_sp.;
+bb9e609cc2f44177dd0a1d080feb9c47	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Spirotrichea;Strombidiida;Strombidiidae_J;Strombidiidae_J_X;Strombidiidae_J_X_sp.;
+ce63126f3a0137ea0b725879b5cab86b	VonDamm only	Shared	Cosmo	Eukaryota;Opisthokonta;Metazoa;Annelida;Annelida_X;Annelida_XX
+d0b0fa52b64629c756d1d11f458486c1	VonDamm only	Shared	Cosmo	Eukaryota;Stramenopiles;Stramenopiles_X;Stramenopiles_XX;Stramenopiles_XXX;Stramenopiles_XXXX;Stramenopiles_XXXXX;Stramenopiles_XXXXX_sp.;
+db81c9c7fb578f089eaeb2acd4f8295d	Shared across	Shared	Cosmo	Eukaryota;Opisthokonta;Metazoa;Arthropoda;Crustacea;Malacostraca
+dd7263f55f2d19fe7505479928b09db7	Shared across	Shared	Cosmo	Eukaryota;Alveolata;Ciliophora;Phyllopharyngea;Cyrtophoria_8;Dysteriidae
+e2b1f27274d539b3740f48105947f3cc	Shared across	Shared	Cosmo	Eukaryota;Stramenopiles;Ochrophyta;Dictyochophyceae;Dictyochophyceae_X;Florenciellales
+e4ddabe7a0458708071b45065394dfa3	Shared across	Shared	Vent only	Eukaryota;Rhizaria;Cercozoa;Filosa-Granofilosea;Filosa-Granofilosea_X;Massiteriidae;Massisteria;Massisteria_sp.;
+e83fa06fe7a9b83c11922ee64672d2b0	Shared across	Shared	Cosmo	Eukaryota;Opisthokonta;Metazoa;Cnidaria;Cnidaria_X;Hydrozoa;Hydrozoa_X;Hydrozoa_X_sp.;
+e9c2c1ed010bb04f6434f018332f1b7a	Shared across	Shared	Cosmo	Eukaryota;Hacrobia;Haptophyta;Prymnesiophyceae;Prymnesiophyceae_Clade_D;Prymnesiophyceae_Clade_D_X;Prymnesiophyceae_Clade_D_XX;Prymnesiophyceae_Clade_D_XX_sp.;
+efc68ab89402795c76d7288ab0af2fe8	Shared across	Shared	Cosmo	Eukaryota;Hacrobia;Haptophyta;Prymnesiophyceae;Prymnesiales;Chrysochromulinaceae;Chrysochromulina;Chrysochromulina_sp.;
+f2110ae20894407f3712b1aeeee82f41	VonDamm only	Shared	Cosmo	Eukaryota;Opisthokonta;Metazoa;Mollusca;Gastropoda;Vetigastropoda

@@ -1,0 +1,13 @@
+"","CLASSIFICATION","ORIGIN","MEAN","MAX","MIN"
+"1","Non-vent","bybiovolume",12.9393,17.2223,8.6563
+"2","Vent","bybiovolume",172.183,391.8334,38.0949
+"3","Piccard (vent only)","bybiovolume",165.4408,217.6852,95.7815
+"4","Von Damm (vent only)","bybiovolume",175.5541,391.8334,38.0949
+"5","Shipboard (vent only)","bybiovolume",127.2422,188.6605,38.0949
+"6","IGT (vent only)","bybiovolume",224.9414,391.8334,145.1235
+"7","Non-vent","sizefrac",2.4883,3.5071,1.4694
+"8","Vent","sizefrac",4.9972,11.1115,0.2388
+"9","Piccard (vent only)","sizefrac",4.5898,10.8386,0.6004
+"10","Von Damm (vent only)","sizefrac",5.2009,11.1115,0.2388
+"11","Shipboard (vent only)","sizefrac",3.4537,7.7532,0.2388
+"12","IGT (vent only)","sizefrac",8.5155,20.4947,1.0006
