@@ -4,7 +4,9 @@ Sarah Hu _In preparation_
 
 https://shu251.github.io/midcayman-rise-microeuk/
 
-Sequences -[![DOI](https://img.shields.io/badge/NSF-OCE0939564-blue.svg)](https://www.bco-dmo.org/dataset/828392)
+Sequences [![DOI](https://img.shields.io/badge/NSF-OCE0939564-blue.svg)](https://www.bco-dmo.org/dataset/828392)
+
+[SRA sequence](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA802868/)
 
 ## Premise
 
