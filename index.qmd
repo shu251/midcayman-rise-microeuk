@@ -1,6 +1,8 @@
 ---
-title: "Microbial eukaryotic predation pressure and biomass at Mid-Cayman Rise: Implications for deep-sea carbon cycling"
+title: "Microbial eukaryotic predation pressure and biomass at deep-sea hydrothermal vents: Implications for deep-sea carbon cycling"
 ---
+
+Sarah K. Hu Rika E. Anderson, Maria G. Pachiadaki, Virginia P. Edgcomb, Margrethe H. Serres, Sean P. Sylva, Christopher R. German, Jeffrey S. Seewald, Susan Q. Lang, & Julie A. Huber
 
 Website for *in prep* manuscript on microbial eukaryotic ecology at deep-sea hydrothermal vents. Hu et al. (in prep)
 

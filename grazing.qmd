@@ -956,11 +956,20 @@ dtaf <- bac_ctrl %>%
   data.frame
 # View(bac_ctrl)
 # head(dtaf)
-
+dtaf
 dtaf_avg <- dtaf %>% 
   group_by(TimePoint, Stain, Site, Name) %>% 
   summarise(Avg_cellsperml = mean(Cells.ml)) %>% 
   data.frame
+dtaf_avg
+
+# Get starting FLP amounts
+dtaf %>% 
+  filter(FLP_t0 == "use") %>% 
+  # group_by(Name) %>% 
+  summarise(MEAN = mean(Cells.ml),
+            MIN = min(Cells.ml),
+            MAX = max(Cells.ml))
 ```
 
 ## Bag grazing experiment controls
@@ -1928,9 +1937,19 @@ prok_temp
 
 # Figure 2 compilation
 
-```{r, fig.height=10, fig.width=7}
+```{r, warnings=FALSE, fig.height=10, fig.width=7}
+# fig2 <- (euk_temp + labs(x = "") + theme(legend.position = "none")) + prok_temp + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a")
+# 
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig2.svg", h = 10, w = 7)
-(euk_temp + labs(x = "") + theme(legend.position = "none")) + prok_temp + patchwork::plot_layout(ncol = 1) + patchwork::plot_annotation(tag_levels = "a")
+# fig2
+# dev.off()
+# 
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig2-a.svg", h = 5, w = 7)
+# euk_temp
+# dev.off()
+# 
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig2-b.svg", h = 5, w = 7)
+# prok_temp
 # dev.off()
 ```
 
