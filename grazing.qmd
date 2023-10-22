@@ -170,28 +170,33 @@ vent_fullname <- c("Background","Plume", "Lots 'O Shrimp", "Shrimpocalypse",
 
 site_ids <- c("VD", "Piccard")
 site_fullname <- c("Von Damm", "Piccard")
-# head(counts_cellsml_avg)
+head(counts_cellsml_avg)
 ```
 
-### Figure S1
+### Figure S2
 ```{r}
 #| fig-width: 8
 #| fig-height: 10
-# svg(filename = "../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS1.svg")
+# svg(filename = "../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS2.svg")
 counts_cellsml_avg %>% 
   mutate(EXP_CATEGORY = case_when(
     EXP_TYPE == "Bag" ~ "Shipboard",
     TRUE ~ "IGT"
+  )) %>% 
+  mutate(VARIABLE_FIX = case_when(
+    VARIABLE == "microCONC" ~ "microeukaryote",
+    VARIABLE == "nanoCONC" ~ "nanoeukaryote",
+    VARIABLE == "eukCONC" ~ "Total eukaryote"
   )) %>% 
   # Factor name order and label
   mutate(SiteOrder = factor(Site, levels = site_ids, labels = site_fullname)) %>% 
   mutate(NameOrder = factor(Name, levels = vent_ids, labels = vent_fullname)) %>% 
   # Plot with outline vs. solid circle
   ggplot(aes(x = NameOrder, y = MEAN, group = NameOrder,
-                                          fill = VARIABLE,
-                                          color = VARIABLE,
+                                          fill = VARIABLE_FIX,
+                                          color = VARIABLE_FIX,
                                           shape = EXP_CATEGORY)) +
-  geom_jitter(size = 2, stroke = 2, aes(fill = VARIABLE, color = VARIABLE,
+  geom_jitter(size = 2, stroke = 2, aes(fill = VARIABLE_FIX, color = VARIABLE_FIX,
                                         shape = EXP_CATEGORY)) +
   geom_boxplot(alpha = 0.1) +
   scale_shape_manual(values = c(1, 21)) +
@@ -220,7 +225,8 @@ Eukaryote cell concentration (cells/ml) are lower in the background and plume sa
 ## Plot eukaryote cell concentration over time.
 
 Include plot over time.
-#### Figure S4
+
+#### Figure S5
 ```{r}
 #| fig-width: 7
 #| fig-height: 6
@@ -385,6 +391,18 @@ site_fill <- c("#E76F51", "#264653")
 # names(site_color) <- site_fullname
 ```
 
+Write function to output scientific notation in the plot with `x 10^a`
+```{r}
+library(scales)
+scientific_10 = function(x) {
+  ifelse(
+    x==0, "0",
+    parse(text = sub("e[+]?", " %*% 10^", scales::scientific_format()(x)))
+  )
+} 
+```
+
+
 ```{r}
 prok_plot <- ggplot(insitu_proks, aes(x = Name_order, y = MEAN)) +
   geom_errorbar(aes(ymax = (MEAN + SEM), ymin = (MEAN - SEM)), width = 0.2) +
@@ -394,7 +412,9 @@ prok_plot <- ggplot(insitu_proks, aes(x = Name_order, y = MEAN)) +
   scale_fill_manual(values = c("#E76F51", "#264653")) +
   scale_color_manual(values = c("#E76F51", "#264653")) +
   labs(y = bquote("Prokaryote cells "~mL^-1), x = "", title = "") +
-  scale_y_log10() +
+  scale_y_log10(label = scientific_10) +
+  # scale_y_log10(label=trans_format("log10",math_format(10^.x))) +
+  # scale_y_continuous(label = scientific_10) +
   theme_minimal() +
     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
            panel.background = element_blank(), 
@@ -856,7 +876,8 @@ igtregression
 
 > Results are more consistent across experiments when we remove Tf from the IGT experiments
 
-#### Figure S3
+#### Figure S4
+
 ```{r, fig.height=12, fig.width=7}
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS3.svg", h = 12, w = 7)
 shipboardregression + igtregression +
@@ -888,9 +909,9 @@ igt_regression_noTf_wb <- calculate_lm(IGT_lm_woTf_wb) # Recalculate
 
 Plot IGT grazing experiments with newly calculated grazing effect.
 
-#### Figure S8
+#### Figure S9
 ```{r}
-# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS8.svg")
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS9_new.svg")
 igt_regression_noTf_wb %>% 
   # filter(SizeFrac == "total_euks") %>% 
   # filter(TYPE != "IGT") %>% 
@@ -914,7 +935,7 @@ igt_regression_noTf_wb %>%
         strip.text = element_text(color = "black", size = 7),
                      legend.title = element_blank(),
                      legend.position = "right")
-dev.off()
+# dev.off()
 ```
 
 ## Compile and save grazing experiment results
@@ -950,84 +971,106 @@ All incubations had control experiments run alongside them. This was to ensure a
 bac_ctrl <- read.delim("input-data/bac-counts-compiled.txt")
 # dim(bac_ctrl)
 dtaf <- bac_ctrl %>% 
+  mutate(ORIG_ID = Site) %>% 
   separate(SampleID, c("exp", "Replicate", "TimePoint"), sep = "-", remove = FALSE) %>% 
   separate(Site, c("Site", "Name"), sep = "-", remove = FALSE) %>% 
   filter(Stain == "DTAF") %>% 
+  filter(!(Name == "Rav2" & Cells.ml > 90000)) %>% # remove inconsistent replicate from Ravelin #2
+  filter(!(Name == "Rav2" & Replicate == "REP1")) %>% # remove inconsistent replicate from Ravelin #2
   data.frame
-# View(bac_ctrl)
-# head(dtaf)
-dtaf
-dtaf_avg <- dtaf %>% 
-  group_by(TimePoint, Stain, Site, Name) %>% 
-  summarise(Avg_cellsperml = mean(Cells.ml)) %>% 
-  data.frame
-dtaf_avg
 
-# Get starting FLP amounts
-dtaf %>% 
-  filter(FLP_t0 == "use") %>% 
-  # group_by(Name) %>% 
-  summarise(MEAN = mean(Cells.ml),
+# 
+dtaf_avg <- dtaf %>%
+  group_by(TimePoint, Stain, Site, Name) %>%
+  summarise(Avg_cellsperml = mean(Cells.ml),
             MIN = min(Cells.ml),
-            MAX = max(Cells.ml))
+            MAX = max(Cells.ml)) %>%
+  data.frame
+# dtaf_avg
 ```
 
 ## Bag grazing experiment controls
 
+Option to plot averages. However, consistency between Replicate 1 and 2 was not always great. So plotting individually is best to show that the FLP do not disappear due to anomalous reasons.
+
 ```{r, fig.height=7, fig.width=7}
-bag_ctrls <- dtaf_avg %>% 
+# bag_ctrls <- dtaf_avg %>% 
+#   filter(Site != "IGT") %>% 
+#   ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
+#   geom_errorbar(aes(ymin = MIN, ymax = MAX), width = 0.1) +
+#   geom_rect(data = filter(dtaf_avg, TimePoint == "T0", Site != "IGT"), aes(
+#                                            ymin = (Avg_cellsperml-(0.15*Avg_cellsperml)),
+#                                            ymax = (Avg_cellsperml+(0.15*Avg_cellsperml))), color = NA, alpha = 0.4, xmin = 0, xmax = 6, fill = "black") +
+#   geom_line(aes(group = Name)) +
+#   geom_point(stat = "identity", aes(shape = Site, fill = Name), size = 2) +
+#   # scale_fill_manual(values = c("black","#9970ab", "#5aae61")) +
+#   facet_wrap(Name ~ Site) +
+#   scale_y_log10(labels = scientific_10) +
+#   theme_bw() + theme(strip.background = element_blank(), 
+#                           legend.title = element_blank(),
+#                      axis.text = element_text(size = 10, color = "black"),
+#                           title = element_text(size = 10, face = "bold"),
+#                           axis.title = element_text(size = 9)) +
+#   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
+# bag_ctrls
+```
+
+```{r, fig.height=7, fig.width=8}
+# View(dtaf)
+ship_ctrls_reps <- dtaf %>% 
   filter(Site != "IGT") %>% 
-  ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
-  geom_rect(data = filter(dtaf_avg, TimePoint == "T0", Site != "IGT"), aes(
-                                           ymin = (Avg_cellsperml-(0.1*Avg_cellsperml)),
-                                           ymax = (Avg_cellsperml+(0.1*Avg_cellsperml))), color = NA, alpha = 0.4, xmin = 0, xmax = 6, fill = "black") +
-  geom_line(aes(group = Name)) +
-  geom_point(stat = "identity", aes(shape = Site, fill = Name), size = 2) +
+  ggplot(aes(x = TimePoint, y = Cells.ml, fill = Name, shape = Replicate)) +
+  geom_rect(data = filter(dtaf, TimePoint == "T0", Site != "IGT"), aes(
+                                           ymin = (Cells.ml-(0.15*Cells.ml)),
+                                           ymax = (Cells.ml+(0.15*Cells.ml))), color = NA, alpha = 0.4, xmin = 0, xmax = 6, fill = "black") +
+  geom_line(aes(group = Replicate)) +
+  geom_point(stat = "identity", aes(shape = Replicate), size = 2) +
   # scale_fill_manual(values = c("black","#9970ab", "#5aae61")) +
   facet_wrap(Name ~ Site) +
-  scale_y_log10() +
+  scale_y_log10(labels = scientific_10) +
   theme_bw() + theme(strip.background = element_blank(), 
                           legend.title = element_blank(),
                      axis.text = element_text(size = 10, color = "black"),
                           title = element_text(size = 10, face = "bold"),
                           axis.title = element_text(size = 9)) +
   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
-bag_ctrls
+ship_ctrls_reps
 ```
+
 
 ## IGT experiment controls
 
 Repeat for IGT experiments.
 
-```{r, fig.width=4, fig.height=3}
-igt_ctrl_plot <- dtaf_avg %>% 
+```{r, fig.width=6, fig.height=5}
+igt_ctrl_reps <- dtaf %>% 
   filter(Site == "IGT") %>% 
-  ggplot(aes(x = TimePoint, y = Avg_cellsperml, fill = Name, shape = Site)) +
-  geom_rect(data = filter(dtaf_avg, TimePoint == "T0", Site == "IGT"), aes(
-                                           ymin = (Avg_cellsperml-(0.1*Avg_cellsperml)),
-                                           ymax = (Avg_cellsperml+(0.1*Avg_cellsperml))), color = NA, alpha = 0.4, xmin = 0, xmax = 6, fill = "black") +
-  geom_line(aes(group = Name)) +
-  geom_point(stat = "identity", aes(shape = Site, fill = Name), size = 2) +
-  # scale_fill_manual(values = c("black","#9970ab", "#5aae61")) +
-  facet_wrap(Name ~ Site) +
-  scale_y_log10() +
+  ggplot(aes(x = TimePoint, y = Cells.ml, shape = Replicate)) +
+    geom_rect(data = filter(dtaf, TimePoint == "T0", Site == "IGT"), aes(
+                                           ymin = (Cells.ml-(0.15*Cells.ml)),
+                                           ymax = (Cells.ml+(0.15*Cells.ml))), color = NA, alpha = 0.4, xmin = 0, xmax = 6, fill = "black") +
+  geom_line(aes(group = Replicate)) +
+  geom_point(stat = "identity", aes(shape = Replicate), size = 2) +
+  facet_wrap(Name ~ ORIG_ID) +
+  scale_y_log10(labels = scientific_10) +
   theme_bw() + theme(strip.background = element_blank(), 
                           legend.title = element_blank(),
                      axis.text = element_text(size = 10, color = "black"),
                           title = element_text(size = 10, face = "bold"),
                           axis.title = element_text(size = 9)) +
   labs(title = "FLP counts for controls", y = bquote("Log FLP "~mL^-1), x = "Time point")
-igt_ctrl_plot
+igt_ctrl_reps
 ```
 
-##### Figure S5
+##### Figure S6
+
 ```{r}
-# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS5_1.svg", w = 7, h = 7)
-bag_ctrls + theme(legend.position = "none")
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS6_1.svg", w = 9, h = 7)
+ship_ctrls_reps
 # dev.off()
 
-# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS5_2.svg", w = 4, h = 3)
-(igt_ctrl_plot + theme(legend.position = "none"))
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS6_2.svg", w = 7, h = 5)
+igt_ctrl_reps
 # dev.off()
 ```
 
@@ -1365,7 +1408,7 @@ Use ```pgC_cell_MD_nodiatom``` moving forward.
 
 (2) Get a summary pg per cell for vent and background samples. This is derived from biovolume estimates.
 
-## Table S4 biomass summaries
+## Biomass summaries
 ```{r}
 c_factor_biov <- 
   biov_calc %>% select(-EXP, -h, -d) %>% 
@@ -1459,7 +1502,7 @@ by_biovol_plot <- pgC_ml_biov_bysample %>%
     geom_point(shape = 21, color = "black") + 
     geom_linerange(aes(ymin = (pgC_ml_min), ymax = (pgC_ml_max))) +
   facet_grid(.~SiteOrder + NameOrder, space = "free", scales = "free") +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  scale_y_continuous(labels = scientific_10) +
     theme_minimal() +
     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
            panel.background = element_blank(), 
@@ -1485,10 +1528,31 @@ Derived from Caron et al. 1995
 
 (1) Assign by size class
 
+Assuming conversion factor is 183 fg C per um.
+
+For nanoplankton <20um, picoplankton are included for now. We are assuming the size range of nanoplankton are 3um.
 ```{r}
-c_n <- 2.6 # pg C per cell
-c_m <- 138 # pg C per cell
+vol_nano <- (4/3) * pi * (3^3)
+vol_nano # units are um^3
+fg_nano_c <- 183 * vol_nano #units are now fg per C
+c_n <- (fg_nano_c)/1000
+c_n
 ```
+
+For microplankton, we are assuming the cell diameter is 50 um.
+```{r}
+vol_micr <- (4/3) * pi * (50^3)
+vol_micr # units are um^3
+fg_micr_c <- 183 * vol_micr #units are now fg per C
+c_m <- (fg_micr_c)/1000
+c_m
+```
+```{r}
+c_n
+c_m * (1e-6)
+# 1pg to 1e-6ug
+```
+
 
 ```{r}
 pgC_ml_sizefrac_bysample_tmp <- counts_cellsml_avg %>% 
@@ -1543,7 +1607,7 @@ by_sizefrac_plot <- pgC_ml_sizefrac_bysample %>%
     geom_point(color = "black", aes(shape = VARIABLE)) + 
     # geom_linerange(aes(ymin = (pgC_ml_min/1000), ymax = (pgC_ml_max/1000))) +
   facet_grid(.~SiteOrder + NameOrder, space = "free", scales = "free") +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+  scale_y_continuous(labels = scientific_10) +
     theme_minimal() +
     theme(panel.grid.major = element_line(), panel.grid.minor = element_blank(),
            panel.background = element_blank(), 
@@ -1562,9 +1626,9 @@ by_sizefrac_plot <- pgC_ml_sizefrac_bysample %>%
 
 Combined supplementary plot showing two routes of determining total biomass.
 
-## Figure S2
+## Figure S3
 ```{r, fig.height=8, fig.width=7}
-# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS2.svg", h = 8, w = 7)
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS3_new.svg", h = 8, w = 7)
 by_biovol_plot + by_sizefrac_plot + patchwork::plot_layout(ncol = 1) +
   plot_annotation(tag_levels = "a")
 # dev.off()
@@ -1593,7 +1657,7 @@ table4_cbiomass_total <- pgC_ml_biov_bysample %>%
   )
 
 # table4_cbiomass_total
-# write.csv(table4_cbiomass_total, file = "output-data/tableS4-cbiomass.csv")
+write.csv(table4_cbiomass_total, file = "output-data/tableS4-cbiomass.csv")
 ```
 
 
@@ -1738,7 +1802,7 @@ supp_table_env_mcr <- mcr_metadata %>%
   select(FIELD, VENT, SAMPLETYPE, DEPTH, TEMP = temp, PH = pH, PERCSEA = percseawater, MG = mg, H2 = h2, H2S = h2s, CH4 = ch4, MICROBIAL = ProkConc, everything())
 
 # Save supplementary metadata table:
-# write.csv(supp_table_env_mcr, file = "output-data/supp_table_MCR_metadata.csv")
+write.csv(supp_table_env_mcr, file = "output-data/supp_table_MCR_metadata.csv")
 ```
 
 # Analysis of grazing rate results
@@ -1806,17 +1870,18 @@ grazing_rate <- table_wcalcs %>%
 grazing_rate + scale_y_log10()
 ```
 ```{r}
-grazing_rate + scale_y_log10(limits = c(1,1e5))
+grazing_rate + scale_y_log10(labels = scientific_10, limits = c(1,1e5))
 ```
 
 # Figure 1 compilation
 
 ```{r, fig.height=8, fig.width=10}
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig1.svg", w = 10, h = 8)
+
   (euk_plot + theme(legend.position = "none")) +
   (prok_plot + theme(legend.position = "none")) +
   (grazing_min_plot + theme(legend.position = "none") + scale_y_continuous(limits = c(0, 0.02))) +
-  (grazing_rate + scale_y_log10(limits = c(1,1e5)) + theme(legend.position = "none")) + patchwork::plot_layout(ncol = 2) +
+  (grazing_rate + scale_y_log10(labels = scientific_10, limits = c(1,1e5)) + theme(legend.position = "none")) + patchwork::plot_layout(ncol = 2) +
   patchwork::plot_annotation(tag_levels = "a")
 # dev.off()
 ```
@@ -1849,7 +1914,7 @@ mod_metadata <- mcr_metadata %>%
 # setdiff(mod_metadata$FLUID_ORIGIN, table_wcalcs$FLUID_ORIGIN)
 
 grazing_wenv <- table_wcalcs %>% 
-  select(SiteOrder, Name, Experiment_rep, FLUID_ORIGIN, RATE_minute, starts_with("EUK_"), starts_with("PROK_"), starts_with("GRAZING_EFFECT")) %>%
+  select(SiteOrder, Name, Experiment_rep, FLUID_ORIGIN, RATE_minute, starts_with("EUK_"), starts_with("PROK_"), starts_with("GRAZING_EFFECT"), CLEARANCE_RATE_ml, SPEC_GRAZE_RATE_hr, BAC_TURNOVER_PERC) %>%
   left_join(mod_metadata, join_by(Name == Name, FLUID_ORIGIN == FLUID_ORIGIN))
 
 # View(grazing_wenv)
@@ -1911,7 +1976,7 @@ prok_temp <- grazing_wenv %>%
   geom_errorbar(aes(ymin = ((PROK_ml)-(PROK_sem)),ymax = ((PROK_ml)+(PROK_sem))), color = "black") +
       geom_errorbarh(aes(xmin = (GRAZING_EFFECT_hr_min),xmax = (GRAZING_EFFECT_hr_max)), color = "black") +
   geom_point(aes(shape = SITE_TYPE), size = 4, stroke = 2) +
-  scale_y_log10() + 
+  scale_y_log10(labels = scientific_10) + 
   scale_x_log10() +
   # scale_shape_manual(values = c(1, 19)) +
   scale_shape_manual(values = c(2, 24, 6, 25)) +
@@ -1943,7 +2008,7 @@ prok_temp
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig2.svg", h = 10, w = 7)
 # fig2
 # dev.off()
-# 
+# # 
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig2-a.svg", h = 5, w = 7)
 # euk_temp
 # dev.off()
@@ -2032,7 +2097,7 @@ allrates <- all_vents %>%
 
 Add Gorda Ridge comparison to supplementary?
 
-#### Figure S7
+#### Figure S8
 ```{r, fig.height=4, fig.width=6}
 # allrates
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS7.svg", h = 4, w = 6)
@@ -2088,10 +2153,8 @@ allrates_nonzero + scale_y_log10()
 
 ```{r}
 head(grazing_wenv)
-
-
 ```
-##### Figure S6
+##### Figure S7
 ```{r, fig.height=8, fig.width=10}
 # svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS6.svg", h = 8, w = 10)
 grazing_wenv %>% 
@@ -2136,6 +2199,152 @@ grazing_wenv %>%
 # dev.off()
 ```
 
+```{r}
+grazing_wenv_forLM <- grazing_wenv %>% 
+  # filter(!(Name == "Shrimpocalypse" & grepl("IGT", Experiment_rep))) %>%
+  filter(GRAZING_EFFECT_hr > 0) %>%
+    mutate(TEMP = as.numeric(temp)) %>% 
+    mutate(EXP_TYPE = case_when(
+      grepl("IGT", Experiment_rep) ~ "IGT",
+      TRUE ~ "Shipboard"
+    )) %>% 
+  unite(SITE_TYPE, SiteOrder, EXP_TYPE, sep = "-", remove = FALSE) %>% 
+  filter(!(SITE_TYPE == "NA-IGT")) %>% 
+  mutate(EUK_ml = as.character(EUK_ml)) %>% 
+  mutate(PROK_ml = as.character(PROK_ml),
+         PROK_EUK_RATIO = as.character(as.numeric(PROK_ml)/as.numeric(EUK_ml))) %>%
+  mutate(temp = as.character(temp),
+         pH = as.character(pH),
+         mg = as.character(mg),
+         h2 = as.character(h2),
+         ch4 = as.character(ch4),
+         percseawater = as.character(percseawater)) %>% 
+  select(SITE_TYPE, SiteOrder, EXP_TYPE, Experiment_rep, GRAZING_EFFECT_hr, CLEARANCE_RATE_ml, SPEC_GRAZE_RATE_hr, BAC_TURNOVER_PERC, EUK_ml, PROK_ml, PROK_EUK_RATIO, temp, DEPTH, pH, percseawater, mg, h2, ch4) %>% 
+  pivot_longer(cols = c(GRAZING_EFFECT_hr, CLEARANCE_RATE_ml, SPEC_GRAZE_RATE_hr, BAC_TURNOVER_PERC), names_to = "RATE", values_to = "RATE_VALUE") %>%
+  pivot_longer(cols = c(PROK_ml, EUK_ml, temp, DEPTH, pH, percseawater, mg, h2, ch4, PROK_EUK_RATIO), names_to = "PARAMS", values_to = "PARAMS_VALUE") %>%
+  data.frame
+
+```
+
+
+```{r}
+library(broom)
+regression_tmp <- grazing_wenv_forLM %>%
+  mutate(PARAMS_VALUE = as.numeric(PARAMS_VALUE)) %>% 
+  # Set up the linear regression
+  group_by(RATE, PARAMS) %>%
+  nest(data = c(-RATE, -PARAMS)) %>%
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
+    tidied = map(lm_fit, tidy)) %>%
+  unnest(tidied) %>%
+  select(RATE, PARAMS,
+    term, estimate) %>%
+  pivot_wider(names_from = term, values_from = estimate) %>%
+  select(everything(), SLOPE = PARAMS_VALUE) %>%
+  data.frame
+
+regression_results_S8 <- grazing_wenv_forLM %>%
+  group_by(RATE, PARAMS) %>%
+  nest(data = c(-RATE, -PARAMS)) %>%
+  mutate(lm_fit = map(data, ~lm(RATE_VALUE ~ PARAMS_VALUE, data = .)),
+    glanced = map(lm_fit, glance)) %>%
+  unnest(glanced) %>%
+  select(RATE, PARAMS, r.squared, adj.r.squared) %>%
+  right_join(grazing_wenv_forLM) %>%
+  right_join(regression_tmp) %>%
+  data.frame
+
+
+```
+Supplementary Table
+```{r}
+regression_results_TABLE <- regression_results_S8 %>% 
+  select(RATE, PARAMS, r.squared, adj.r.squared, SLOPE) %>% 
+  distinct()
+# write.csv(regression_results_TABLE, file = "output-data/LM-results-table.csv")
+```
+
+
+```{r, fig.height=8, fig.width=18}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS6.svg", h = 8, w = 10)
+grazing_for_supp <- regression_results_S8
+
+# y = mx+b
+# 0 = slope (x) + b
+# solve for b
+plot_r2 <- grazing_for_supp %>% 
+  ggplot(aes(x = as.numeric(RATE_VALUE), y = as.numeric(PARAMS_VALUE), 
+             color = SITE_TYPE, fill = SITE_TYPE, shape = SITE_TYPE)) +
+  geom_point(aes(shape = SITE_TYPE), size = 4, stroke = 2) +
+  facet_wrap(~ PARAMS + round(r.squared, 3), scales = "free", ncol = 5,
+             labeller = label_parsed) +
+  scale_y_continuous() +
+  scale_x_log10(labels = scientific_10) +
+  scale_shape_manual(values = c(21, 21, 21, 21)) +
+  scale_fill_manual(values = c("white", "#264653", "white", "#E76F51")) +
+  scale_color_manual(values = c("#264653", "#264653", "#E76F51", "#E76F51")) +
+  theme_minimal() +
+    theme(panel.grid.minor = element_blank(),
+           axis.line = element_line(colour = "black"), 
+           axis.text.x = element_text(color="black", size = 13), 
+           axis.text.y = element_text(color="black", size = 13),
+           axis.title = element_text(color="black", size = 13),
+           axis.ticks = element_line(),
+           strip.text = element_text(color="black", size = 13), legend.title = element_blank()) +
+  labs(x = bquote("Cells consumed "~mL^-1 ~hr^-1), y = bquote("Eukaryote cells "~mL^-1),
+       title = "")
+
+plot_wslope <- grazing_for_supp %>% 
+    mutate(b = (SLOPE)*(`X.Intercept.`)) %>% 
+  mutate(new_xint = ((0 - b)/SLOPE)) %>% 
+    mutate(new_xint_2 = case_when(
+      `X.Intercept.` < 0 ~ (`X.Intercept.`)*(-1),
+      `X.Intercept.` > 0 ~ (`X.Intercept.`),
+    )) %>% 
+  filter(!is.na(PARAMS_VALUE)) %>% 
+  ggplot(aes(x = as.numeric(RATE_VALUE), y = as.numeric(PARAMS_VALUE), 
+             color = SITE_TYPE, fill = SITE_TYPE, shape = SITE_TYPE)) +
+  geom_point(aes(shape = SITE_TYPE), size = 4, stroke = 2) +
+  facet_wrap(~ PARAMS + round(r.squared, 3), scales = "free", ncol = 5,
+             labeller = label_parsed) +
+  # scale_y_continuous() +
+  # scale_x_log10() +
+  scale_x_continuous(trans=log10_trans(),
+                       breaks = trans_breaks("log10", function(x) 10^x),
+                       labels = trans_format("log10", math_format(10^.x))) +
+    geom_abline(aes(slope = (SLOPE), intercept = (`X.Intercept.`)), color = "black", linetype = "dashed", size = 0.5) +
+  # geom_abline(aes(slope = (SLOPE), yintercept = (b)), color = "black", linetype = "dashed", size = 0.5) +
+  scale_shape_manual(values = c(21, 21, 21, 21)) +
+  scale_fill_manual(values = c("white", "#264653", "white", "#E76F51")) +
+  scale_color_manual(values = c("#264653", "#264653", "#E76F51", "#E76F51")) +
+  theme_minimal() +
+    theme(panel.grid.minor = element_blank(),
+           axis.line = element_line(colour = "black"), 
+           axis.text.x = element_text(color="black", size = 13), 
+           axis.text.y = element_text(color="black", size = 13),
+           axis.title = element_text(color="black", size = 13),
+           axis.ticks = element_line(),
+           strip.text = element_text(color="black", size = 13), legend.title = element_blank()) +
+  labs(x = bquote("Cells consumed "~mL^-1 ~hr^-1), y = bquote("Eukaryote cells "~mL^-1),
+       title = "")
+
+# plot_wslope
+```
+
+### Figure S7 #2
+
+Supplementary figure
+```{r, fig.height=8, fig.width=16}
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS7_log.svg", h = 8, w = 16)
+
+# plot_r2
+
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS7_slope.svg", h = 8, w = 16)
+# 
+# plot_wslope
+
+# dev.off()
+```
 
 
 # Linear regression & tidy models
@@ -2601,6 +2810,15 @@ est_predicted(all_vents %>%
                 filter(GRAZING_EFFECT_hr > 0) %>%
                 filter(Highest.Temp < 60), "Removed undetected, temps lower than 60C")
 ```
+# Save Robjects for Results
+```{r}
+# Oct 22, 2023
+save(euk_prok_counts, table_grazerate_wflp_wprok_weuk,
+     table_wcalcs, biov_calc, c_factor_biov,
+     pgC_ml_biov_bysample, pgC_ml_sizefrac_bysample,
+     carbon_consumed, file = "input-data/all-dfs-for-Tables.RData")
+```
+
 
 # Session
 

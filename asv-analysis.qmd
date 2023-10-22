@@ -154,7 +154,8 @@ pca_plot <- mcr_pca_pts %>%
   guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
   theme(legend.title = element_blank(),
-        axis.text = element_text(color = "black", face = "bold", size = 13)) +
+        axis.text = element_text(color = "black", face = "bold", size = 13),
+        axis.title = element_text(color = "black", face = "bold", size = 16)) +
   labs(x =  paste(pc1, "%"), y = paste(pc2, "%"))
 
 pca_plot
@@ -302,9 +303,11 @@ bubble
 
 ### Relative abundance
 
-```{r}
+#### Figure S7
+```{r, fig.height=9, fig.width=8}
 alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
 
+# svg(filename = "../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/figS7_barplot.svg", h=9, w=8)
 asv_wtax_qc %>% 
     filter(value > 0) %>% 
   # Avg seq count by ASV across replicates
@@ -339,9 +342,13 @@ asv_wtax_qc %>%
   ggplot(aes(x = SAMPLENAME_ORDER, y = SUM)) +
     geom_bar(stat = "identity", position = "fill", color = "black", aes(fill = SUPERGROUP)) +
   facet_grid(. ~ VENT + SITE, scales = "free", space = "free") +
+  scale_fill_manual(values = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525", "#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525")) +
   theme_minimal() +
   theme(legend.position = "right",
-        axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1))
+        axis.text.x = element_text(color = "black", angle = 45, hjust = 1, vjust = 1),
+        strip.text.x.top = element_text(color = "black", angle = 90, vjust = 0)) +
+  labs(x = "Relative sequence abundance", y = "") 
+# dev.off()
 ```
 
 In bar plot above, in situ and Tf incubation samples are paired for each site.
@@ -770,7 +777,7 @@ tax_table_shared <- left_join(shared_across, shared_exp) %>%
   select(FeatureID, ends_with("_PA"), Taxon) %>% 
   distinct()
 
-# write_delim(tax_table_shared, file = "output-data/list-of-shared-taxa.txt", delim = "\t")
+write_delim(tax_table_shared, file = "output-data/list-of-shared-taxa.txt", delim = "\t")
 ```
 
 # In situ vs. Tf relative changes
@@ -1048,11 +1055,22 @@ analysis_fam <- corncob_mcr(mcr_fam)
 # head(tax_table(mcr_fam))
 ```
 
+
 ```{r, fig.height=9, fig.width=9}
 fam_corncob <- analysis_fam %>%
-  # unite(Family, c(Class, Order, Family), sep = " ", remove = FALSE) %>%
+  filter(Supergroup != "Opisthokonta") %>% 
+  mutate(SUPERGROUP = case_when(
+    Supergroup == "Alveolata" ~ "Alveolate",
+    TRUE ~ Supergroup
+  ),
+  PHYLUM = case_when(
+    Phylum == "Ciliophora" ~ "Ciliate",
+    Phylum == "Dinoflagellata" ~ "Dinoflagellate",
+    Phylum == "Haptophyta" ~ "Haptophyte",
+    TRUE ~ Phylum
+  )) %>% 
   unite(Family, c(Family), sep = " ", remove = FALSE) %>%
-  unite(SUPPHY, c(Supergroup, Phylum), sep = ";", remove = FALSE) %>% 
+  unite(SUPPHY, c(SUPERGROUP, PHYLUM), sep = ";", remove = FALSE) %>% 
   filter(VARIABLE != "mu.(Intercept)") %>%
   ggplot(aes(y = Family, x = Estimate)) +
     geom_vline(xintercept = 0, alpha = 0.2) +
