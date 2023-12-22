@@ -22,8 +22,22 @@ Set up R environment
 
 ```{r}
 #| message: false
-library(tidyverse); library(phyloseq); library(ape)
-library(ggupset); library(cowplot)
+library(tidyverse)
+library(ape)
+library(ggupset)
+library(cowplot)
+```
+
+Phyloseq, DivNet, and Breakaway:
+
+```{r}
+# | message: false
+# devtools::install_github("joey711/phyloseq")
+library(phyloseq)
+# remotes::install_github("adw96/breakaway")
+# remotes::install_github("adw96/DivNet")
+# remotes::install_github("statdivlab/corncob")
+library(breakaway); library(DivNet); library(corncob)
 ```
 
 Import previously sequenced and analyzed tag-sequence data. See https://shu251.github.io/microeuk-amplicon-survey/ for additional information.
@@ -71,9 +85,7 @@ site_colors <- c("#418b84", "#943b36")
 
 # Vent colors
 vent_colors <- c("#253494","#1d91c0", "#E9C46A", "#E76F51", "#264653", "#2A9D8F", "#2A9D8F", "#90be6d", "#941b0c", "#577590", "#eae2b7", "#deebf7")
-# vent_colors <- c("")
 names(vent_colors) <- vent_fullname
-# all_taxa_color = c("#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#deebf7", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525", "#fa9fb5", "#c51b8a", "#67000d", "#ef3b2c", "#ffffcc", "#feb24c", "#c7e9b4", "#1d91c0", "#253494", "#9e9ac8", "#238b45", "#54278f", "#bdbdbd", "#252525")
 ```
 
 # Preliminary look at all samples
@@ -125,12 +137,11 @@ mcr_pca_pts <- data.frame(pca_logratio$x, SAMPLE = rownames(pca_logratio$x)) %>%
         remove = FALSE) 
 # head(mcr_pca_pts)
 
-pc1 <- round(variance_logratio[1] * 100, 2)
-pc2 <- round(variance_logratio[2] * 100, 2)
+pc1 <- round(variance_logratio[1] * 100, 1)
+pc2 <- round(variance_logratio[2] * 100, 1)
 ```
 
 PCoA with all samples
-
 
 ```{r, fig.height=8, fig.width=7}
 # samples <- as.character(unique(tmp$SAMPLENAME))
@@ -152,12 +163,13 @@ pca_plot <- mcr_pca_pts %>%
   scale_color_manual(values = samplenames_color) +
   theme_linedraw() + coord_fixed(ratio = 1) +
   guides(fill = guide_legend(override.aes = list(shape = c(22)))) +
-  geom_hline(yintercept = 0) + geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0, size = 0.2) + geom_vline(xintercept = 0, size = 0.2) +
   theme(legend.title = element_blank(),
-        axis.text = element_text(color = "black", face = "bold", size = 13),
-        axis.title = element_text(color = "black", face = "bold", size = 16)) +
-  labs(x =  paste(pc1, "%"), y = paste(pc2, "%"))
-
+        axis.text = element_text(color = "black", size = 13),
+        axis.title = element_text(color = "black", size = 16),
+        panel.grid.minor = element_blank()) +
+  labs(x =  paste(pc1, "%", sep = ""), y = paste(pc2, "%", sep = ""))
+# ?paste()
 pca_plot
 ```
 
@@ -304,6 +316,7 @@ bubble
 ### Relative abundance
 
 #### Figure S7
+
 ```{r, fig.height=9, fig.width=8}
 alv <- c("Alveolata-Ellobiopsidae", "Alveolata-Perkinsea", "Alveolata-Unknown", "Alveolata-Chrompodellids", "Alveolata-Apicomplexa")
 
@@ -359,7 +372,8 @@ In bar plot above, in situ and Tf incubation samples are paired for each site.
 # | message: false
 # remotes::install_github("adw96/breakaway")
 # remotes::install_github("adw96/DivNet")
-
+# devtools::install_github("joey711/phyloseq")
+# library(phyloseq)
 # library(breakaway); library(DivNet); library(phyloseq); library(tidyverse)
 ```
 
@@ -1021,7 +1035,6 @@ analysis_class %>%
 
 > Class level looks pretty good. Keep this one. Looks at major taxonomic groups that were more enriched at vents? Work on the language here. Repeat vent vs. plume at ASV level. ID some of the core ASVs that can help elaborate on what we see above (table in supplementary)
 
-
 ### Order corncob
 
 ```{r, eval = FALSE}
@@ -1055,7 +1068,6 @@ analysis_fam <- corncob_mcr(mcr_fam)
 # head(tax_table(mcr_fam))
 ```
 
-
 ```{r, fig.height=9, fig.width=9}
 fam_corncob <- analysis_fam %>%
   filter(Supergroup != "Opisthokonta") %>% 
@@ -1078,14 +1090,16 @@ fam_corncob <- analysis_fam %>%
     geom_point(aes(fill = SUPPHY), shape = 21, color = "black", size = 3) +
   scale_fill_brewer(palette = "Dark2") +
   facet_grid(SUPPHY ~ VARIABLE, space = "free", scales = "free") +
-  theme_minimal() +
+  theme_linedraw() +
   theme(legend.position = "none",
+        strip.background = element_blank(),
         axis.text.y = element_text(color = "black", size = 13),
         axis.text.x = element_text(color = "black", size = 13),
         strip.text.x = element_blank(),
         strip.text.y = element_text(color = "black", angle = 0, 
                                     hjust = 0, vjust = 0.5,
-                                    size = 12)) +
+                                    size = 12),
+        panel.grid.minor = element_blank()) +
   labs(x = "Coefficient", y = "", title = "")
 fam_corncob
 ```
@@ -1160,11 +1174,12 @@ There was a total of 29 ASVs that were both a part of the enriched at vents (com
 # Figure 3
 
 ```{r, warning=FALSE, fig.width=18, fig.height=9}
-# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig3.svg", w = 18, h = 9)
-# pca_plot + fam_corncob + patchwork::plot_layout(ncol = 2, widths = c(1, 1)) + patchwork::plot_annotation(tag_levels = "a")
+library(patchwork)
+(pca_plot) + (fam_corncob) + patchwork::plot_layout(ncol = 2, widths = c(1, 0.7)) + patchwork::plot_annotation(tag_levels = "a") & theme(plot.tag = element_text(size = 18))
+# svg("../../../Manuscripts_presentations_reviews/MCR-grazing-2023/svg-files-figures/fig3-revision.svg", w = 18, h = 9)
+# fig3_all
 # dev.off()
 ```
-
 
 # Info
 
